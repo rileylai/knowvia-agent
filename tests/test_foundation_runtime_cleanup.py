@@ -6,6 +6,8 @@ import importlib.util
 import subprocess
 import sys
 
+import yaml
+
 from src.app.config import get_settings
 from src.app.dependencies import get_queue_client, get_readiness_service, get_tool_registry
 from src.app.main import app
@@ -143,3 +145,20 @@ def test_api_preflight_does_not_require_rq() -> None:
 
     assert ("rq", "rq") not in preflight.PROFILE_DEPENDENCIES["api"]
     assert ("rq", "rq") in preflight.PROFILE_DEPENDENCIES["legacy-worker"]
+
+
+def test_local_postgres_compose_uses_dedicated_knowvia_identity() -> None:
+    compose_path = Path(__file__).resolve().parents[1] / "docker-compose.yml"
+    compose = yaml.safe_load(compose_path.read_text(encoding="utf-8"))
+    postgres = compose["services"]["postgres"]
+
+    assert compose["name"] == "knowvia"
+    assert postgres["container_name"] == "knowvia-postgres"
+    assert postgres["environment"]["POSTGRES_USER"] == "${POSTGRES_USER:-knowvia}"
+    assert postgres["environment"]["POSTGRES_DB"] == "${POSTGRES_DB:-knowvia}"
+    assert postgres["volumes"] == [
+        "knowvia-postgres-data:/var/lib/postgresql/data"
+    ]
+    assert compose["volumes"]["knowvia-postgres-data"]["name"] == (
+        "knowvia-postgres-data"
+    )

@@ -52,7 +52,7 @@ RUN_FLAG_ENV = "LEARNLOOP_RUN_LIVE_VECTOR_SMOKE"
 OPENAI_API_KEY_ENV = "OPENAI_API_KEY"
 ADMIN_DATABASE_URL_ENV = "LEARNLOOP_PGVECTOR_ADMIN_DATABASE_URL"
 DEFAULT_ADMIN_DATABASE_URL = (
-    "postgresql+psycopg://learnloop:learnloop@localhost:5432/postgres"
+    "postgresql+psycopg://knowvia:knowvia@localhost:5433/postgres"
 )
 VECTOR_DIMENSIONS = 1536
 

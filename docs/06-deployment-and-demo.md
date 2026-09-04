@@ -18,9 +18,13 @@ cloud sync。這些是 Future Work。
 
 ## Current local 狀態
 
-目前 code 可以從 uv environment 啟動 FastAPI，Docker Compose 提供 PostgreSQL
-與 pgvector，並保留 Redis service 給 legacy queue。現有 API 的 Notion index、
-source persistence 與 QA 是 synchronous path；非 Notion source 尚未完成 generic
+目前 code 可以從 uv environment 啟動 FastAPI。Docker Compose 以
+`knowvia-postgres`、dedicated `knowvia-postgres-data` volume、`knowvia` role 與
+`knowvia` database 提供 PostgreSQL + pgvector，host port 維持 5433。舊
+`learnloop-postgres` 與原有 bind-mounted data 不屬於 active Compose project。
+
+Compose 仍保留 Redis service 給 legacy queue。現有 API 的 Notion index、source
+persistence 與 QA 是 synchronous path；非 Notion source 尚未完成 generic
 chunk/index pipeline。
 
 Knowvia API startup、API preflight 與 core readiness 不建立或要求 Redis/RQ。

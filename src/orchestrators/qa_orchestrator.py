@@ -36,6 +36,22 @@ from src.services import (
 INSUFFICIENT_INFO_ANSWER = (
     "I do not have enough information in production notes to answer safely."
 )
+INSUFFICIENT_INFO_SENTINEL = "INSUFFICIENT_INFO"
+_LEGACY_INSUFFICIENT_ANSWER_PREFIXES = (
+    "the context does not contain sufficient information",
+    "the provided context does not contain sufficient information",
+    "the provided context is insufficient",
+    "there is not enough information in the provided context",
+)
+
+
+def _answer_indicates_insufficient_info(answer_text: str) -> bool:
+    normalized = " ".join(answer_text.casefold().split()).strip(" .!`\"")
+    if normalized == INSUFFICIENT_INFO_SENTINEL.casefold():
+        return True
+    return normalized.startswith(_LEGACY_INSUFFICIENT_ANSWER_PREFIXES)
+
+
 DEFAULT_QA_TOP_K = 5
 DEFAULT_QA_PROVIDER_NAME = "openai"
 DEFAULT_QA_MODEL = "gpt-4o-mini"
@@ -282,13 +298,19 @@ class QAOrchestrator:
                     failure_reason="LLM_OUTPUT_INVALID",
                 )
 
+            insufficient_info = _answer_indicates_insufficient_info(answer_text)
+            response_answer = (
+                INSUFFICIENT_INFO_ANSWER if insufficient_info else answer_text
+            )
+            response_citations = [] if insufficient_info else citations
+
             self._workflow_run_service.mark_workflow_succeeded(
                 workflow_run.id,
                 metadata_json=json.dumps(
                     self._build_workflow_metadata(
-                        insufficient_info=False,
+                        insufficient_info=insufficient_info,
                         retrieved_chunk_count=len(retrieved_chunks),
-                        citation_count=len(citations),
+                        citation_count=len(response_citations),
                         provider_name=normalized_provider_name,
                         model=normalized_model,
                         prompt_id=prompt_id,
@@ -306,10 +328,10 @@ class QAOrchestrator:
             return QAResult(
                 workflow_run_id=workflow_run.id,
                 status="succeeded",
-                answer=answer_text,
-                insufficient_info=False,
+                answer=response_answer,
+                insufficient_info=insufficient_info,
                 retrieved_chunk_count=len(retrieved_chunks),
-                citations=citations,
+                citations=response_citations,
                 provider=llm_response.provider,
                 model=llm_response.model,
                 token_input=llm_response.token_input,

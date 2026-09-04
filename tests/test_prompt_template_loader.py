@@ -22,8 +22,9 @@ def test_prompt_template_loader_loads_and_renders_qa_prompt() -> None:
     )
 
     assert bundle.prompt_id == PROMPT_ID_QA_ANSWER
-    assert bundle.version == "qa_answer_v2"
+    assert bundle.version == "qa_answer_v3"
     assert "Answer only from the provided context." in system_message
+    assert "INSUFFICIENT_INFO" in system_message
     assert "What does positional encoding do?" in user_message
     assert "Knowledge/NLP/Week5" in user_message
 

@@ -48,6 +48,22 @@ class FailingProvider(LLMProvider):
         raise LLMClientError("upstream timeout")
 
 
+class InsufficientContextProvider(LLMProvider):
+    @property
+    def name(self) -> str:
+        return "openai"
+
+    async def generate(self, request: LLMRequest) -> LLMResponse:
+        _ = request
+        return LLMResponse(
+            provider="openai",
+            model="gpt-4o-mini",
+            output_text="INSUFFICIENT_INFO",
+            token_input=20,
+            token_output=2,
+        )
+
+
 def _build_session_factory():
     engine = create_engine(
         "sqlite+pysqlite://",
@@ -184,7 +200,7 @@ def test_qa_api_returns_grounded_answer_with_citations() -> None:
             assert metadata["provider_name"] == "openai"
             assert metadata["model"] == "gpt-4o-mini"
             assert metadata["prompt_id"] == "qa_answer"
-            assert metadata["prompt_version"] == "qa_answer_v2"
+            assert metadata["prompt_version"] == "qa_answer_v3"
             assert metadata["retrieval_mode"] == "lexical_fallback"
             assert (
                 metadata["retrieval_fallback_reason"]
@@ -260,6 +276,51 @@ def test_qa_api_returns_insufficient_info_when_no_retrieval_match() -> None:
         app.dependency_overrides.clear()
 
 
+def test_qa_api_returns_zero_citations_when_provider_rejects_retrieved_context() -> None:
+    session_factory = _build_session_factory()
+    seed_session = session_factory()
+    try:
+        _seed_chunks(seed_session)
+    finally:
+        seed_session.close()
+
+    def _db_override():
+        session = session_factory()
+        try:
+            yield session
+        finally:
+            session.close()
+
+    def _provider_router_override() -> ProviderRouter:
+        router = ProviderRouter()
+        router.register_provider(InsufficientContextProvider())
+        return router
+
+    app.dependency_overrides[get_db_session] = _db_override
+    app.dependency_overrides[get_db_session_factory] = lambda: session_factory
+    app.dependency_overrides[get_provider_router] = _provider_router_override
+
+    try:
+        client = TestClient(app)
+        response = client.post(
+            "/api/qa",
+            json={
+                "query": "Explain attention in week5 notes",
+                "top_k": 3,
+                "provider_name": "openai",
+                "model": "gpt-4o-mini",
+            },
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["insufficient_info"] is True
+        assert payload["citations"] == []
+        assert payload["retrieved_chunk_count"] >= 1
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_qa_api_returns_provider_not_found_when_provider_missing() -> None:
     session_factory = _build_session_factory()
     seed_session = session_factory()
@@ -311,7 +372,7 @@ def test_qa_api_returns_provider_not_found_when_provider_missing() -> None:
             assert metadata["provider_name"] == "openai"
             assert metadata["model"] == "gpt-4o-mini"
             assert metadata["prompt_id"] == "qa_answer"
-            assert metadata["prompt_version"] == "qa_answer_v2"
+            assert metadata["prompt_version"] == "qa_answer_v3"
             assert metadata["estimated_cost"] is None
         finally:
             verify_session.close()
@@ -372,7 +433,7 @@ def test_qa_api_returns_llm_provider_error_when_provider_request_fails() -> None
             assert metadata["provider_name"] == "openai"
             assert metadata["model"] == "gpt-4o-mini"
             assert metadata["prompt_id"] == "qa_answer"
-            assert metadata["prompt_version"] == "qa_answer_v2"
+            assert metadata["prompt_version"] == "qa_answer_v3"
             assert metadata["estimated_cost"] is None
         finally:
             verify_session.close()

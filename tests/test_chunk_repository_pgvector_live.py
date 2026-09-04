@@ -14,7 +14,7 @@ from src.db.models import KnowledgeChunk, NotionBlock, NotionPage, SourceDocumen
 from src.repositories import ChunkRepository
 
 VECTOR_DIMENSIONS = 1536
-ADMIN_DATABASE_URL = "postgresql+psycopg://learnloop:learnloop@localhost:5432/postgres"
+ADMIN_DATABASE_URL = "postgresql+psycopg://knowvia:knowvia@localhost:5433/postgres"
 DATABASE_PREFIX_ENV = "LEARNLOOP_PGVECTOR_TEST_DATABASE_PREFIX"
 DEFAULT_DATABASE_PREFIX = "learnloop_step52_"
 ALLOWED_DATABASE_PREFIXES = {DEFAULT_DATABASE_PREFIX, "learnloop_step98_"}

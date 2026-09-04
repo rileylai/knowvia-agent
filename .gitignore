@@ -6,6 +6,10 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
+# Frontend
+node_modules/
+dist/
+
 # Environment
 .env
 .env.*

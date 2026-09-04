@@ -90,7 +90,7 @@ def test_settings_load_with_env_override(monkeypatch) -> None:
     monkeypatch.setenv("LOG_LEVEL", "DEBUG")
     monkeypatch.setenv("DATABASE_URL", "postgresql://localhost:5432/learnloop")
     monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
-    monkeypatch.setenv("MOCK_NOTION_DATA_DIR", "mock_data/notion_pages")
+    monkeypatch.setenv("MOCK_NOTION_DATA_DIR", "tests/fixtures/notion_pages")
     monkeypatch.setenv("NOTION_BACKEND", "live")
     monkeypatch.setenv("NOTION_TOKEN", "placeholder-notion-token")
     monkeypatch.setenv("NOTION_REQUEST_TIMEOUT_SECONDS", "45")
@@ -124,7 +124,7 @@ def test_settings_load_with_env_override(monkeypatch) -> None:
     assert settings.log_level == "DEBUG"
     assert settings.database_url == "postgresql://localhost:5432/learnloop"
     assert settings.redis_url == "redis://localhost:6379/0"
-    assert settings.mock_notion_data_dir == "mock_data/notion_pages"
+    assert settings.mock_notion_data_dir == "tests/fixtures/notion_pages"
     assert settings.notion_backend == "live"
     assert settings.notion_token == "placeholder-notion-token"
     assert settings.notion_request_timeout_seconds == 45
