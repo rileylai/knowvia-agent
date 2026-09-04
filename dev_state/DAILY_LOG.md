@@ -312,3 +312,29 @@ Not yet manually verified.
 
 等待使用者重新確認 PDF upload success card 的 chunk count，以及 A、B、C、negative
 question、invalid upload error 與 `Add URL` disabled。
+
+## 2026-09-04 PDF Follow-up Manual Verification
+
+### Verified
+
+- PDF upload/indexing 成功，Knowledge success card 顯示實際 chunk count 與 embedded
+  count。
+- `What is an agent design pattern?` 成功回答並提供 PDF backend citations。
+- `What design patterns for agentic AI systems?` 成功回答並提供 PDF citations。
+- Unsupported query `什麼是claude` 回傳 `insufficient_info` 與 zero citations。
+- `2.1.1` retrieval coverage 修正與 `2.1.2` chunk count UI 均通過 browser manual
+  verification，roadmap 更新為 `done`。
+
+### Known Limitation
+
+- `What design patterns for agentic AI systems?` 已通過 PDF QA。
+- 帶有 `in this document` 的 query 目前沒有 deterministic referent，因為 Chat 尚未
+  有 Conversation Session 或 current-source scope。這不是 `2.1` blocker；相關
+  conversational referent 與 current source context 留到後續 Conversation Sessions /
+  context work。
+
+### Next
+
+- Append `2.1.3 PDF Source Inventory and Exact Duplicate Guard`，目前維持 `planned`。
+- `2.0` 與 `2.1` 維持 `manual_verification`；本輪不開始 `2.1.3` implementation，
+  也不開始 `2.2`。
