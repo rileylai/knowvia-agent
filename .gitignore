@@ -6,6 +6,10 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
+# Frontend
+node_modules/
+dist/
+
 # Environment
 .env
 .env.*
@@ -19,7 +23,6 @@ __pycache__/
 
 # Local files
 data/
-dev_state/
 local_storage/
 uploads/
 tmp/

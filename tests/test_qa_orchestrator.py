@@ -50,8 +50,13 @@ class _FakeEmbeddingClient(EmbeddingClient):
 
 
 class _FakeProvider(LLMProvider):
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        output_text: str = "Attention aligns query and key to weight values.",
+    ) -> None:
         self.requests: list[LLMRequest] = []
+        self._output_text = output_text
 
     @property
     def name(self) -> str:
@@ -62,7 +67,7 @@ class _FakeProvider(LLMProvider):
         return LLMResponse(
             provider="openai",
             model="gpt-4o-mini",
-            output_text="Attention aligns query and key to weight values.",
+            output_text=self._output_text,
             token_input=25,
             token_output=10,
         )
@@ -195,6 +200,126 @@ def test_qa_orchestrator_uses_query_embeddings_and_dedupes_citations() -> None:
     assert metadata["embedding_dimensions"] == 1536
     assert metadata["vector_distance_metric"] == "cosine"
     assert metadata["estimated_cost"] == pytest.approx(0.00000975)
+
+
+def test_qa_orchestrator_builds_pdf_citations_from_retrieved_metadata() -> None:
+    session_factory = _build_session_factory()
+    session = session_factory()
+    retriever = _FakeRetriever(
+        result=RetrievalResult(
+            chunks=[
+                RetrievedChunk(
+                    chunk_id=11,
+                    chunk_index=2,
+                    chunk_text="PDF evidence about bounded execution.",
+                    notion_path="",
+                    notion_page_id=None,
+                    source_kind="pdf",
+                    score=0.845123,
+                    source_document_id=7,
+                    source_display_name="agent-notes.pdf",
+                    locator="page 3",
+                )
+            ],
+            retrieval_mode=RETRIEVAL_MODE_LEXICAL_FALLBACK,
+            retrieval_fallback_reason=None,
+        )
+    )
+    provider_router = ProviderRouter()
+    provider_router.register_provider(_FakeProvider())
+    orchestrator = _build_orchestrator(
+        session=session,
+        session_factory=session_factory,
+        retriever=retriever,
+        embedding_client=None,
+        provider_router=provider_router,
+    )
+
+    result = asyncio.run(
+        orchestrator.answer_question(
+            query="What does the PDF say about execution?",
+            top_k=5,
+            page_ids=None,
+            section_paths=None,
+            source_kinds=["pdf"],
+            provider_name="openai",
+            model="gpt-4o-mini",
+            request_workflow_id="wf-qa-pdf-citation",
+        )
+    )
+
+    assert result.insufficient_info is False
+    assert len(result.citations) == 1
+    assert result.citations[0].source_kind == "pdf"
+    assert result.citations[0].source_display_name == "agent-notes.pdf"
+    assert result.citations[0].locator == "page 3"
+    assert result.citations[0].score == pytest.approx(0.845123)
+
+
+@pytest.mark.parametrize(
+    "provider_answer",
+    [
+        "INSUFFICIENT_INFO",
+        "The context does not contain sufficient information to answer the question.",
+    ],
+)
+def test_qa_orchestrator_removes_citations_when_provider_reports_insufficient_info(
+    provider_answer: str,
+) -> None:
+    session_factory = _build_session_factory()
+    session = session_factory()
+    retriever = _FakeRetriever(
+        result=RetrievalResult(
+            chunks=[
+                RetrievedChunk(
+                    chunk_id=1,
+                    chunk_index=0,
+                    chunk_text="Beam search explores likely token sequences.",
+                    notion_path="Knowledge/NLP/Beam Search",
+                    notion_page_id="page-nlp",
+                    source_kind="notion",
+                    score=0.42,
+                )
+            ],
+            retrieval_mode=RETRIEVAL_MODE_LEXICAL_FALLBACK,
+            retrieval_fallback_reason=None,
+        )
+    )
+    provider_router = ProviderRouter()
+    provider_router.register_provider(_FakeProvider(output_text=provider_answer))
+    orchestrator = _build_orchestrator(
+        session=session,
+        session_factory=session_factory,
+        retriever=retriever,
+        embedding_client=None,
+        provider_router=provider_router,
+    )
+
+    result = asyncio.run(
+        orchestrator.answer_question(
+            query="hi",
+            top_k=5,
+            page_ids=None,
+            section_paths=None,
+            source_kinds=["notion"],
+            provider_name="openai",
+            model="gpt-4o-mini",
+            request_workflow_id="wf-qa-insufficient-with-retrieval",
+        )
+    )
+
+    assert result.insufficient_info is True
+    assert result.citations == []
+    assert result.answer == (
+        "I do not have enough information in production notes to answer safely."
+    )
+    assert result.retrieved_chunk_count == 1
+
+    workflow_run = session.get(WorkflowRun, result.workflow_run_id)
+    assert workflow_run is not None
+    metadata = json.loads(workflow_run.metadata_json or "{}")
+    assert metadata["insufficient_info"] is True
+    assert metadata["citation_count"] == 0
 
 
 def test_qa_orchestrator_dimension_mismatch_falls_back_and_returns_insufficient_info() -> None:

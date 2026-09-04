@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional, Protocol
+from typing import TYPE_CHECKING, Dict, Optional, Protocol
 
-from src.queue import QueueClient
+if TYPE_CHECKING:
+    from src.queue import QueueClient
 
 
 READINESS_OK = "ok"
@@ -61,7 +62,7 @@ class ReadinessService:
         probe: ReadinessProbe,
         mode: str,
         openai_configured: bool,
-        queue_client: Optional[QueueClient] = None,
+        queue_client: Optional["QueueClient"] = None,
         queue_required: bool = False,
         notion_backend: str = "mock",
         notion_configured: Optional[bool] = None,

@@ -9,10 +9,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from src.app.dependencies import get_tool_registry
+from src.app.dependencies import get_embedding_client, get_tool_registry
 from src.app.main import app
 from src.db.base import Base
-from src.db.models import NotionBlock, NotionPage, SourceDocument, WorkflowRun
+from src.db.models import KnowledgeChunk, NotionBlock, NotionPage, SourceDocument, WorkflowRun
 from src.db.session import get_db_session, get_db_session_factory
 from src.orchestrators import MVP_CHAT_TEXT_MAX_CHARS
 from src.services.screenshot_quality import (
@@ -38,6 +38,13 @@ from src.tools import (
     YouTubeTranscriptParserClient,
     YouTubeTranscriptParserClientError,
     YouTubeTranscriptTool,
+)
+from src.providers import (
+    EmbeddingCapabilities,
+    EmbeddingClient,
+    EmbeddingClientError,
+    EmbeddingRequest,
+    EmbeddingResponse,
 )
 
 
@@ -67,6 +74,42 @@ class _FakePDFParserClient(PDFParserClient):
         if self._should_fail:
             raise PDFParserClientError(self._failure_message)
         return _FakeParsedPDF(raw_text=self._raw_text, page_count=self._page_count)
+
+
+class _FakeEmbeddingClient(EmbeddingClient):
+    def __init__(self, *, should_fail: bool = False) -> None:
+        self._should_fail = should_fail
+
+    @property
+    def name(self) -> str:
+        return "openai"
+
+    def get_capabilities(
+        self,
+        *,
+        model: str,
+        dimensions: int,
+    ) -> EmbeddingCapabilities:
+        return EmbeddingCapabilities(
+            provider="openai",
+            model=model,
+            dimensions=dimensions,
+            max_input_count=2048,
+            max_single_input_tokens=8192,
+            max_aggregate_tokens=300000,
+            tokenizer_model=model,
+        )
+
+    async def embed(self, request: EmbeddingRequest) -> EmbeddingResponse:
+        if self._should_fail:
+            raise EmbeddingClientError("embedding provider unavailable")
+        return EmbeddingResponse(
+            provider="openai",
+            model=request.model or "text-embedding-3-small",
+            embeddings=[[0.1] * 1536 for _ in request.inputs],
+            indices=list(range(len(request.inputs))),
+            token_input=len(request.inputs),
+        )
 
 
 class _FakeURLArticleParserClient(URLArticleParserClient):
@@ -172,6 +215,7 @@ def _build_session_factory():
         engine,
         tables=[
             SourceDocument.__table__,
+            KnowledgeChunk.__table__,
             WorkflowRun.__table__,
             NotionPage.__table__,
             NotionBlock.__table__,
@@ -373,6 +417,7 @@ def test_ingest_document_api_persists_extracted_pdf_text_and_filename() -> None:
     app.dependency_overrides[get_db_session] = _db_override
     app.dependency_overrides[get_db_session_factory] = lambda: session_factory
     app.dependency_overrides[get_tool_registry] = _tool_registry_override
+    app.dependency_overrides[get_embedding_client] = lambda: _FakeEmbeddingClient()
 
     try:
         client = TestClient(app)
@@ -466,6 +511,60 @@ def test_ingest_document_api_returns_pdf_parse_failed() -> None:
             assert workflow_run.workflow_type == "ingestion"
             assert workflow_run.status == "failed"
             assert workflow_run.failure_reason == "PDF_PARSE_FAILED"
+        finally:
+            session.close()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_ingest_document_api_returns_safe_error_when_embedding_fails() -> None:
+    session_factory = _build_session_factory()
+
+    def _db_override():
+        session = session_factory()
+        try:
+            yield session
+        finally:
+            session.close()
+
+    def _tool_registry_override() -> ToolRegistry:
+        return _build_tool_registry_with_pdf_parser(
+            _FakePDFParserClient(raw_text="Searchable PDF text", page_count=1)
+        )
+
+    app.dependency_overrides[get_db_session] = _db_override
+    app.dependency_overrides[get_db_session_factory] = lambda: session_factory
+    app.dependency_overrides[get_tool_registry] = _tool_registry_override
+    app.dependency_overrides[get_embedding_client] = lambda: _FakeEmbeddingClient(
+        should_fail=True
+    )
+
+    try:
+        response = TestClient(app).post(
+            "/api/ingest/document",
+            files={
+                "document": (
+                    "provider-failure.pdf",
+                    b"%PDF-1.4 fake-pdf-content",
+                    "application/pdf",
+                )
+            },
+        )
+
+        assert response.status_code == 502
+        detail = response.json()["detail"]
+        assert detail["error_code"] == "EMBEDDING_PROVIDER_ERROR"
+        assert detail["failure_reason"] == "EMBEDDING_PROVIDER_ERROR"
+        assert detail["workflow_run_id"] is not None
+
+        session: Session = session_factory()
+        try:
+            source_document = session.query(SourceDocument).one()
+            assert source_document.status == "failed"
+            assert session.query(KnowledgeChunk).count() == 0
+            workflow_run = session.get(WorkflowRun, detail["workflow_run_id"])
+            assert workflow_run is not None
+            assert workflow_run.status == "failed"
         finally:
             session.close()
     finally:

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from src.app.config import get_settings
 from src.db.unit_of_work import SqlAlchemyUnitOfWork, UnitOfWorkFactory
 
-DEFAULT_DATABASE_URL = "postgresql+psycopg://learnloop:learnloop@localhost:5432/learnloop"
+DEFAULT_DATABASE_URL = "postgresql+psycopg://knowvia:knowvia@localhost:5433/knowvia"
 SessionFactory = Callable[[], Session]
 
 

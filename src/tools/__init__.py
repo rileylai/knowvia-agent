@@ -1,3 +1,5 @@
+from importlib import import_module
+
 from src.tools.base import Tool
 from src.tools.image_ocr_tool import (
     ImageOCRParserClient,
@@ -36,22 +38,6 @@ from src.tools.notion_api_reader_client import (
     UrllibNotionHTTPTransport,
     normalize_notion_page_id,
 )
-from src.tools.notion_api_writer_client import NotionAPIWriterClient
-from src.tools.notion_writer_tool import (
-    InMemoryAISupplementEntry,
-    InMemoryNotionPageSnapshot,
-    InMemoryNotionWriteOperation,
-    InMemoryNotionWriterClient,
-    NotionAppendRequest,
-    NotionAppendResult,
-    NotionAppendVerificationError,
-    NotionWriterAuthError,
-    NotionWritePolicyViolationError,
-    NotionWriterClient,
-    NotionWriterClientError,
-    NotionWriterPageNotFoundError,
-    NotionWriterTool,
-)
 from src.tools.pdf_parser_tool import (
     PDFParserClient,
     PDFParserClientError,
@@ -65,19 +51,6 @@ from src.tools.registry import (
     ToolNotFoundError,
     ToolRegistry,
     ToolRegistryError,
-)
-from src.tools.telegram_bot_tool import (
-    DisabledTelegramBotClient,
-    InMemoryTelegramBotClient,
-    TelegramBotClient,
-    TelegramBotClientError,
-    TelegramBotFileDownloadError,
-    TelegramBotNotConfiguredError,
-    TelegramBotSendError,
-    TelegramDownloadedFile,
-    TelegramBotTool,
-    TelegramHTTPBotClient,
-    TelegramSentMessage,
 )
 from src.tools.url_article_parser_tool import (
     MAX_URL_REDIRECTS,
@@ -98,6 +71,53 @@ from src.tools.youtube_transcript_tool import (
     YouTubeTranscriptParserClientError,
     YouTubeTranscriptTool,
 )
+
+
+_LEGACY_EXPORTS = {
+    name: (module_name, name)
+    for module_name, names in {
+        "src.tools.notion_api_writer_client": ("NotionAPIWriterClient",),
+        "src.tools.notion_writer_tool": (
+            "InMemoryAISupplementEntry",
+            "InMemoryNotionPageSnapshot",
+            "InMemoryNotionWriteOperation",
+            "InMemoryNotionWriterClient",
+            "NotionAppendRequest",
+            "NotionAppendResult",
+            "NotionAppendVerificationError",
+            "NotionWriterAuthError",
+            "NotionWritePolicyViolationError",
+            "NotionWriterClient",
+            "NotionWriterClientError",
+            "NotionWriterPageNotFoundError",
+            "NotionWriterTool",
+        ),
+        "src.tools.telegram_bot_tool": (
+            "DisabledTelegramBotClient",
+            "InMemoryTelegramBotClient",
+            "TelegramBotClient",
+            "TelegramBotClientError",
+            "TelegramBotFileDownloadError",
+            "TelegramBotNotConfiguredError",
+            "TelegramBotSendError",
+            "TelegramDownloadedFile",
+            "TelegramBotTool",
+            "TelegramHTTPBotClient",
+            "TelegramSentMessage",
+        ),
+    }.items()
+    for name in names
+}
+
+
+def __getattr__(name: str):
+    target = _LEGACY_EXPORTS.get(name)
+    if target is None:
+        raise AttributeError(name)
+    module = import_module(target[0])
+    value = getattr(module, target[1])
+    globals()[name] = value
+    return value
 
 __all__ = [
     "Tool",

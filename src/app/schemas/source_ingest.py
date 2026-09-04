@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from datetime import datetime
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -25,6 +28,18 @@ class SourceDocumentCreateResponse(BaseModel):
     source_type: str
     source_display_name: str
     content_hash: str
+    index_status: Optional[str] = None
+    indexed_chunk_count: int = 0
+    embedded_chunk_count: int = 0
+
+
+class KnowledgeSourceResponse(BaseModel):
+    id: int
+    display_name: str
+    source_kind: str
+    status: str
+    chunk_count: int
+    updated_at: Optional[datetime] = None
 
 
 class URLIngestionRequest(BaseModel):

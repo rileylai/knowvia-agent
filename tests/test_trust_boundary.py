@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from src.app.config import get_settings
-from src.app.main import app
+from src.app.legacy import app
 from src.services import TrustBoundaryError, TrustBoundaryService
 
 

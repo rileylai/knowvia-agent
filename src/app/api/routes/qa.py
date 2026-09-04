@@ -97,6 +97,9 @@ async def run_qa(
                 notion_path=citation.notion_path,
                 page_id=citation.page_id,
                 score=citation.score,
+                source_kind=citation.source_kind,
+                source_display_name=citation.source_display_name,
+                locator=citation.locator,
             )
             for citation in result.citations
         ],

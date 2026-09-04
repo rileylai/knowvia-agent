@@ -21,7 +21,7 @@ if str(_REPO_ROOT) not in sys.path:
 from src.repositories import SyntheticDataRepository  # noqa: E402
 
 DEFAULT_DATABASE_URL = (
-    "postgresql+psycopg://learnloop:learnloop@localhost:5432/learnloop"
+    "postgresql+psycopg://knowvia:knowvia@localhost:5433/knowvia"
 )
 CONFIRMATION_TEXT = "CLEAN_SYNTHETIC_DATA"
 

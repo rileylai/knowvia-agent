@@ -18,7 +18,7 @@ PROMPT_ID_SCREENSHOT_TITLE_REPAIR = "screenshot_title_repair"
 PROMPT_ID_SCREENSHOT_SUMMARY_REPAIR = "screenshot_summary_repair"
 
 _PROMPT_FILE_MAP = {
-    PROMPT_ID_QA_ANSWER: "qa_answer_v2.md",
+    PROMPT_ID_QA_ANSWER: "qa_answer_v3.md",
     PROMPT_ID_SUPPLEMENT_PROPOSAL: "supplement_proposal_v7.md",
     PROMPT_ID_SCREENSHOT_BODY_REPAIR: "screenshot_body_repair_v2.md",
     PROMPT_ID_SCREENSHOT_TITLE_REPAIR: "screenshot_title_repair_v3.md",

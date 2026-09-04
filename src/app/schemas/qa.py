@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 class QARequest(BaseModel):
     query: str = Field(min_length=1, description="User question for RAG QA.")
     top_k: int = Field(
-        default=5,
+        default=10,
         ge=1,
         le=20,
         description="Maximum number of retrieved production chunks.",
@@ -23,7 +23,7 @@ class QARequest(BaseModel):
     )
     source_kinds: Optional[List[str]] = Field(
         default=None,
-        description="Optional source kind filter. Current MVP production QA uses notion only.",
+        description="Optional source kind filter. Supported production kinds are notion and pdf.",
     )
     provider_name: str = Field(
         default="openai",
@@ -38,9 +38,12 @@ class QARequest(BaseModel):
 
 
 class QACitation(BaseModel):
-    notion_path: str
+    notion_path: Optional[str] = None
     page_id: Optional[str] = None
     score: float
+    source_kind: str = "notion"
+    source_display_name: Optional[str] = None
+    locator: Optional[str] = None
 
 
 class QAResponse(BaseModel):

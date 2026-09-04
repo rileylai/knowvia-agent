@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from src.db.base import Base
-from src.db.models import KnowledgeChunk, NotionBlock, NotionPage
+from src.db.models import KnowledgeChunk, NotionBlock, NotionPage, SourceDocument
 from src.rag import ProductionChunkRetriever
 from src.repositories import ChunkRepository
 
@@ -24,7 +24,12 @@ def test_step98_safety_decoy_is_filtered_before_top_k(decoy_kind: str) -> None:
     engine = create_engine("sqlite+pysqlite:///:memory:")
     Base.metadata.create_all(
         engine,
-        tables=[NotionPage.__table__, NotionBlock.__table__, KnowledgeChunk.__table__],
+        tables=[
+            NotionPage.__table__,
+            NotionBlock.__table__,
+            SourceDocument.__table__,
+            KnowledgeChunk.__table__,
+        ],
     )
     session = sessionmaker(bind=engine, autoflush=False, autocommit=False)()
     try:

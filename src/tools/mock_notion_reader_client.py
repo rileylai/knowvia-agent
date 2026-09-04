@@ -15,7 +15,7 @@ from src.tools.notion_reader_tool import (
 )
 
 DEFAULT_MOCK_NOTION_DATA_DIR = (
-    Path(__file__).resolve().parents[2] / "mock_data" / "notion_pages"
+    Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "notion_pages"
 )
 
 

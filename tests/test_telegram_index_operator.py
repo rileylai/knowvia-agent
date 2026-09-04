@@ -11,7 +11,7 @@ from src.app.dependencies import (
     get_telegram_session_store,
     get_tool_registry,
 )
-from src.app.main import app
+from src.app.legacy import app
 from src.db.base import Base
 from src.db.models import (
     KnowledgeChunk,

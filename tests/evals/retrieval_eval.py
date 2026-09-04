@@ -14,7 +14,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from src.db.base import Base
-from src.db.models import KnowledgeChunk, NotionBlock, NotionPage
+from src.db.models import KnowledgeChunk, NotionBlock, NotionPage, SourceDocument
 from src.rag import ProductionChunkRetriever
 from src.repositories import ChunkRepository
 
@@ -107,6 +107,7 @@ def build_synthetic_retrieval_session(
         tables=[
             NotionPage.__table__,
             NotionBlock.__table__,
+            SourceDocument.__table__,
             KnowledgeChunk.__table__,
         ],
     )

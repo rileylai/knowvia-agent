@@ -14,7 +14,7 @@ from src.app.dependencies import (
     get_provider_router,
     get_tool_registry,
 )
-from src.app.main import app
+from src.app.legacy import app
 from src.db.base import Base
 from src.db.models import (
     ChangeRequest,

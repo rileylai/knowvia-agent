@@ -40,6 +40,15 @@ class NotionChunkDraft:
 
 
 @dataclass
+class TextChunkDraft:
+    source_kind: str
+    chunk_index: int
+    chunk_text: str
+    locator: str
+    citation_meta: Dict[str, Any]
+
+
+@dataclass
 class _ChunkAccumulator:
     notion_path: str
     lines: List[str] = field(default_factory=list)
@@ -79,6 +88,61 @@ def chunk_notion_page(
         current.block_ids.append(block.notion_block_id)
 
     _flush_chunk(chunks=chunks, current=current, page=page)
+    return chunks
+
+
+def chunk_text_document(
+    text: str,
+    *,
+    source_kind: str,
+    source_display_name: str,
+    pages: Optional[List[str]] = None,
+    max_chunk_chars: int = 1200,
+) -> List[TextChunkDraft]:
+    """Build bounded, deterministic chunks for any normalized text source."""
+    if max_chunk_chars <= 0:
+        raise ValueError("max_chunk_chars must be positive")
+    if not source_kind.strip():
+        raise ValueError("source_kind must not be empty")
+    if not source_display_name.strip():
+        raise ValueError("source_display_name must not be empty")
+
+    page_values = list(pages or [])
+    chunks: List[TextChunkDraft] = []
+    if page_values:
+        for page_number, page_text in enumerate(page_values, start=1):
+            normalized_page = _normalize_text(page_text)
+            for piece in _split_bounded_text(normalized_page, max_chunk_chars):
+                chunks.append(
+                    TextChunkDraft(
+                        source_kind=source_kind.strip().lower(),
+                        chunk_index=len(chunks),
+                        chunk_text=piece,
+                        locator=f"page {page_number}",
+                        citation_meta={
+                            "source_kind": source_kind.strip().lower(),
+                            "source_display_name": source_display_name.strip(),
+                            "locator": f"page {page_number}",
+                        },
+                    )
+                )
+    else:
+        normalized_text = _normalize_text(text)
+        for piece in _split_bounded_text(normalized_text, max_chunk_chars):
+            locator = f"chunk {len(chunks) + 1}"
+            chunks.append(
+                TextChunkDraft(
+                    source_kind=source_kind.strip().lower(),
+                    chunk_index=len(chunks),
+                    chunk_text=piece,
+                    locator=locator,
+                    citation_meta={
+                        "source_kind": source_kind.strip().lower(),
+                        "source_display_name": source_display_name.strip(),
+                        "locator": locator,
+                    },
+                )
+            )
     return chunks
 
 
@@ -122,6 +186,37 @@ def _flush_chunk(
 
 def _normalize_text(text: str) -> str:
     return " ".join(text.split())
+
+
+def _split_bounded_text(text: str, max_chunk_chars: int) -> List[str]:
+    normalized_text = text.strip()
+    if not normalized_text:
+        return []
+    if len(normalized_text) <= max_chunk_chars:
+        return [normalized_text]
+
+    words = normalized_text.split(" ")
+    pieces: List[str] = []
+    current: List[str] = []
+    current_length = 0
+    for word in words:
+        if current and current_length + 1 + len(word) > max_chunk_chars:
+            pieces.append(" ".join(current))
+            current = []
+            current_length = 0
+        if len(word) > max_chunk_chars:
+            if current:
+                pieces.append(" ".join(current))
+                current = []
+                current_length = 0
+            for start in range(0, len(word), max_chunk_chars):
+                pieces.append(word[start : start + max_chunk_chars])
+            continue
+        current.append(word)
+        current_length += len(word) if len(current) == 1 else 1 + len(word)
+    if current:
+        pieces.append(" ".join(current))
+    return pieces
 
 
 def _normalize_path(path: str) -> str:

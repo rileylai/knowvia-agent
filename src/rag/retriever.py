@@ -29,6 +29,10 @@ class RetrievedChunk:
     notion_page_id: Optional[str]
     source_kind: str
     score: float
+    source_document_id: Optional[int] = None
+    source_display_name: Optional[str] = None
+    locator: Optional[str] = None
+    citation_metadata: Optional[str] = None
 
 
 @dataclass
@@ -187,6 +191,10 @@ class ProductionChunkRetriever:
                     notion_page_id=candidate.notion_page_id,
                     source_kind=candidate.source_kind,
                     score=score,
+                    source_document_id=candidate.source_document_id,
+                    source_display_name=candidate.source_display_name,
+                    locator=candidate.locator,
+                    citation_metadata=candidate.citation_metadata,
                 )
             )
 
@@ -206,6 +214,10 @@ class ProductionChunkRetriever:
             notion_page_id=match.notion_page_id,
             source_kind=match.source_kind,
             score=match.score,
+            source_document_id=match.source_document_id,
+            source_display_name=match.source_display_name,
+            locator=match.locator,
+            citation_metadata=match.citation_metadata,
         )
 
     def _score_lexical(

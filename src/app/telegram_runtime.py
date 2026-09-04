@@ -88,6 +88,7 @@ def build_telegram_gateway_orchestrator(
             tool_registry=tool_registry,
             unit_of_work_factory=unit_of_work_factory,
             workflow_run_service=workflow_run_service,
+            index_knowledge=False,
         ),
         image_ocr_ingestion_orchestrator=ImageOCRIngestionOrchestrator(
             tool_registry=tool_registry,

@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from src.db.base import Base
-from src.db.models import KnowledgeChunk, NotionBlock, NotionPage
+from src.db.models import KnowledgeChunk, NotionBlock, NotionPage, SourceDocument
 from src.orchestrators.notion_page_index_orchestrator import (
     NotionPageIndexOrchestrator,
     PreparedNotionPageSnapshot,
@@ -36,7 +36,12 @@ def _build_session_factory(tmp_path: Path):
     engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'synthetic.db'}")
     Base.metadata.create_all(
         engine,
-        tables=[NotionPage.__table__, NotionBlock.__table__, KnowledgeChunk.__table__],
+        tables=[
+            NotionPage.__table__,
+            NotionBlock.__table__,
+            SourceDocument.__table__,
+            KnowledgeChunk.__table__,
+        ],
     )
     return engine, sessionmaker(bind=engine, autoflush=False, autocommit=False)
 

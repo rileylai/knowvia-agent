@@ -68,7 +68,16 @@ class SourceDocument(Base):
     source_type: Mapped[str] = mapped_column(String(64), nullable=False)
     source_display_name: Mapped[str] = mapped_column(String(512), nullable=False)
     content_hash: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    file_hash: Mapped[Optional[str]] = mapped_column(
+        String(64), nullable=True, index=True
+    )
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
+    owner_scope: Mapped[str] = mapped_column(
+        String(128), nullable=False, server_default="local", index=True
+    )
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, server_default="parsed", index=True
+    )
     created_at: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -104,6 +113,23 @@ class KnowledgeChunk(Base):
     )
     embedding_text: Mapped[str] = mapped_column(Text, nullable=True)
     source_kind: Mapped[str] = mapped_column(String(32), nullable=False)
+    source_display_name: Mapped[Optional[str]] = mapped_column(
+        String(512), nullable=True
+    )
+    locator: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
+    citation_metadata: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    embedding_model: Mapped[Optional[str]] = mapped_column(
+        String(128), nullable=True
+    )
+    embedding_dimensions: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True
+    )
+    owner_scope: Mapped[str] = mapped_column(
+        String(128), nullable=False, server_default="local", index=True
+    )
+    eligibility_status: Mapped[str] = mapped_column(
+        String(32), nullable=False, server_default="eligible", index=True
+    )
     created_at: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

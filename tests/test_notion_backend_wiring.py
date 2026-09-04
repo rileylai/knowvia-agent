@@ -9,10 +9,8 @@ from src.app.config import (
 )
 from src.app.dependencies import get_tool_registry
 from src.tools import (
-    InMemoryNotionWriterClient,
     JSONMockNotionReaderClient,
     NotionAPIReaderClient,
-    NotionAPIWriterClient,
 )
 
 
@@ -28,7 +26,7 @@ def _isolate_dependency_caches():
     _clear_caches()
 
 
-def test_notion_backend_defaults_to_mock(monkeypatch) -> None:
+def test_notion_backend_defaults_to_mock_reader(monkeypatch) -> None:
     monkeypatch.delenv("NOTION_BACKEND", raising=False)
     monkeypatch.delenv("NOTION_TOKEN", raising=False)
     _clear_caches()
@@ -36,13 +34,10 @@ def test_notion_backend_defaults_to_mock(monkeypatch) -> None:
     registry = get_tool_registry()
 
     reader = registry.get_tool("notion_reader")._notion_reader_client
-    writer = registry.get_tool("notion_writer")._notion_writer_client
     assert isinstance(reader, JSONMockNotionReaderClient)
-    assert isinstance(writer, InMemoryNotionWriterClient)
-    assert set(writer._pages) == {page.page_id for page in reader.list_pages()}
 
 
-def test_live_backend_uses_api_reader_and_writer(monkeypatch) -> None:
+def test_live_backend_uses_api_reader_only(monkeypatch) -> None:
     monkeypatch.setenv("NOTION_BACKEND", "live")
     monkeypatch.setenv("NOTION_TOKEN", "placeholder-token")
     monkeypatch.setenv("NOTION_REQUEST_TIMEOUT_SECONDS", "45")
@@ -54,9 +49,7 @@ def test_live_backend_uses_api_reader_and_writer(monkeypatch) -> None:
     registry = get_tool_registry()
 
     reader = registry.get_tool("notion_reader")._notion_reader_client
-    writer = registry.get_tool("notion_writer")._notion_writer_client
     assert isinstance(reader, NotionAPIReaderClient)
-    assert isinstance(writer, NotionAPIWriterClient)
     assert reader._transport._timeout_seconds == 45
     assert reader._max_attempts == 4
     assert reader._retry_base_seconds == 2

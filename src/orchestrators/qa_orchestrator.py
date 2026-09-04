@@ -36,6 +36,22 @@ from src.services import (
 INSUFFICIENT_INFO_ANSWER = (
     "I do not have enough information in production notes to answer safely."
 )
+INSUFFICIENT_INFO_SENTINEL = "INSUFFICIENT_INFO"
+_LEGACY_INSUFFICIENT_ANSWER_PREFIXES = (
+    "the context does not contain sufficient information",
+    "the provided context does not contain sufficient information",
+    "the provided context is insufficient",
+    "there is not enough information in the provided context",
+)
+
+
+def _answer_indicates_insufficient_info(answer_text: str) -> bool:
+    normalized = " ".join(answer_text.casefold().split()).strip(" .!`\"")
+    if normalized == INSUFFICIENT_INFO_SENTINEL.casefold():
+        return True
+    return normalized.startswith(_LEGACY_INSUFFICIENT_ANSWER_PREFIXES)
+
+
 DEFAULT_QA_TOP_K = 5
 DEFAULT_QA_PROVIDER_NAME = "openai"
 DEFAULT_QA_MODEL = "gpt-4o-mini"
@@ -48,6 +64,9 @@ class QACitationResult:
     notion_path: str
     page_id: Optional[str]
     score: float
+    source_kind: str = "notion"
+    source_display_name: Optional[str] = None
+    locator: Optional[str] = None
 
 
 @dataclass
@@ -282,13 +301,19 @@ class QAOrchestrator:
                     failure_reason="LLM_OUTPUT_INVALID",
                 )
 
+            insufficient_info = _answer_indicates_insufficient_info(answer_text)
+            response_answer = (
+                INSUFFICIENT_INFO_ANSWER if insufficient_info else answer_text
+            )
+            response_citations = [] if insufficient_info else citations
+
             self._workflow_run_service.mark_workflow_succeeded(
                 workflow_run.id,
                 metadata_json=json.dumps(
                     self._build_workflow_metadata(
-                        insufficient_info=False,
+                        insufficient_info=insufficient_info,
                         retrieved_chunk_count=len(retrieved_chunks),
-                        citation_count=len(citations),
+                        citation_count=len(response_citations),
                         provider_name=normalized_provider_name,
                         model=normalized_model,
                         prompt_id=prompt_id,
@@ -306,10 +331,10 @@ class QAOrchestrator:
             return QAResult(
                 workflow_run_id=workflow_run.id,
                 status="succeeded",
-                answer=answer_text,
-                insufficient_info=False,
+                answer=response_answer,
+                insufficient_info=insufficient_info,
                 retrieved_chunk_count=len(retrieved_chunks),
-                citations=citations,
+                citations=response_citations,
                 provider=llm_response.provider,
                 model=llm_response.model,
                 token_input=llm_response.token_input,
@@ -509,24 +534,41 @@ class QAOrchestrator:
     def _build_context_text(self, retrieved_chunks: List[RetrievedChunk]) -> str:
         context_lines = []
         for idx, chunk in enumerate(retrieved_chunks, start=1):
+            source_display_name = (
+                chunk.source_display_name or chunk.notion_path or "unknown source"
+            )
+            locator = chunk.locator or chunk.notion_path or f"chunk {chunk.chunk_index + 1}"
             context_lines.append(
-                f"[C{idx}] path={chunk.notion_path} score={chunk.score:.4f}\n{chunk.chunk_text}"
+                f"[C{idx}] source_kind={chunk.source_kind} "
+                f"source={source_display_name} locator={locator} "
+                f"score={chunk.score:.4f}\n{chunk.chunk_text}"
             )
         return "\n\n".join(context_lines)
 
     def _build_citations(self, retrieved_chunks: List[RetrievedChunk]) -> List[QACitationResult]:
         citations: List[QACitationResult] = []
-        seen_paths = set()
+        seen_citations = set()
         for chunk in retrieved_chunks:
-            path = chunk.notion_path.strip()
-            if not path or path in seen_paths:
+            legacy_path = chunk.notion_path.strip()
+            source_kind = chunk.source_kind.strip().lower() or "notion"
+            source_display_name = (
+                chunk.source_display_name or legacy_path or "unknown source"
+            ).strip()
+            locator = (
+                chunk.locator or legacy_path or f"chunk {chunk.chunk_index + 1}"
+            ).strip()
+            citation_key = (source_kind, source_display_name, locator)
+            if not source_display_name or not locator or citation_key in seen_citations:
                 continue
-            seen_paths.add(path)
+            seen_citations.add(citation_key)
             citations.append(
                 QACitationResult(
-                    notion_path=path,
+                    notion_path=legacy_path,
                     page_id=chunk.notion_page_id,
                     score=round(chunk.score, 6),
+                    source_kind=source_kind,
+                    source_display_name=source_display_name,
+                    locator=locator,
                 )
             )
         return citations

@@ -9,8 +9,6 @@ from src.app.api import (
     ops_router,
     qa_router,
     source_ingest_router,
-    supplement_router,
-    telegram_router,
 )
 from src.app.config import get_settings
 from src.app.api_idempotency import api_idempotency_middleware
@@ -21,9 +19,9 @@ from src.services import ApiIdempotencyService, WorkflowRunAuditUpdateError
 
 settings = get_settings()
 configure_logging(settings.log_level)
-request_logger = get_logger("learnloop.request")
+request_logger = get_logger("knowvia.request")
 
-app = FastAPI(title="LearnLoop Agent")
+app = FastAPI(title="Knowvia Agent")
 app.state.api_idempotency_service = ApiIdempotencyService(get_db_session_factory())
 protected_api_dependency = [Depends(require_api_bearer_token)]
 
@@ -31,8 +29,6 @@ app.include_router(notion_index_router, dependencies=protected_api_dependency)
 app.include_router(ops_router)
 app.include_router(qa_router, dependencies=protected_api_dependency)
 app.include_router(source_ingest_router, dependencies=protected_api_dependency)
-app.include_router(supplement_router, dependencies=protected_api_dependency)
-app.include_router(telegram_router)
 app.middleware("http")(api_idempotency_middleware)
 
 

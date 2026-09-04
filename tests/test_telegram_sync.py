@@ -11,7 +11,7 @@ from src.app.dependencies import (
     get_telegram_sync_session_store,
     get_tool_registry,
 )
-from src.app.main import app
+from src.app.legacy import app
 from src.db.base import Base
 from src.db.models import KnowledgeChunk, NotionBlock, NotionPage, TelegramUpdateLedger, WorkflowRun
 from src.db.session import get_db_session, get_db_session_factory, get_unit_of_work_factory

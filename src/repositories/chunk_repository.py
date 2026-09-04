@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import Float, Text, bindparam, cast, func, or_
+from sqlalchemy import Float, Text, and_, bindparam, cast, func, or_
 from sqlalchemy.orm import Session
 
-from src.db.models import KnowledgeChunk, NotionBlock, NotionPage
+from src.db.models import KnowledgeChunk, NotionBlock, NotionPage, SourceDocument
 from src.policies.synthetic_data import SYNTHETIC_NOTION_PAGE_IDS
 
 
@@ -34,6 +34,22 @@ class NotionChunkUpsert:
 
 
 @dataclass
+class KnowledgeChunkUpsert:
+    source_document_id: int
+    source_kind: str
+    chunk_index: int
+    chunk_text: str
+    source_display_name: str
+    locator: str
+    embedding: List[float]
+    embedding_model: str
+    embedding_dimensions: int
+    citation_metadata: Dict[str, Any] = field(default_factory=dict)
+    owner_scope: str = "local"
+    eligibility_status: str = "eligible"
+
+
+@dataclass
 class RetrievalChunkCandidate:
     chunk_id: int
     chunk_index: int
@@ -42,6 +58,10 @@ class RetrievalChunkCandidate:
     source_kind: str
     notion_page_id: Optional[str]
     embedding_text: Optional[str]
+    source_document_id: Optional[int] = None
+    source_display_name: Optional[str] = None
+    locator: Optional[str] = None
+    citation_metadata: Optional[str] = None
 
 
 @dataclass
@@ -53,6 +73,10 @@ class SemanticChunkMatch:
     source_kind: str
     notion_page_id: Optional[str]
     score: float
+    source_document_id: Optional[int] = None
+    source_display_name: Optional[str] = None
+    locator: Optional[str] = None
+    citation_metadata: Optional[str] = None
 
 
 class ChunkRepository:
@@ -144,6 +168,71 @@ class ChunkRepository:
         self._session.flush()
         return int(deleted_count or 0)
 
+    def upsert_source_document_chunks(
+        self,
+        *,
+        source_document_id: int,
+        chunks: List[KnowledgeChunkUpsert],
+    ) -> List[KnowledgeChunk]:
+        source_document = self._session.get(SourceDocument, source_document_id)
+        if source_document is None:
+            raise ChunkRepositoryError(
+                f"SourceDocument not found: {source_document_id}"
+            )
+
+        ordered_chunks = sorted(chunks, key=lambda item: item.chunk_index)
+        for chunk in ordered_chunks:
+            if chunk.source_kind not in {"pdf", "notion"}:
+                raise ChunkRepositoryError(
+                    f"Unsupported source_kind for source document: {chunk.source_kind}"
+                )
+            if chunk.source_document_id != source_document_id:
+                raise ChunkRepositoryError(
+                    "Knowledge chunk source_document_id does not match the target"
+                )
+            if chunk.eligibility_status != "eligible":
+                raise ChunkRepositoryError(
+                    "Source document chunks must be eligible only after complete indexing"
+                )
+            if len(chunk.embedding) != chunk.embedding_dimensions:
+                raise ChunkRepositoryError("Embedding dimensions do not match vector")
+
+        existing_chunks = self._session.query(KnowledgeChunk).filter(
+            KnowledgeChunk.source_document_id == source_document_id
+        )
+        existing_chunks.delete(synchronize_session=False)
+        self._session.flush()
+
+        inserted: List[KnowledgeChunk] = []
+        for chunk in ordered_chunks:
+            knowledge_chunk = KnowledgeChunk(
+                source_document_id=source_document_id,
+                notion_block_id=None,
+                chunk_index=chunk.chunk_index,
+                chunk_text=chunk.chunk_text,
+                notion_path=None,
+                embedding=chunk.embedding,
+                embedding_text=self._serialize_embedding(chunk.embedding),
+                source_kind=chunk.source_kind,
+                source_display_name=chunk.source_display_name,
+                locator=chunk.locator,
+                citation_metadata=json.dumps(chunk.citation_metadata, sort_keys=True),
+                embedding_model=chunk.embedding_model,
+                embedding_dimensions=chunk.embedding_dimensions,
+                owner_scope=chunk.owner_scope,
+                eligibility_status=chunk.eligibility_status,
+            )
+            if self._session.bind is not None and self._session.bind.dialect.name == "sqlite":
+                knowledge_chunk.id = self._allocate_chunk_id_for_sqlite()
+            self._session.add(knowledge_chunk)
+            self._session.flush()
+            inserted.append(knowledge_chunk)
+
+        self._session.flush()
+        for chunk in inserted:
+            self._session.refresh(chunk)
+        return inserted
+
     def list_production_chunks(
         self,
         *,
@@ -171,11 +260,18 @@ class ChunkRepository:
                 KnowledgeChunk.source_kind,
                 KnowledgeChunk.embedding_text,
                 NotionPage.notion_page_id,
+                KnowledgeChunk.source_document_id,
+                KnowledgeChunk.source_display_name,
+                KnowledgeChunk.locator,
+                KnowledgeChunk.citation_metadata,
+                SourceDocument.source_display_name.label("document_display_name"),
             )
             .outerjoin(NotionBlock, KnowledgeChunk.notion_block_id == NotionBlock.id)
             .outerjoin(NotionPage, NotionBlock.notion_page_id == NotionPage.id)
+            .outerjoin(SourceDocument, KnowledgeChunk.source_document_id == SourceDocument.id)
             .filter(KnowledgeChunk.source_kind.in_(effective_source_kinds))
         )
+        query = self._apply_eligibility_filter(query)
         query = self._exclude_known_synthetic_pages(query)
         query = self._apply_page_filter(
             query=query,
@@ -196,6 +292,14 @@ class ChunkRepository:
                 source_kind=row.source_kind,
                 notion_page_id=row.notion_page_id,
                 embedding_text=row.embedding_text,
+                source_document_id=row.source_document_id,
+                source_display_name=(
+                    row.source_display_name
+                    or row.document_display_name
+                    or row.notion_path
+                ),
+                locator=row.locator or row.notion_path,
+                citation_metadata=row.citation_metadata,
             )
             for row in rows
         ]
@@ -252,14 +356,21 @@ class ChunkRepository:
                 KnowledgeChunk.source_kind,
                 NotionPage.notion_page_id,
                 vector_distance.label("vector_distance"),
+                KnowledgeChunk.source_document_id,
+                KnowledgeChunk.source_display_name,
+                KnowledgeChunk.locator,
+                KnowledgeChunk.citation_metadata,
+                SourceDocument.source_display_name.label("document_display_name"),
             )
             .outerjoin(NotionBlock, KnowledgeChunk.notion_block_id == NotionBlock.id)
             .outerjoin(NotionPage, NotionBlock.notion_page_id == NotionPage.id)
+            .outerjoin(SourceDocument, KnowledgeChunk.source_document_id == SourceDocument.id)
             .filter(
                 KnowledgeChunk.source_kind.in_(effective_source_kinds),
                 KnowledgeChunk.embedding.is_not(None),
             )
         )
+        query = self._apply_eligibility_filter(query)
         query = self._exclude_known_synthetic_pages(query)
         query = self._apply_page_filter(
             query=query,
@@ -290,6 +401,14 @@ class ChunkRepository:
                 source_kind=row.source_kind,
                 notion_page_id=row.notion_page_id,
                 score=max(0.0, min(1.0, 1.0 - float(row.vector_distance))),
+                source_document_id=row.source_document_id,
+                source_display_name=(
+                    row.source_display_name
+                    or row.document_display_name
+                    or row.notion_path
+                ),
+                locator=row.locator or row.notion_path,
+                citation_metadata=row.citation_metadata,
             )
             for row in rows
         ]
@@ -323,10 +442,24 @@ class ChunkRepository:
         self,
         normalized_source_kinds: List[str],
     ) -> List[str]:
-        # Current production RAG in MVP reads from indexed Notion chunks only.
         return [
-            source_kind for source_kind in normalized_source_kinds if source_kind == "notion"
+            source_kind
+            for source_kind in normalized_source_kinds
+            if source_kind in {"notion", "pdf"}
         ]
+
+    def _apply_eligibility_filter(self, query):
+        return query.filter(
+            KnowledgeChunk.eligibility_status == "eligible",
+            or_(
+                KnowledgeChunk.source_kind == "notion",
+                and_(
+                    KnowledgeChunk.source_kind == "pdf",
+                    SourceDocument.source_type == "pdf",
+                    SourceDocument.status == "indexed",
+                ),
+            ),
+        )
 
     def _apply_page_filter(
         self,
@@ -383,7 +516,7 @@ class ChunkRepository:
 
     def _normalize_source_kinds(self, source_kinds: Optional[List[str]]) -> List[str]:
         if source_kinds is None:
-            return ["notion"]
+            return ["notion", "pdf"]
         normalized = []
         seen = set()
         for source_kind in source_kinds:

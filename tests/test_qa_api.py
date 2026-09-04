@@ -8,10 +8,16 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from src.app.dependencies import get_provider_router
+from src.app.dependencies import get_embedding_client, get_provider_router
 from src.app.main import app
 from src.db.base import Base
-from src.db.models import KnowledgeChunk, NotionBlock, NotionPage, WorkflowRun
+from src.db.models import (
+    KnowledgeChunk,
+    NotionBlock,
+    NotionPage,
+    SourceDocument,
+    WorkflowRun,
+)
 from src.db.session import get_db_session, get_db_session_factory
 from src.providers import (
     LLMClientError,
@@ -48,6 +54,22 @@ class FailingProvider(LLMProvider):
         raise LLMClientError("upstream timeout")
 
 
+class InsufficientContextProvider(LLMProvider):
+    @property
+    def name(self) -> str:
+        return "openai"
+
+    async def generate(self, request: LLMRequest) -> LLMResponse:
+        _ = request
+        return LLMResponse(
+            provider="openai",
+            model="gpt-4o-mini",
+            output_text="INSUFFICIENT_INFO",
+            token_input=20,
+            token_output=2,
+        )
+
+
 def _build_session_factory():
     engine = create_engine(
         "sqlite+pysqlite://",
@@ -59,6 +81,7 @@ def _build_session_factory():
         tables=[
             NotionPage.__table__,
             NotionBlock.__table__,
+            SourceDocument.__table__,
             KnowledgeChunk.__table__,
             WorkflowRun.__table__,
         ],
@@ -126,6 +149,43 @@ def _seed_chunks(session: Session) -> None:
     session.commit()
 
 
+def _seed_pdf_chunks(session: Session, *, chunk_count: int = 12) -> None:
+    source_document = SourceDocument(
+        id=1,
+        source_type="pdf",
+        source_display_name="agent-design-patterns.pdf",
+        raw_text="Agent design pattern evidence",
+        content_hash="pdf-design-patterns-hash",
+        owner_scope="local",
+        status="indexed",
+    )
+    session.add(source_document)
+    session.flush()
+    session.add_all(
+        [
+            KnowledgeChunk(
+                id=index + 1,
+                source_document_id=source_document.id,
+                notion_block_id=None,
+                chunk_index=index,
+                chunk_text=(
+                    f"Agent design pattern evidence item {index + 1} "
+                    "describes a bounded system."
+                ),
+                notion_path=None,
+                embedding=None,
+                embedding_text=None,
+                source_kind="pdf",
+                source_display_name="agent-design-patterns.pdf",
+                locator=f"page {index + 1}",
+                eligibility_status="eligible",
+            )
+            for index in range(chunk_count)
+        ]
+    )
+    session.commit()
+
+
 def test_qa_api_returns_grounded_answer_with_citations() -> None:
     session_factory = _build_session_factory()
     seed_session = session_factory()
@@ -184,7 +244,7 @@ def test_qa_api_returns_grounded_answer_with_citations() -> None:
             assert metadata["provider_name"] == "openai"
             assert metadata["model"] == "gpt-4o-mini"
             assert metadata["prompt_id"] == "qa_answer"
-            assert metadata["prompt_version"] == "qa_answer_v2"
+            assert metadata["prompt_version"] == "qa_answer_v3"
             assert metadata["retrieval_mode"] == "lexical_fallback"
             assert (
                 metadata["retrieval_fallback_reason"]
@@ -193,6 +253,53 @@ def test_qa_api_returns_grounded_answer_with_citations() -> None:
             assert metadata["estimated_cost"] == pytest.approx(0.00000975)
         finally:
             verify_session.close()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_qa_api_default_top_k_covers_pdf_enumeration_context() -> None:
+    session_factory = _build_session_factory()
+    seed_session = session_factory()
+    try:
+        _seed_pdf_chunks(seed_session)
+    finally:
+        seed_session.close()
+
+    def _db_override():
+        session = session_factory()
+        try:
+            yield session
+        finally:
+            session.close()
+
+    def _provider_router_override() -> ProviderRouter:
+        router = ProviderRouter()
+        router.register_provider(FakeProvider())
+        return router
+
+    app.dependency_overrides[get_db_session] = _db_override
+    app.dependency_overrides[get_db_session_factory] = lambda: session_factory
+    app.dependency_overrides[get_embedding_client] = lambda: None
+    app.dependency_overrides[get_provider_router] = _provider_router_override
+
+    try:
+        client = TestClient(app)
+        response = client.post(
+            "/api/qa",
+            json={
+                "query": "What design patterns are described in this PDF?",
+                "source_kinds": ["pdf"],
+                "provider_name": "openai",
+                "model": "gpt-4o-mini",
+            },
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["insufficient_info"] is False
+        assert payload["retrieved_chunk_count"] == 10
+        assert len(payload["citations"]) == 10
+        assert {citation["source_kind"] for citation in payload["citations"]} == {"pdf"}
     finally:
         app.dependency_overrides.clear()
 
@@ -260,6 +367,51 @@ def test_qa_api_returns_insufficient_info_when_no_retrieval_match() -> None:
         app.dependency_overrides.clear()
 
 
+def test_qa_api_returns_zero_citations_when_provider_rejects_retrieved_context() -> None:
+    session_factory = _build_session_factory()
+    seed_session = session_factory()
+    try:
+        _seed_chunks(seed_session)
+    finally:
+        seed_session.close()
+
+    def _db_override():
+        session = session_factory()
+        try:
+            yield session
+        finally:
+            session.close()
+
+    def _provider_router_override() -> ProviderRouter:
+        router = ProviderRouter()
+        router.register_provider(InsufficientContextProvider())
+        return router
+
+    app.dependency_overrides[get_db_session] = _db_override
+    app.dependency_overrides[get_db_session_factory] = lambda: session_factory
+    app.dependency_overrides[get_provider_router] = _provider_router_override
+
+    try:
+        client = TestClient(app)
+        response = client.post(
+            "/api/qa",
+            json={
+                "query": "Explain attention in week5 notes",
+                "top_k": 3,
+                "provider_name": "openai",
+                "model": "gpt-4o-mini",
+            },
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["insufficient_info"] is True
+        assert payload["citations"] == []
+        assert payload["retrieved_chunk_count"] >= 1
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_qa_api_returns_provider_not_found_when_provider_missing() -> None:
     session_factory = _build_session_factory()
     seed_session = session_factory()
@@ -311,7 +463,7 @@ def test_qa_api_returns_provider_not_found_when_provider_missing() -> None:
             assert metadata["provider_name"] == "openai"
             assert metadata["model"] == "gpt-4o-mini"
             assert metadata["prompt_id"] == "qa_answer"
-            assert metadata["prompt_version"] == "qa_answer_v2"
+            assert metadata["prompt_version"] == "qa_answer_v3"
             assert metadata["estimated_cost"] is None
         finally:
             verify_session.close()
@@ -372,7 +524,7 @@ def test_qa_api_returns_llm_provider_error_when_provider_request_fails() -> None
             assert metadata["provider_name"] == "openai"
             assert metadata["model"] == "gpt-4o-mini"
             assert metadata["prompt_id"] == "qa_answer"
-            assert metadata["prompt_version"] == "qa_answer_v2"
+            assert metadata["prompt_version"] == "qa_answer_v3"
             assert metadata["estimated_cost"] is None
         finally:
             verify_session.close()
