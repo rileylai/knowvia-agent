@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from dataclasses import dataclass
+from types import SimpleNamespace
 from typing import Any, Dict, Iterable, Mapping
 
 from src.tools import (
@@ -96,6 +98,55 @@ def test_url_article_parser_tool_returns_extracted_text() -> None:
     assert result.structured_content["url"] == "https://example.com/article"
     assert result.structured_content["raw_text"] == "Attention is all you need"
     assert result.structured_content["char_count"] == len("Attention is all you need")
+
+
+def test_trafilatura_parser_preserves_final_url_and_html_title(monkeypatch) -> None:
+    monkeypatch.setitem(
+        sys.modules,
+        "trafilatura",
+        SimpleNamespace(extract=lambda html: "Extracted article body"),
+    )
+    transport = _FakeHTTPTransport(
+        {
+            "https://public.example/start": _FakeHTTPResponse(
+                status=302,
+                headers={"Location": "/guide"},
+            ),
+            "https://public.example/guide": _FakeHTTPResponse(
+                headers={"Content-Type": "text/html"},
+                body=b"<html><head><title> Bounded Agents Guide </title></head></html>",
+            ),
+        }
+    )
+    client = TrafilaturaURLArticleParserClient(
+        http_transport=transport,
+        safety_policy=URLSafetyPolicy(dns_resolver=_resolver(["93.184.216.34"])),
+    )
+
+    parsed = client.parse_article(url="https://public.example/start")
+
+    assert parsed.url == "https://public.example/guide"
+    assert parsed.title == "Bounded Agents Guide"
+    assert parsed.raw_text == "Extracted article body"
+
+
+def test_url_parser_accepts_plain_text_responses() -> None:
+    transport = _FakeHTTPTransport(
+        {
+            "https://public.example/plain": _FakeHTTPResponse(
+                headers={"Content-Type": "text/plain; charset=utf-8"},
+                body=b"Plain text article about agents.",
+            )
+        }
+    )
+    client = TrafilaturaURLArticleParserClient(
+        http_transport=transport,
+        safety_policy=URLSafetyPolicy(dns_resolver=_resolver(["93.184.216.34"])),
+    )
+
+    parsed = client.parse_article(url="https://public.example/plain")
+
+    assert parsed.raw_text == "Plain text article about agents."
 
 
 def test_url_article_parser_tool_rejects_non_http_url() -> None:

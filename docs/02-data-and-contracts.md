@@ -53,6 +53,8 @@ source_type
 source_display_name
 raw_text_or_normalized_text
 content_hash
+requested_url: optional
+final_url: optional
 parser_name
 parser_version
 source_metadata
@@ -60,9 +62,11 @@ created_at
 updated_at
 ```
 
-目前 repository 的 PDF ingestion 會先建立 `SourceDocument`，再以它作為 snapshot
+目前 repository 的 PDF 與 URL ingestion 會先建立 `SourceDocument`，再以它作為 snapshot
 boundary 產生 generic `KnowledgeChunk`。`owner_scope` 與 `status` 由 backend 維護；
-本輪 local PDF 使用 `owner_scope=local`，完整 indexing 才會進入 `indexed` 狀態。
+本輪 local PDF 與 URL 使用 `owner_scope=local`，完整 indexing 才會進入 `indexed`
+狀態。URL snapshot 另外保存 `requested_url` 與 redirect 後的 `final_url`，用於
+dedup、inventory 與 citation provenance。
 
 ## `KnowledgeChunk`
 
@@ -92,7 +96,7 @@ updated_at
 
 目前 code 的 `knowledge_chunks` 同時保留 Notion block/page 連結與 PDF
 `source_document_id`，並共用向量、embedding identity、provenance、owner scope 與
-eligibility 欄位。Repository 允許 `notion` 與 `pdf`；PDF 只有在其
+eligibility 欄位。Repository 允許 `notion`、`pdf` 與 `url`；PDF 與 URL 只有在其
 `SourceDocument.status=indexed` 且 chunk eligibility 為 `eligible` 時可被 retrieval
 使用。`KnowledgeSource` table 仍是 conceptual entity，本輪沒有為它建立大型新
 schema。
@@ -173,13 +177,15 @@ source_document_id: optional
 source_display_name
 locator
 score: optional
+source_url: optional
 ```
 
 Citation 由 backend 從 retrieved chunk metadata 組出。LLM 只能使用提供的
 evidence，不能自行建立 citation。
 
 PDF citation 的 `locator` 使用 parser 實際提供的 `page N`；若沒有 page metadata，
-backend 使用 deterministic `chunk N`，不虛構頁碼。
+backend 使用 deterministic `chunk N`，不虛構頁碼。URL citation 由 chunk metadata
+帶出 validated 的 `final_url`，並保留 requested URL 供 provenance 查核。
 
 Memory 只能以 `Used saved memory` 等明確標記呈現，不能填入 enterprise document
 citation 欄位。

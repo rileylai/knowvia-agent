@@ -46,7 +46,7 @@ flowchart LR
 | Source ingestion | `EXISTING` / `MODIFY` | 現有 parser/persist；補 generic chunk/index |
 | Notion sync | `EXISTING` | deterministic page listing、sync、chunk、embed、index |
 | Knowledge Layer | `MODIFY` | 統一 `KnowledgeSource`、`SourceDocument`、`KnowledgeChunk` |
-| Retrieval Service | `EXISTING` / `MODIFY` | 現有 Notion-only pgvector 與 lexical fallback；擴充 source eligibility |
+| Retrieval Service | `EXISTING` / `MODIFY` | 共用 Notion、PDF、URL 的 pgvector 與 lexical fallback；套用 source eligibility |
 | Conversation State | `NEW` | session、message、short-term context budget |
 | Context Assembly | `NEW` | 組合 knowledge evidence、memory 與 conversation context |
 | Memory Service | `NEW` | explicit save、owner scope、semantic retrieval |
@@ -73,10 +73,10 @@ Source adapter
   -> retrieval index
 ```
 
-目前 code 的 PDF、Image/OCR、URL、YouTube 與 chat text flow 在
-`SourceDocument` 後停止。Notion flow 已完成 chunk、embedding 與 indexing，
-但資料模型與 retriever 仍帶有 Notion-specific assumptions。Generic pipeline
-是下一個 implementation slice。
+目前 code 的 PDF 與 URL flow 都會經過 `SourceDocument`、共用 chunk、embedding
+與 retrieval eligibility。Notion flow 也已完成 chunk、embedding 與 indexing；
+Image/OCR、YouTube 與 chat text 仍在 `SourceDocument` 後停止。URL 仍使用既有
+parser adapter，不建立 source-specific chunk 或 retrieval contract。
 
 ## Notion boundary
 

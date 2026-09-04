@@ -62,11 +62,15 @@ from src.tools import ToolRegistry
 router = APIRouter()
 
 
-@router.get("/api/knowledge/sources", response_model=list[KnowledgeSourceResponse])
+@router.get(
+    "/api/knowledge/sources",
+    response_model=list[KnowledgeSourceResponse],
+    response_model_exclude_none=True,
+)
 def list_indexed_knowledge_sources(
     db_session: Session = Depends(get_db_session),
 ) -> list[KnowledgeSourceResponse]:
-    summaries = SourceDocumentRepository(db_session).list_indexed_pdf_sources(
+    summaries = SourceDocumentRepository(db_session).list_indexed_sources(
         owner_scope="local"
     )
     return [
@@ -77,6 +81,7 @@ def list_indexed_knowledge_sources(
             status=summary.status,
             chunk_count=summary.chunk_count,
             updated_at=summary.updated_at,
+            source_url=summary.source_url,
         )
         for summary in summaries
     ]
@@ -166,11 +171,15 @@ def _build_url_ingestion_orchestrator(
     db_session_factory: SessionFactory,
     unit_of_work_factory: UnitOfWorkFactory,
     tool_registry: ToolRegistry,
+    embedding_client: Optional[EmbeddingClient],
+    cost_tracker: CostTracker,
 ) -> URLIngestionOrchestrator:
     return URLIngestionOrchestrator(
         tool_registry=tool_registry,
         unit_of_work_factory=unit_of_work_factory,
         workflow_run_service=WorkflowRunService(db_session_factory),
+        embedding_batch_service=build_embedding_batch_service(embedding_client),
+        cost_tracker=cost_tracker,
     )
 
 
@@ -235,11 +244,15 @@ async def ingest_url_article(
     db_session_factory: SessionFactory = Depends(get_db_session_factory),
     unit_of_work_factory: UnitOfWorkFactory = Depends(get_business_unit_of_work_factory),
     tool_registry: ToolRegistry = Depends(get_tool_registry),
+    embedding_client: Optional[EmbeddingClient] = Depends(get_embedding_client),
+    cost_tracker: CostTracker = Depends(get_cost_tracker),
 ) -> SourceDocumentCreateResponse:
     orchestrator = _build_url_ingestion_orchestrator(
         db_session_factory=db_session_factory,
         unit_of_work_factory=unit_of_work_factory,
         tool_registry=tool_registry,
+        embedding_client=embedding_client,
+        cost_tracker=cost_tracker,
     )
     request_workflow_id = str(getattr(request.state, "workflow_id", ""))
 
@@ -266,6 +279,11 @@ async def ingest_url_article(
         source_type=result.source_type,
         source_display_name=result.source_display_name,
         content_hash=result.content_hash,
+        requested_url=result.requested_url,
+        final_url=result.final_url,
+        index_status=result.index_status,
+        indexed_chunk_count=result.indexed_chunk_count,
+        embedded_chunk_count=result.embedded_chunk_count,
     )
 
 

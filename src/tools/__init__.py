@@ -53,6 +53,7 @@ from src.tools.registry import (
     ToolRegistryError,
 )
 from src.tools.url_article_parser_tool import (
+    MAX_URL_LENGTH,
     MAX_URL_REDIRECTS,
     MAX_URL_RESPONSE_BYTES,
     ParsedURLArticle,
@@ -63,6 +64,7 @@ from src.tools.url_article_parser_tool import (
     URLArticleParserTool,
     URLSafetyPolicy,
     UrllibURLHTTPTransport,
+    canonicalize_url,
 )
 from src.tools.youtube_transcript_tool import (
     ParsedYouTubeTranscript,
@@ -174,6 +176,8 @@ __all__ = [
     "UrllibURLHTTPTransport",
     "MAX_URL_REDIRECTS",
     "MAX_URL_RESPONSE_BYTES",
+    "MAX_URL_LENGTH",
+    "canonicalize_url",
     "ParsedYouTubeTranscript",
     "OCRImageInput",
     "ParsedImageOCR",

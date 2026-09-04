@@ -212,6 +212,11 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 .source-controls button { padding: 11px 15px; color: white; background: var(--ink); border: 1px solid var(--ink); cursor: pointer; }
 .source-controls button:not(:disabled):hover { background: #303831; }
 .source-controls button:disabled { color: #8b8f8a; background: #e7e6de; border-color: #cdcec6; cursor: not-allowed; }
+.url-control { display: flex; align-items: flex-end; gap: 8px; flex: 1; }
+.url-control label { color: var(--ink-soft); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
+.url-control input { min-width: 0; flex: 1; padding: 11px 12px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); font: inherit; }
+.url-control input:focus { outline: 2px solid var(--acid); outline-offset: 1px; }
+.citation-meta a { color: inherit; overflow-wrap: anywhere; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .source-result { margin-top: 22px; }
 .source-result:empty { display: none; }
@@ -254,6 +259,7 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
   .form-footer button { width: 100%; }
   .source-controls { flex-direction: column; }
   .source-controls button { width: 100%; }
+  .url-control { align-items: stretch; flex-direction: column; }
   .source-success { display: block; }
   .source-success-meta { margin-top: 17px; text-align: left; }
   .memory-placeholder { grid-template-columns: 1fr; }

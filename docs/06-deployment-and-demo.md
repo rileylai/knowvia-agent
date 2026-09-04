@@ -23,10 +23,10 @@ cloud sync。這些是 Future Work。
 `knowvia` database 提供 PostgreSQL + pgvector，host port 維持 5433。舊
 `learnloop-postgres` 與原有 bind-mounted data 不屬於 active Compose project。
 
-Compose 仍保留 Redis service 給 legacy queue。現有 API 的 Notion index、PDF
+Compose 仍保留 Redis service 給 legacy queue。現有 API 的 Notion index、PDF 與 URL
 validate/parse/index、source persistence 與 QA 都是 synchronous path；Image/OCR、
-URL、YouTube 與 chat text 尚未完成 generic chunk/index pipeline。本地 positive QA
-baseline 使用 `mock_data/` 中的 PDF，不需要 Notion discovery 或 page selection。
+YouTube 與 chat text 尚未完成 generic chunk/index pipeline。本地 positive QA baseline
+使用 `mock_data/` 中的 PDF，不需要 Notion discovery 或 page selection。
 
 Knowvia API startup、API preflight 與 core readiness 不建立或要求 Redis/RQ。
 Redis service 只在需要執行 legacy worker 時使用。
@@ -97,12 +97,13 @@ TELEGRAM_*_TIMEOUT_SECONDS
 ## Demo 流程
 
 1. 開啟 Knowledge Tab。
-2. 從 `mock_data/` 選取一份 PDF。
+2. 從 `mock_data/` 選取一份 PDF，或貼上可公開取得的 HTTP/HTTPS article URL。
 3. Backend 完成 validate、parse、normalize、chunk、embedding 與 indexing。
-4. 開啟 Chat 並提出該 PDF 明確涵蓋的問題。
-5. UI 顯示 grounded answer 與 backend-owned PDF citation。
-6. 對沒有足夠 evidence 的問題回傳 `insufficient_info`。
-7. 驗證 invalid upload 顯示 error，且 `Add URL` 維持 disabled。
+4. 確認 Knowledge inventory 顯示 indexed source 與 chunk count。
+5. 開啟 Chat 並提出該 source 明確涵蓋的問題。
+6. UI 顯示 grounded answer 與 backend-owned citation。
+7. 對沒有足夠 evidence 的問題回傳 `insufficient_info`，並驗證 invalid source 顯示
+   error。
 
 如果 SSE 已完成，UI 可顯示 search、source count、memory search、generation、
 answer delta、citations 與 done。不得顯示 private model chain-of-thought。

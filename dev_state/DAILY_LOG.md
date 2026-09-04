@@ -20,8 +20,7 @@
 
 ## Manual Verification
 
-Not yet manually verified. 本輪沒有 frontend implementation，也沒有進行 feature
-frontend acceptance。
+本輪沒有 frontend implementation，因此未進行 feature frontend acceptance。
 
 ## Issues
 
@@ -268,6 +267,59 @@ insufficient-info、invalid upload error，以及 `Add URL` disabled。
 - 完成本輪 frozen regression 與 bounded live local verification後，等待 `2.0`、`2.1`
   manual verification。
 - 不開始 `2.2 URL Knowledge Pipeline`。
+
+## 2026-09-05 URL Knowledge Pipeline
+
+### Scope
+
+- 實作 `2.2 URL Knowledge Pipeline`。
+- URL 走既有 generic flow：validate、fetch、parse、normalize、`SourceDocument`、
+  chunk、embedding、`KnowledgeChunk`、retrieval 與 backend citation。
+- 本輪不開始 `2.3 Screenshot / Image Knowledge Pipeline`。
+
+### Implementation
+
+- URL parser 保留 requested URL、redirect 後的 final URL 與 HTML title；title 缺失時
+  使用 bounded URL fallback。
+- Backend 只允許 HTTP/HTTPS、HTML/XHTML/plain text，限制 URL 長度、redirect 次數、
+  response 大小與 timeout。每次 redirect 都重新檢查 DNS，private、loopback、
+  link-local 與 localhost 會被拒絕。
+- 新增 URL snapshot identity 欄位與 migration。相同 owner、final URL、content hash
+  且已 indexed 的 snapshot 回傳 `already_indexed`；同 URL 的內容變更建立新 snapshot。
+- PDF 與 URL 共用 `KnowledgeIndexingService`、chunk、embedding、eligibility、
+  retrieval 與 citation metadata。沒有建立 URL-specific chunk、retriever 或 vector
+  table。
+- Knowledge UI 新增 URL input 與 idle、loading、success、duplicate、error state；
+  inventory 顯示 indexed URL 與 final URL。
+
+### Automated Evidence
+
+- TDD URL pipeline tests：URL indexing、generic retrieval、dedup、embedding failure、
+  inventory、citation 與 parser provenance 通過。
+- Backend full suite：`651 passed, 5 skipped`。
+- Frontend tests：`24 passed`。
+- Frontend production build：PASS。
+- `git diff --check`：PASS。
+
+### Manual Verification
+
+- Knowledge UI 可以正常加入公開 URL，並顯示 visible loading、indexing 與 success state。
+- 成功後 Indexed Sources 正確顯示 URL source 與 chunk count。
+- Chat 可以根據 indexed URL evidence 產生 grounded answer。
+- URL citation 由 backend metadata 提供，包含 source URL、display name、deterministic
+  `chunk N` locator 與 score。
+- 再次加入相同且內容未變的 URL 顯示 `Already indexed`，沒有新增重複 searchable
+  source 或 chunks。
+- 沒有足夠 evidence 的問題回傳 `insufficient_info`，且 citations 為空。
+- localhost、loopback 與 non-public URL fail closed，並顯示 visible error。
+- Existing PDF upload、inventory、retrieval、citation 與 duplicate flow 沒有 regression。
+- 本輪未開始 `2.3` 或其他後續能力。
+
+### Next
+
+- `2.2` 已完成 Paste URL → indexing → Chat → citation 的 frontend manual acceptance，
+  狀態更新為 `done`。
+- `2.3 Screenshot / Image Knowledge Pipeline` 維持 `planned`。
 
 ## 2026-09-04 PDF Positive QA Follow-ups
 

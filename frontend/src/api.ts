@@ -5,6 +5,7 @@ export type QACitation = {
   source_kind?: string;
   source_display_name?: string | null;
   locator?: string | null;
+  source_url?: string | null;
 };
 
 export type QAResponse = {
@@ -28,7 +29,11 @@ export type PDFIndexResponse = {
   index_status: string | null;
   indexed_chunk_count: number;
   embedded_chunk_count: number;
+  requested_url?: string | null;
+  final_url?: string | null;
 };
+
+export type URLIndexResponse = PDFIndexResponse;
 
 export type KnowledgeSource = {
   id: number;
@@ -37,6 +42,7 @@ export type KnowledgeSource = {
   status: string;
   chunk_count: number;
   updated_at?: string | null;
+  source_url?: string | null;
 };
 
 type ErrorDetail = {
@@ -126,6 +132,39 @@ export async function indexPDF(
   }
 
   return payload as PDFIndexResponse;
+}
+
+export async function indexURL(
+  url: string,
+  request: typeof fetch = fetch,
+): Promise<URLIndexResponse> {
+  let response: Response;
+  try {
+    response = await request("/api/ingest/url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+  } catch {
+    throw new Error("Unable to reach the Knowvia backend.");
+  }
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error(
+      response.ok
+        ? "Knowvia returned an unreadable response."
+        : `Knowvia returned an error (${response.status}).`,
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(errorMessage(payload, response.status));
+  }
+
+  return payload as URLIndexResponse;
 }
 
 export async function listKnowledgeSources(

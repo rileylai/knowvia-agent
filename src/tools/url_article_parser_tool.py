@@ -3,9 +3,10 @@ from __future__ import annotations
 import ipaddress
 import socket
 from dataclasses import dataclass
+from html.parser import HTMLParser
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 from urllib.error import HTTPError, URLError
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin, urlsplit, urlunsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from src.tools.base import Tool
@@ -16,6 +17,7 @@ from src.tools.models import ToolContext, ToolResult, ToolSpec
 class ParsedURLArticle:
     url: str
     raw_text: str
+    title: Optional[str] = None
 
 
 class URLArticleParserClientError(Exception):
@@ -27,6 +29,8 @@ class URLArticleParserClientError(Exception):
 MAX_URL_RESPONSE_BYTES = 5 * 1024 * 1024
 MAX_URL_REDIRECTS = 5
 URL_FETCH_TIMEOUT_SECONDS = 30.0
+MAX_URL_LENGTH = 2048
+MAX_URL_TITLE_CHARS = 512
 SUPPORTED_URL_CONTENT_TYPES = frozenset(
     {"text/html", "application/xhtml+xml", "text/plain"}
 )
@@ -68,6 +72,11 @@ class URLSafetyPolicy:
         self._dns_resolver = dns_resolver or _default_dns_resolver
 
     def validate_syntax(self, url: str) -> None:
+        if len(url) > MAX_URL_LENGTH:
+            raise URLArticleParserClientError(
+                "url exceeds the maximum length",
+                code="INVALID_ARGUMENT",
+            )
         parsed = urlsplit(url)
         if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
             raise URLArticleParserClientError(
@@ -223,11 +232,15 @@ class TrafilaturaURLArticleParserClient(URLArticleParserClient):
         except ModuleNotFoundError as exc:
             raise URLArticleParserClientError("trafilatura dependency is missing") from exc
 
-        html = self._download_html(url)
-        try:
-            extracted = trafilatura.extract(html)
-        except Exception as exc:
-            raise URLArticleParserClientError("Failed to extract article text") from exc
+        downloaded = self._download_article(url)
+        html = downloaded.body
+        if downloaded.content_type == "text/plain":
+            extracted = html
+        else:
+            try:
+                extracted = trafilatura.extract(html)
+            except Exception as exc:
+                raise URLArticleParserClientError("Failed to extract article text") from exc
 
         if extracted is None:
             raise URLArticleParserClientError("No extractable text found in URL article")
@@ -236,9 +249,16 @@ class TrafilaturaURLArticleParserClient(URLArticleParserClient):
         if not normalized_text:
             raise URLArticleParserClientError("No extractable text found in URL article")
 
-        return ParsedURLArticle(url=url, raw_text=normalized_text)
+        return ParsedURLArticle(
+            url=downloaded.final_url,
+            raw_text=normalized_text,
+            title=_extract_html_title(html),
+        )
 
     def _download_html(self, url: str) -> str:
+        return self._download_article(url).body
+
+    def _download_article(self, url: str) -> "_DownloadedURLArticle":
         current_url = url
         redirect_count = 0
         while True:
@@ -271,8 +291,14 @@ class TrafilaturaURLArticleParserClient(URLArticleParserClient):
                     redirect_count += 1
                     continue
 
-                content_type = str(headers.get("Content-Type", "")).split(";", 1)[0]
-                if content_type.strip().lower() not in SUPPORTED_URL_CONTENT_TYPES:
+                if status_code < 200 or status_code >= 300:
+                    raise URLArticleParserClientError(
+                        "URL fetch returned an unsuccessful response",
+                        code="URL_FETCH_FAILED",
+                    )
+
+                content_type = str(headers.get("Content-Type", "")).split(";", 1)[0].strip().lower()
+                if content_type not in SUPPORTED_URL_CONTENT_TYPES:
                     raise URLArticleParserClientError(
                         "URL response content type is not supported",
                         code="URL_RESPONSE_TYPE_UNSUPPORTED",
@@ -296,9 +322,14 @@ class TrafilaturaURLArticleParserClient(URLArticleParserClient):
             break
 
         try:
-            return body.decode(charset, errors="replace")
+            decoded_body = body.decode(charset, errors="replace")
         except (LookupError, UnicodeError) as exc:
             raise URLArticleParserClientError("Failed to decode URL content") from exc
+        return _DownloadedURLArticle(
+            final_url=current_url,
+            body=decoded_body,
+            content_type=content_type,
+        )
 
     def _read_bounded_body(self, response: Any) -> bytes:
         chunks = []
@@ -345,6 +376,8 @@ class URLArticleParserTool(Tool):
                 "required": ["url", "raw_text", "char_count"],
                 "properties": {
                     "url": {"type": "string"},
+                    "final_url": {"type": "string"},
+                    "title": {"type": ["string", "null"]},
                     "raw_text": {"type": "string"},
                     "char_count": {"type": "integer"},
                 },
@@ -386,9 +419,11 @@ class URLArticleParserTool(Tool):
             )
 
         return ToolResult.success(
-            content=f"parsed url={url} char_count={len(normalized_raw_text)}",
+            content=f"parsed URL article char_count={len(normalized_raw_text)}",
             structured_content={
                 "url": parsed.url,
+                "final_url": parsed.url,
+                "title": parsed.title,
                 "raw_text": normalized_raw_text,
                 "char_count": len(normalized_raw_text),
             },
@@ -400,3 +435,74 @@ class URLArticleParserTool(Tool):
         except URLArticleParserClientError:
             return False
         return True
+
+
+@dataclass(frozen=True)
+class _DownloadedURLArticle:
+    final_url: str
+    body: str
+    content_type: str
+
+
+class _HTMLTitleParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self._in_title = False
+        self._parts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, Optional[str]]]) -> None:
+        _ = attrs
+        if tag.lower() == "title":
+            self._in_title = True
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag.lower() == "title":
+            self._in_title = False
+
+    def handle_data(self, data: str) -> None:
+        if self._in_title and len("".join(self._parts)) < MAX_URL_TITLE_CHARS:
+            self._parts.append(data)
+
+    def title(self) -> Optional[str]:
+        normalized = " ".join("".join(self._parts).split())
+        return normalized[:MAX_URL_TITLE_CHARS] or None
+
+
+def _extract_html_title(html: str) -> Optional[str]:
+    parser = _HTMLTitleParser()
+    try:
+        parser.feed(html)
+        parser.close()
+    except Exception:
+        return None
+    return parser.title()
+
+
+def canonicalize_url(url: str) -> str:
+    """Normalize only URL syntax used for deterministic source identity."""
+    URLSafetyPolicy().validate_syntax(url)
+    parsed = urlsplit(url)
+    scheme = parsed.scheme.lower()
+    hostname = parsed.hostname
+    if hostname is None:
+        raise URLArticleParserClientError(
+            "URL host is invalid",
+            code="INVALID_ARGUMENT",
+        )
+    normalized_host = hostname.lower().rstrip(".")
+    if ":" in normalized_host:
+        normalized_host = f"[{normalized_host}]"
+    port = parsed.port
+    default_port = 443 if scheme == "https" else 80
+    netloc = normalized_host
+    if port is not None and port != default_port:
+        netloc = f"{netloc}:{port}"
+    return urlunsplit(
+        (
+            scheme,
+            netloc,
+            parsed.path or "/",
+            parsed.query,
+            "",
+        )
+    )

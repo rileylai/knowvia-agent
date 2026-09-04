@@ -589,6 +589,7 @@ def test_ingest_url_api_persists_extracted_text_and_full_url_display_name() -> N
     app.dependency_overrides[get_db_session] = _db_override
     app.dependency_overrides[get_db_session_factory] = lambda: session_factory
     app.dependency_overrides[get_tool_registry] = _tool_registry_override
+    app.dependency_overrides[get_embedding_client] = lambda: _FakeEmbeddingClient()
 
     try:
         client = TestClient(app)
@@ -602,6 +603,11 @@ def test_ingest_url_api_persists_extracted_text_and_full_url_display_name() -> N
         assert payload["status"] == "succeeded"
         assert payload["source_type"] == "url"
         assert payload["source_display_name"] == source_url
+        assert payload["requested_url"] == source_url
+        assert payload["final_url"] == source_url
+        assert payload["index_status"] == "indexed"
+        assert payload["indexed_chunk_count"] == 1
+        assert payload["embedded_chunk_count"] == 1
         assert payload["content_hash"] == hashlib.sha256(
             "Attention article summary".encode("utf-8")
         ).hexdigest()
@@ -613,6 +619,10 @@ def test_ingest_url_api_persists_extracted_text_and_full_url_display_name() -> N
             assert source_document.source_type == "url"
             assert source_document.source_display_name == source_url
             assert source_document.raw_text == "Attention article summary"
+            assert source_document.requested_url == source_url
+            assert source_document.final_url == source_url
+            assert source_document.status == "indexed"
+            assert session.query(KnowledgeChunk).count() == 1
 
             workflow_run = session.get(WorkflowRun, payload["workflow_run_id"])
             assert workflow_run is not None

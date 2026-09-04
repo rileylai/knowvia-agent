@@ -8,11 +8,15 @@ from typing import Any, Dict, Optional
 
 from src.db.unit_of_work import UnitOfWorkFactory
 from src.services import (
+    CostTracker,
+    EmbeddingBatchService,
+    KnowledgeIndexingError,
+    KnowledgeIndexingService,
     STANDARD_FAILURE_REASONS,
     WorkflowRunAuditUpdateError,
     WorkflowRunService,
 )
-from src.tools import ToolContext, ToolRegistry
+from src.tools import ToolContext, ToolRegistry, URLArticleParserClientError, canonicalize_url
 
 URL_ARTICLE_PARSER_TOOL_NAME = "url_article_parser"
 
@@ -35,6 +39,11 @@ class URLIngestionResult:
     source_type: str
     source_display_name: str
     content_hash: str
+    requested_url: str
+    final_url: str
+    index_status: str = "indexed"
+    indexed_chunk_count: int = 0
+    embedded_chunk_count: int = 0
 
 
 class URLIngestionError(Exception):
@@ -62,10 +71,17 @@ class URLIngestionOrchestrator:
         tool_registry: ToolRegistry,
         unit_of_work_factory: UnitOfWorkFactory,
         workflow_run_service: WorkflowRunService,
+        embedding_batch_service: Optional[EmbeddingBatchService] = None,
+        cost_tracker: Optional[CostTracker] = None,
     ) -> None:
         self._tool_registry = tool_registry
         self._unit_of_work_factory = unit_of_work_factory
         self._workflow_run_service = workflow_run_service
+        self._knowledge_indexing_service = KnowledgeIndexingService(
+            unit_of_work_factory=unit_of_work_factory,
+            embedding_batch_service=embedding_batch_service,
+            cost_tracker=cost_tracker,
+        )
 
     async def ingest_url(
         self,
@@ -87,14 +103,14 @@ class URLIngestionOrchestrator:
                 {
                     "operation": "ingest_url",
                     "source_type": "url",
-                    "source_display_name": normalized_url,
-                    "source_url": normalized_url,
+                    "url_length": len(normalized_url),
                     "request_workflow_id": request_workflow_id,
                 },
                 sort_keys=True,
             ),
         )
 
+        source_document_id: Optional[int] = None
         try:
             parsed = await self._parse_url_article(
                 url=normalized_url,
@@ -102,17 +118,90 @@ class URLIngestionOrchestrator:
             )
             raw_text = self._extract_raw_text(parsed)
             content_hash = self._build_content_hash(raw_text)
+            requested_url = self._canonicalize_url(normalized_url)
+            final_url = self._extract_final_url(
+                parser_output=parsed,
+                fallback_url=requested_url,
+            )
+            source_display_name = self._extract_source_display_name(
+                parser_output=parsed,
+                fallback_url=final_url,
+            )
+
+            with self._unit_of_work_factory() as unit_of_work:
+                existing_source = unit_of_work.source_documents.find_indexed_url_source(
+                    final_url=final_url,
+                    content_hash=content_hash,
+                    owner_scope="local",
+                )
+            if existing_source is not None:
+                self._workflow_run_service.mark_workflow_succeeded(
+                    workflow_run.id,
+                    metadata_json=json.dumps(
+                        {
+                            "operation": "ingest_url_duplicate_guard",
+                            "source_document_id": existing_source.id,
+                            "source_type": "url",
+                            "content_hash": content_hash,
+                            "index_status": "indexed",
+                            "result_status": "already_indexed",
+                            "indexed_chunk_count": existing_source.chunk_count,
+                            "embedded_chunk_count": existing_source.chunk_count,
+                        },
+                        sort_keys=True,
+                    ),
+                )
+                return URLIngestionResult(
+                    workflow_run_id=workflow_run.id,
+                    status="already_indexed",
+                    source_document_id=existing_source.id,
+                    source_type=existing_source.source_kind,
+                    source_display_name=existing_source.display_name,
+                    content_hash=existing_source.content_hash,
+                    requested_url=requested_url,
+                    final_url=existing_source.source_url or final_url,
+                    index_status=existing_source.status,
+                    indexed_chunk_count=existing_source.chunk_count,
+                    embedded_chunk_count=existing_source.chunk_count,
+                )
+
             with self._unit_of_work_factory() as unit_of_work:
                 source_document = unit_of_work.source_documents.create_source_document(
                     source_type="url",
-                    source_display_name=normalized_url,
+                    source_display_name=source_display_name,
                     raw_text=raw_text,
                     content_hash=content_hash,
+                    requested_url=requested_url,
+                    final_url=final_url,
+                    owner_scope="local",
+                    status="indexing",
                 )
                 source_document_id = int(source_document.id)
                 persisted_source_type = source_document.source_type
                 persisted_display_name = source_document.source_display_name
                 persisted_content_hash = source_document.content_hash
+
+            try:
+                indexing_result = await self._knowledge_indexing_service.index_source_document(
+                    source_document_id=source_document_id,
+                    source_kind="url",
+                    source_display_name=source_display_name,
+                    raw_text=raw_text,
+                    request_workflow_id=request_workflow_id,
+                    citation_metadata={
+                        "requested_url": requested_url,
+                        "final_url": final_url,
+                    },
+                    owner_scope="local",
+                    empty_chunks_error_code="URL_FETCH_FAILED",
+                )
+            except KnowledgeIndexingError as exc:
+                raise URLIngestionError(
+                    error_code=exc.error_code,
+                    message=exc.message,
+                    http_status_code=exc.http_status_code,
+                    failure_reason=exc.failure_reason,
+                ) from None
 
             self._workflow_run_service.mark_workflow_succeeded(
                 workflow_run.id,
@@ -121,10 +210,12 @@ class URLIngestionOrchestrator:
                         "operation": "ingest_url",
                         "source_document_id": source_document_id,
                         "source_type": "url",
-                        "source_display_name": normalized_url,
-                        "source_url": parsed.get("url", normalized_url),
+                        "index_status": "indexed",
                         "content_hash": content_hash,
                         "char_count": len(raw_text),
+                        "indexed_chunk_count": indexing_result.indexed_chunk_count,
+                        "embedded_chunk_count": indexing_result.embedded_chunk_count,
+                        **indexing_result.embedding_metadata,
                     },
                     sort_keys=True,
                 ),
@@ -132,6 +223,7 @@ class URLIngestionOrchestrator:
         except WorkflowRunAuditUpdateError:
             raise
         except URLIngestionError as exc:
+            self._mark_source_document_failed(source_document_id)
             self._mark_failed_workflow(
                 workflow_run_id=workflow_run.id,
                 failure_reason=exc.failure_reason,
@@ -145,6 +237,7 @@ class URLIngestionOrchestrator:
                 workflow_run_id=workflow_run.id,
             ) from exc
         except Exception as exc:
+            self._mark_source_document_failed(source_document_id)
             self._mark_failed_workflow(
                 workflow_run_id=workflow_run.id,
                 failure_reason="UNKNOWN_ERROR",
@@ -165,7 +258,56 @@ class URLIngestionOrchestrator:
             source_type=persisted_source_type,
             source_display_name=persisted_display_name,
             content_hash=persisted_content_hash,
+            requested_url=requested_url,
+            final_url=final_url,
+            index_status="indexed",
+            indexed_chunk_count=indexing_result.indexed_chunk_count,
+            embedded_chunk_count=indexing_result.embedded_chunk_count,
         )
+
+    def _extract_final_url(
+        self,
+        *,
+        parser_output: Dict[str, Any],
+        fallback_url: str,
+    ) -> str:
+        final_url = parser_output.get("final_url") or parser_output.get("url")
+        if final_url is None:
+            return fallback_url
+        if not isinstance(final_url, str) or not final_url.strip():
+            raise URLIngestionError(
+                error_code="TOOL_OUTPUT_INVALID",
+                message="URL parser final_url is invalid",
+                http_status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                failure_reason="UNKNOWN_ERROR",
+            )
+        return self._canonicalize_url(final_url)
+
+    def _extract_source_display_name(
+        self,
+        *,
+        parser_output: Dict[str, Any],
+        fallback_url: str,
+    ) -> str:
+        title = parser_output.get("title")
+        if not isinstance(title, str):
+            return fallback_url
+        normalized_title = " ".join(title.split()).strip()
+        return normalized_title[:512] or fallback_url
+
+    def _canonicalize_url(self, url: str) -> str:
+        try:
+            return canonicalize_url(url)
+        except URLArticleParserClientError as exc:
+            raise URLIngestionError(
+                error_code=exc.code,
+                message=str(exc),
+                http_status_code=TOOL_ERROR_TO_HTTP_STATUS.get(
+                    exc.code,
+                    HTTPStatus.BAD_REQUEST,
+                ),
+                failure_reason=self._normalize_failure_reason(exc.code),
+            ) from exc
 
     async def _parse_url_article(
         self,
@@ -180,7 +322,6 @@ class URLIngestionOrchestrator:
                 metadata={
                     "operation": "ingest_url",
                     "source_type": "url",
-                    "source_url": url,
                 },
             ),
             arguments={"url": url},
@@ -229,6 +370,18 @@ class URLIngestionOrchestrator:
                 failure_reason="URL_FETCH_FAILED",
             )
         return normalized_raw_text
+
+    def _mark_source_document_failed(self, source_document_id: Optional[int]) -> None:
+        if source_document_id is None:
+            return
+        try:
+            with self._unit_of_work_factory() as unit_of_work:
+                unit_of_work.source_documents.update_status(
+                    source_document_id=source_document_id,
+                    status="failed",
+                )
+        except Exception:
+            return
 
     def _build_content_hash(self, raw_text: str) -> str:
         return hashlib.sha256(raw_text.encode("utf-8")).hexdigest()

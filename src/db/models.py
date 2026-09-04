@@ -71,6 +71,12 @@ class SourceDocument(Base):
     file_hash: Mapped[Optional[str]] = mapped_column(
         String(64), nullable=True, index=True
     )
+    requested_url: Mapped[Optional[str]] = mapped_column(
+        String(2048), nullable=True, index=True
+    )
+    final_url: Mapped[Optional[str]] = mapped_column(
+        String(2048), nullable=True, index=True
+    )
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
     owner_scope: Mapped[str] = mapped_column(
         String(128), nullable=False, server_default="local", index=True

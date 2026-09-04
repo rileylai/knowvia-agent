@@ -31,6 +31,8 @@ class SourceDocumentCreateResponse(BaseModel):
     index_status: Optional[str] = None
     indexed_chunk_count: int = 0
     embedded_chunk_count: int = 0
+    requested_url: Optional[str] = None
+    final_url: Optional[str] = None
 
 
 class KnowledgeSourceResponse(BaseModel):
@@ -40,6 +42,7 @@ class KnowledgeSourceResponse(BaseModel):
     status: str
     chunk_count: int
     updated_at: Optional[datetime] = None
+    source_url: Optional[str] = None
 
 
 class URLIngestionRequest(BaseModel):

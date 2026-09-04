@@ -63,6 +63,11 @@ from src.services.readiness_service import (
     ReadinessService,
 )
 from src.services.knowledge_stats import KnowledgeStatsResult, KnowledgeStatsService
+from src.services.knowledge_indexing_service import (
+    KnowledgeIndexingError,
+    KnowledgeIndexingResult,
+    KnowledgeIndexingService,
+)
 from src.services.workflow_run_service import (
     STANDARD_FAILURE_REASONS,
     WorkflowRunAuditUpdateError,
@@ -243,6 +248,9 @@ __all__ = [
     "ReadinessService",
     "KnowledgeStatsResult",
     "KnowledgeStatsService",
+    "KnowledgeIndexingError",
+    "KnowledgeIndexingResult",
+    "KnowledgeIndexingService",
     "STANDARD_FAILURE_REASONS",
     "WorkflowRunAuditUpdateError",
     "WORKFLOW_STATUS_FAILED",

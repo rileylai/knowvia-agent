@@ -67,6 +67,7 @@ class QACitationResult:
     source_kind: str = "notion"
     source_display_name: Optional[str] = None
     locator: Optional[str] = None
+    source_url: Optional[str] = None
 
 
 @dataclass
@@ -569,6 +570,7 @@ class QAOrchestrator:
                     source_kind=source_kind,
                     source_display_name=source_display_name,
                     locator=locator,
+                    source_url=chunk.source_url,
                 )
             )
         return citations

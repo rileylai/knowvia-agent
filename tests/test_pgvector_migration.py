@@ -45,6 +45,7 @@ def test_pgvector_migration_upgrades_and_downgrades_fresh_sqlite_db(
     assert "embedding" in column_names
     assert "embedding_text" in column_names
     assert "file_hash" in source_document_columns
+    assert {"requested_url", "final_url"} <= source_document_columns
     assert notion_page_columns["last_edited_time"]["nullable"] is True
     assert notion_page_columns["parent_notion_page_id"]["nullable"] is True
     assert "ix_notion_pages_parent_notion_page_id" in {

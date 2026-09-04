@@ -62,6 +62,7 @@ class RetrievalChunkCandidate:
     source_display_name: Optional[str] = None
     locator: Optional[str] = None
     citation_metadata: Optional[str] = None
+    source_url: Optional[str] = None
 
 
 @dataclass
@@ -77,6 +78,7 @@ class SemanticChunkMatch:
     source_display_name: Optional[str] = None
     locator: Optional[str] = None
     citation_metadata: Optional[str] = None
+    source_url: Optional[str] = None
 
 
 class ChunkRepository:
@@ -182,7 +184,7 @@ class ChunkRepository:
 
         ordered_chunks = sorted(chunks, key=lambda item: item.chunk_index)
         for chunk in ordered_chunks:
-            if chunk.source_kind not in {"pdf", "notion"}:
+            if chunk.source_kind not in {"pdf", "notion", "url"}:
                 raise ChunkRepositoryError(
                     f"Unsupported source_kind for source document: {chunk.source_kind}"
                 )
@@ -300,6 +302,9 @@ class ChunkRepository:
                 ),
                 locator=row.locator or row.notion_path,
                 citation_metadata=row.citation_metadata,
+                source_url=self._source_url_from_citation_metadata(
+                    row.citation_metadata
+                ),
             )
             for row in rows
         ]
@@ -409,6 +414,9 @@ class ChunkRepository:
                 ),
                 locator=row.locator or row.notion_path,
                 citation_metadata=row.citation_metadata,
+                source_url=self._source_url_from_citation_metadata(
+                    row.citation_metadata
+                ),
             )
             for row in rows
         ]
@@ -445,7 +453,7 @@ class ChunkRepository:
         return [
             source_kind
             for source_kind in normalized_source_kinds
-            if source_kind in {"notion", "pdf"}
+            if source_kind in {"notion", "pdf", "url"}
         ]
 
     def _apply_eligibility_filter(self, query):
@@ -458,8 +466,30 @@ class ChunkRepository:
                     SourceDocument.source_type == "pdf",
                     SourceDocument.status == "indexed",
                 ),
+                and_(
+                    KnowledgeChunk.source_kind == "url",
+                    SourceDocument.source_type == "url",
+                    SourceDocument.status == "indexed",
+                ),
             ),
         )
+
+    def _source_url_from_citation_metadata(
+        self,
+        citation_metadata: Optional[str],
+    ) -> Optional[str]:
+        if not citation_metadata:
+            return None
+        try:
+            metadata = json.loads(citation_metadata)
+        except json.JSONDecodeError:
+            return None
+        if not isinstance(metadata, dict):
+            return None
+        source_url = metadata.get("final_url") or metadata.get("source_url")
+        if not isinstance(source_url, str) or not source_url.strip():
+            return None
+        return source_url.strip()
 
     def _apply_page_filter(
         self,
@@ -516,7 +546,7 @@ class ChunkRepository:
 
     def _normalize_source_kinds(self, source_kinds: Optional[List[str]]) -> List[str]:
         if source_kinds is None:
-            return ["notion", "pdf"]
+            return ["notion", "pdf", "url"]
         normalized = []
         seen = set()
         for source_kind in source_kinds:

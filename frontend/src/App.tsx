@@ -3,6 +3,7 @@ import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } fr
 import {
   askQuestion,
   indexPDF,
+  indexURL,
   listKnowledgeSources,
   type KnowledgeSource,
   type PDFIndexResponse,
@@ -12,6 +13,7 @@ import {
 type Surface = "knowledge" | "chat" | "memory";
 type RequestState = "idle" | "loading" | "success" | "error";
 type InventoryState = "loading" | "success" | "empty" | "error";
+type SourceType = "pdf" | "url";
 
 const surfaces: Array<{ id: Surface; label: string; index: string }> = [
   { id: "knowledge", label: "Knowledge", index: "01" },
@@ -22,6 +24,8 @@ const surfaces: Array<{ id: Surface; label: string; index: string }> = [
 function KnowledgeSurface() {
   const [requestState, setRequestState] = useState<RequestState>("idle");
   const [indexResult, setIndexResult] = useState<PDFIndexResponse | null>(null);
+  const [activeSourceType, setActiveSourceType] = useState<SourceType>("pdf");
+  const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sources, setSources] = useState<KnowledgeSource[]>([]);
   const [inventoryState, setInventoryState] = useState<InventoryState>("loading");
@@ -65,12 +69,43 @@ function KnowledgeSurface() {
     }
 
     isSubmitting.current = true;
+    setActiveSourceType("pdf");
     setRequestState("loading");
     setIndexResult(null);
     setError(null);
 
     try {
       const result = await indexPDF(file);
+      setIndexResult(result);
+      setRequestState("success");
+      void refreshInventory();
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "An unexpected error occurred.",
+      );
+      setRequestState("error");
+    } finally {
+      isSubmitting.current = false;
+    }
+  };
+
+  const handleURLSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const normalizedURL = url.trim();
+    if (!normalizedURL || isSubmitting.current) {
+      return;
+    }
+
+    isSubmitting.current = true;
+    setActiveSourceType("url");
+    setRequestState("loading");
+    setIndexResult(null);
+    setError(null);
+
+    try {
+      const result = await indexURL(normalizedURL);
       setIndexResult(result);
       setRequestState("success");
       void refreshInventory();
@@ -93,17 +128,17 @@ function KnowledgeSurface() {
       <div className="section-kicker">Source desk / current capability</div>
       <h1 id="knowledge-heading">Knowledge</h1>
       <p className="surface-intro">
-        The current retrieval baseline is grounded in indexed PDF knowledge.
+        The current retrieval baseline is grounded in indexed PDF and URL knowledge.
       </p>
 
       <div className="capability-card">
         <div className="capability-status">
           <span className="status-light" aria-hidden="true" />
-          PDF knowledge baseline
+          PDF knowledge baseline with URL ingestion
         </div>
         <p>
-          Upload a PDF to validate, parse, chunk, embed, and make its evidence available
-          to grounded Chat answers. URL ingestion remains a later capability.
+          Upload a PDF or add a URL to validate, parse, chunk, embed, and make its
+          evidence available to grounded Chat answers.
         </p>
         <div className="source-controls" aria-label="Source ingestion controls">
           <input
@@ -123,7 +158,20 @@ function KnowledgeSurface() {
           >
             Upload source
           </button>
-          <button type="button" disabled>Add URL</button>
+          <form className="url-control" onSubmit={handleURLSubmit}>
+            <label htmlFor="source-url">URL</label>
+            <input
+              id="source-url"
+              type="url"
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
+              placeholder="https://example.com/article"
+              disabled={isLoading}
+            />
+            <button type="submit" disabled={isLoading || !url.trim()}>
+              Add URL
+            </button>
+          </form>
         </div>
 
         <div className="source-result" aria-live="polite">
@@ -131,8 +179,16 @@ function KnowledgeSurface() {
             <div className="loading-state" role="status">
               <span className="loading-orbit" aria-hidden="true" />
               <div>
-                <strong>Uploading and indexing</strong>
-                <p>Validating the PDF and preparing searchable evidence.</p>
+                <strong>
+                  {activeSourceType === "url"
+                    ? "Fetching and indexing URL"
+                    : "Uploading and indexing"}
+                </strong>
+                <p>
+                  {activeSourceType === "url"
+                    ? "Validating the URL and preparing searchable evidence."
+                    : "Validating the PDF and preparing searchable evidence."}
+                </p>
               </div>
             </div>
           )}
@@ -141,7 +197,9 @@ function KnowledgeSurface() {
             <div className="error-state" role="alert">
               <span aria-hidden="true">!</span>
               <div>
-                <strong>Upload failed</strong>
+                <strong>
+                  {activeSourceType === "url" ? "URL ingestion failed" : "Upload failed"}
+                </strong>
                 <p>{error}</p>
               </div>
             </div>
@@ -153,12 +211,20 @@ function KnowledgeSurface() {
                 <strong>
                   {indexResult.status === "already_indexed"
                     ? "Already indexed"
-                    : "PDF indexed"}
+                    : indexResult.source_type === "url"
+                      ? "URL indexed"
+                      : "PDF indexed"}
                 </strong>
                 {indexResult.status === "already_indexed" && (
-                  <p>This PDF is already indexed.</p>
+                  <p>
+                    This {indexResult.source_type === "url" ? "URL" : "PDF"} is
+                    already indexed.
+                  </p>
                 )}
                 <p>{indexResult.source_display_name}</p>
+                {indexResult.source_type === "url" && indexResult.final_url && (
+                  <p>{indexResult.final_url}</p>
+                )}
               </div>
               <div className="source-success-meta">
                 <span>source kind · {indexResult.source_type}</span>
@@ -210,6 +276,7 @@ function KnowledgeSurface() {
                       <span>{source.source_kind}</span>
                       <span>{source.status}</span>
                       <span>{source.chunk_count} chunks</span>
+                      {source.source_url && <span>{source.source_url}</span>}
                       {source.updated_at && <span>updated · {source.updated_at}</span>}
                     </div>
                   </div>
@@ -246,6 +313,11 @@ function CitationList({ response }: { response: QAResponse }) {
                 <span>{citation.source_kind ?? "notion"}</span>
                 <span>{(citation.score * 100).toFixed(1)}% match</span>
                 {citation.locator && <span>{citation.locator}</span>}
+                {citation.source_url && (
+                  <a href={citation.source_url} target="_blank" rel="noreferrer">
+                    {citation.source_url}
+                  </a>
+                )}
                 {citation.page_id && <code>{citation.page_id}</code>}
               </div>
             </div>

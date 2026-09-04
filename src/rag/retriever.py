@@ -33,6 +33,7 @@ class RetrievedChunk:
     source_display_name: Optional[str] = None
     locator: Optional[str] = None
     citation_metadata: Optional[str] = None
+    source_url: Optional[str] = None
 
 
 @dataclass
@@ -195,6 +196,7 @@ class ProductionChunkRetriever:
                     source_display_name=candidate.source_display_name,
                     locator=candidate.locator,
                     citation_metadata=candidate.citation_metadata,
+                    source_url=candidate.source_url,
                 )
             )
 
@@ -218,6 +220,7 @@ class ProductionChunkRetriever:
             source_display_name=match.source_display_name,
             locator=match.locator,
             citation_metadata=match.citation_metadata,
+            source_url=match.source_url,
         )
 
     def _score_lexical(

@@ -449,6 +449,120 @@ describe("Knowvia frontend harness", () => {
     expect(await screen.findByText("PDF indexed")).toBeVisible();
   });
 
+  it("adds a URL, shows indexing, then renders URL provenance metadata", async () => {
+    const deferred = deferredResponse();
+    const fetchMock = vi.fn((input: RequestInfo | URL, _init?: RequestInit) =>
+      input === "/api/knowledge/sources"
+        ? Promise.resolve(jsonResponse([]))
+        : deferred.promise,
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+    await user.type(screen.getByLabelText("URL"), "https://example.com/agents");
+    await user.click(screen.getByRole("button", { name: "Add URL" }));
+
+    expect(screen.getByText("Fetching and indexing URL")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Add URL" })).toBeDisabled();
+    const urlCalls = fetchMock.mock.calls.filter(
+      ([input]) => input === "/api/ingest/url",
+    );
+    expect(urlCalls).toHaveLength(1);
+    expect(urlCalls[0][1]?.method).toBe("POST");
+    expect(urlCalls[0][1]?.body).toBe(
+      JSON.stringify({ url: "https://example.com/agents" }),
+    );
+
+    deferred.resolve(
+      jsonResponse({
+        workflow_run_id: 31,
+        status: "succeeded",
+        source_document_id: 12,
+        source_type: "url",
+        source_display_name: "Bounded Agents Guide",
+        content_hash: "safe-hash",
+        requested_url: "https://example.com/agents",
+        final_url: "https://docs.example.com/agents",
+        index_status: "indexed",
+        indexed_chunk_count: 3,
+        embedded_chunk_count: 3,
+      }),
+    );
+
+    expect(await screen.findByText("URL indexed")).toBeVisible();
+    expect(screen.getByText("Bounded Agents Guide")).toBeVisible();
+    expect(screen.getByText("3 chunks · 3 embedded")).toBeVisible();
+    expect(screen.getByText("https://docs.example.com/agents")).toBeVisible();
+  });
+
+  it("shows an already indexed URL and prevents a second request while loading", async () => {
+    const deferred = deferredResponse();
+    const fetchMock = vi.fn((input: RequestInfo | URL, _init?: RequestInit) =>
+      input === "/api/knowledge/sources"
+        ? Promise.resolve(jsonResponse([]))
+        : deferred.promise,
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+    const urlInput = screen.getByLabelText("URL");
+    await user.type(urlInput, "https://example.com/agents");
+    await user.click(screen.getByRole("button", { name: "Add URL" }));
+    await user.click(screen.getByRole("button", { name: "Add URL" }));
+
+    expect(
+      fetchMock.mock.calls.filter(([input]) => input === "/api/ingest/url"),
+    ).toHaveLength(1);
+
+    deferred.resolve(
+      jsonResponse({
+        workflow_run_id: 32,
+        status: "already_indexed",
+        source_document_id: 12,
+        source_type: "url",
+        source_display_name: "Bounded Agents Guide",
+        content_hash: "safe-hash",
+        requested_url: "https://example.com/agents",
+        final_url: "https://docs.example.com/agents",
+        index_status: "indexed",
+        indexed_chunk_count: 3,
+        embedded_chunk_count: 3,
+      }),
+    );
+
+    expect(await screen.findByText("Already indexed")).toBeVisible();
+    expect(screen.getByText("This URL is already indexed.")).toBeVisible();
+  });
+
+  it("shows a visible URL error and rejects blank URL submission", async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL) =>
+      input === "/api/knowledge/sources"
+        ? Promise.resolve(jsonResponse([]))
+        : Promise.resolve(
+            jsonResponse(
+              { detail: { message: "URL host is not allowed" } },
+              400,
+            ),
+          ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+    expect(screen.getByRole("button", { name: "Add URL" })).toBeDisabled();
+    await user.type(screen.getByLabelText("URL"), "http://localhost/admin");
+    await user.click(screen.getByRole("button", { name: "Add URL" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "URL host is not allowed",
+    );
+  });
+
   it("renders PDF citations and keeps legacy Notion citations compatible", async () => {
     const pdfResponse = {
       ...successPayload,
