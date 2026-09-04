@@ -29,3 +29,4 @@ tmp/
 
 # Deferred LearnLoop parser evaluation
 tests/evals/parser_note_completeness/
+frontend/.vite/
