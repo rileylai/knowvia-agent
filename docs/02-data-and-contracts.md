@@ -60,8 +60,9 @@ created_at
 updated_at
 ```
 
-目前 repository 已有 `source_documents`，但非 Notion ingestion 尚未從此 entity
-走到 generic `KnowledgeChunk`。
+目前 repository 的 PDF ingestion 會先建立 `SourceDocument`，再以它作為 snapshot
+boundary 產生 generic `KnowledgeChunk`。`owner_scope` 與 `status` 由 backend 維護；
+本輪 local PDF 使用 `owner_scope=local`，完整 indexing 才會進入 `indexed` 狀態。
 
 ## `KnowledgeChunk`
 
@@ -89,9 +90,12 @@ updated_at
 `provenance` 至少要能回到 source document、外部 page 或 block、section 與
 定位資訊。`eligibility_status` 由 backend 計算，不接受 LLM 指示。
 
-目前 code 的 `knowledge_chunks` 已有 Notion block/page 連結與向量欄位，但
-repository 仍拒絕非 Notion `source_kind`。Generic source contract 是 planned
-migration boundary，不能在文件中宣稱已完成。
+目前 code 的 `knowledge_chunks` 同時保留 Notion block/page 連結與 PDF
+`source_document_id`，並共用向量、embedding identity、provenance、owner scope 與
+eligibility 欄位。Repository 允許 `notion` 與 `pdf`；PDF 只有在其
+`SourceDocument.status=indexed` 且 chunk eligibility 為 `eligible` 時可被 retrieval
+使用。`KnowledgeSource` table 仍是 conceptual entity，本輪沒有為它建立大型新
+schema。
 
 ## `ConversationSession`
 
@@ -173,6 +177,9 @@ score: optional
 
 Citation 由 backend 從 retrieved chunk metadata 組出。LLM 只能使用提供的
 evidence，不能自行建立 citation。
+
+PDF citation 的 `locator` 使用 parser 實際提供的 `page N`；若沒有 page metadata，
+backend 使用 deterministic `chunk N`，不虛構頁碼。
 
 Memory 只能以 `Used saved memory` 等明確標記呈現，不能填入 enterprise document
 citation 欄位。

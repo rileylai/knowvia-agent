@@ -5,12 +5,15 @@ import hashlib
 import json
 from dataclasses import dataclass
 from http import HTTPStatus
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from src.db.unit_of_work import UnitOfWorkFactory
 from src.services import (
     MAX_PDF_BYTES,
     STANDARD_FAILURE_REASONS,
+    CostTracker,
+    EmbeddingBatchError,
+    EmbeddingBatchService,
     UploadValidationError,
     WorkflowRunAuditUpdateError,
     WorkflowRunService,
@@ -20,6 +23,8 @@ from src.services import (
     validate_pdf_metadata,
     validate_pdf_page_count,
 )
+from src.rag import chunk_text_document
+from src.repositories import KnowledgeChunkUpsert
 from src.tools import ToolContext, ToolRegistry
 
 PDF_PARSER_TOOL_NAME = "pdf_parser"
@@ -34,6 +39,9 @@ TOOL_ERROR_TO_HTTP_STATUS: Dict[str, int] = {
     "PDF_PARSE_FAILED": HTTPStatus.UNPROCESSABLE_ENTITY,
     "PDF_PAGE_LIMIT_EXCEEDED": HTTPStatus.UNPROCESSABLE_ENTITY,
     "EXTRACTED_TEXT_LIMIT_EXCEEDED": HTTPStatus.UNPROCESSABLE_ENTITY,
+    "EMBEDDING_PROVIDER_NOT_CONFIGURED": HTTPStatus.SERVICE_UNAVAILABLE,
+    "EMBEDDING_PROVIDER_ERROR": HTTPStatus.BAD_GATEWAY,
+    "VECTOR_DIMENSION_MISMATCH": HTTPStatus.BAD_GATEWAY,
 }
 
 
@@ -45,6 +53,9 @@ class DocumentIngestionResult:
     source_type: str
     source_display_name: str
     content_hash: str
+    index_status: str = "parsed"
+    indexed_chunk_count: int = 0
+    embedded_chunk_count: int = 0
 
 
 class DocumentIngestionError(Exception):
@@ -72,10 +83,16 @@ class DocumentIngestionOrchestrator:
         tool_registry: ToolRegistry,
         unit_of_work_factory: UnitOfWorkFactory,
         workflow_run_service: WorkflowRunService,
+        embedding_batch_service: Optional[EmbeddingBatchService] = None,
+        cost_tracker: Optional[CostTracker] = None,
+        index_knowledge: bool = True,
     ) -> None:
         self._tool_registry = tool_registry
         self._unit_of_work_factory = unit_of_work_factory
         self._workflow_run_service = workflow_run_service
+        self._embedding_batch_service = embedding_batch_service
+        self._cost_tracker = cost_tracker
+        self._index_knowledge = index_knowledge
 
     async def ingest_document(
         self,
@@ -124,6 +141,10 @@ class DocumentIngestionOrchestrator:
             ),
         )
 
+        source_document_id: Optional[int] = None
+        indexed_chunk_count = 0
+        embedded_chunk_count = 0
+        embedding_metadata: Dict[str, Any] = {}
         try:
             parsed = await self._parse_pdf(
                 file_name=normalized_file_name,
@@ -149,11 +170,135 @@ class DocumentIngestionOrchestrator:
                     source_display_name=normalized_file_name,
                     raw_text=raw_text,
                     content_hash=content_hash,
+                    owner_scope="local",
+                    status="indexing" if self._index_knowledge else "parsed",
                 )
                 source_document_id = int(source_document.id)
                 persisted_source_type = source_document.source_type
                 persisted_display_name = source_document.source_display_name
                 persisted_content_hash = source_document.content_hash
+
+            if not self._index_knowledge:
+                self._workflow_run_service.mark_workflow_succeeded(
+                    workflow_run.id,
+                    metadata_json=json.dumps(
+                        {
+                            "operation": "ingest_document",
+                            "source_document_id": source_document_id,
+                            "source_type": "pdf",
+                            "source_display_name": normalized_file_name,
+                            "content_hash": content_hash,
+                            "page_count": parsed.get("page_count"),
+                            "char_count": len(raw_text),
+                            "index_status": "parsed",
+                        },
+                        sort_keys=True,
+                    ),
+                )
+                return DocumentIngestionResult(
+                    workflow_run_id=workflow_run.id,
+                    status="succeeded",
+                    source_document_id=source_document_id,
+                    source_type=persisted_source_type,
+                    source_display_name=persisted_display_name,
+                    content_hash=persisted_content_hash,
+                    index_status="parsed",
+                )
+
+            chunk_drafts = chunk_text_document(
+                raw_text,
+                source_kind="pdf",
+                source_display_name=normalized_file_name,
+                pages=self._extract_pages(parsed),
+            )
+            if not chunk_drafts:
+                raise DocumentIngestionError(
+                    error_code="PDF_PARSE_FAILED",
+                    message="No searchable text chunks were produced from PDF",
+                    http_status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                    failure_reason="PDF_PARSE_FAILED",
+                )
+            if self._embedding_batch_service is None:
+                raise DocumentIngestionError(
+                    error_code="EMBEDDING_PROVIDER_NOT_CONFIGURED",
+                    message="Embedding provider is not configured for PDF indexing",
+                    http_status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+                    failure_reason="EMBEDDING_PROVIDER_NOT_CONFIGURED",
+                )
+
+            try:
+                embedding_result = await self._embedding_batch_service.embed(
+                    [draft.chunk_text for draft in chunk_drafts],
+                    metadata={
+                        "workflow_id": request_workflow_id,
+                        "operation": "index_pdf",
+                        "source_kind": "pdf",
+                    },
+                )
+            except EmbeddingBatchError as exc:
+                failure_reason = self._normalize_failure_reason(exc.failure_reason)
+                raise DocumentIngestionError(
+                    error_code=failure_reason,
+                    message="Failed to generate PDF chunk embeddings",
+                    http_status_code=TOOL_ERROR_TO_HTTP_STATUS.get(
+                        failure_reason, HTTPStatus.BAD_GATEWAY
+                    ),
+                    failure_reason=failure_reason,
+                ) from None
+
+            if len(embedding_result.embeddings) != len(chunk_drafts):
+                raise DocumentIngestionError(
+                    error_code="VECTOR_DIMENSION_MISMATCH",
+                    message="Embedding response does not match PDF chunk count",
+                    http_status_code=HTTPStatus.BAD_GATEWAY,
+                    failure_reason="VECTOR_DIMENSION_MISMATCH",
+                )
+            indexed_chunks = [
+                KnowledgeChunkUpsert(
+                    source_document_id=source_document_id,
+                    source_kind=draft.source_kind,
+                    chunk_index=draft.chunk_index,
+                    chunk_text=draft.chunk_text,
+                    source_display_name=normalized_file_name,
+                    locator=draft.locator,
+                    embedding=embedding,
+                    embedding_model=embedding_result.model,
+                    embedding_dimensions=embedding_result.dimensions,
+                    citation_metadata=draft.citation_meta,
+                    owner_scope="local",
+                    eligibility_status="eligible",
+                )
+                for draft, embedding in zip(
+                    chunk_drafts, embedding_result.embeddings
+                )
+            ]
+            with self._unit_of_work_factory() as unit_of_work:
+                persisted_chunks = unit_of_work.chunks.upsert_source_document_chunks(
+                    source_document_id=source_document_id,
+                    chunks=indexed_chunks,
+                )
+                unit_of_work.source_documents.update_status(
+                    source_document_id=source_document_id,
+                    status="indexed",
+                )
+            indexed_chunk_count = len(persisted_chunks)
+            embedded_chunk_count = len(embedding_result.embeddings)
+            embedding_metadata = {
+                "embedding_provider": embedding_result.provider,
+                "embedding_model": embedding_result.model,
+                "embedding_dimensions": embedding_result.dimensions,
+                "embedding_token_input": embedding_result.token_input,
+                "embedding_batch_count": embedding_result.batch_count,
+                "embedding_retry_count": embedding_result.retry_count,
+            }
+            if self._cost_tracker is not None:
+                embedding_metadata["embedding_estimated_cost"] = (
+                    self._cost_tracker.estimate_embedding_cost(
+                        provider_name=embedding_result.provider,
+                        model=embedding_result.model,
+                        token_input=embedding_result.token_input,
+                    )
+                )
 
             self._workflow_run_service.mark_workflow_succeeded(
                 workflow_run.id,
@@ -166,6 +311,10 @@ class DocumentIngestionOrchestrator:
                         "content_hash": content_hash,
                         "page_count": parsed.get("page_count"),
                         "char_count": len(raw_text),
+                        "index_status": "indexed",
+                        "indexed_chunk_count": indexed_chunk_count,
+                        "embedded_chunk_count": embedded_chunk_count,
+                        **embedding_metadata,
                     },
                     sort_keys=True,
                 ),
@@ -173,6 +322,7 @@ class DocumentIngestionOrchestrator:
         except WorkflowRunAuditUpdateError:
             raise
         except DocumentIngestionError as exc:
+            self._mark_source_document_failed(source_document_id)
             self._mark_failed_workflow(
                 workflow_run_id=workflow_run.id,
                 failure_reason=exc.failure_reason,
@@ -186,6 +336,7 @@ class DocumentIngestionOrchestrator:
                 workflow_run_id=workflow_run.id,
             ) from exc
         except Exception as exc:
+            self._mark_source_document_failed(source_document_id)
             self._mark_failed_workflow(
                 workflow_run_id=workflow_run.id,
                 failure_reason="UNKNOWN_ERROR",
@@ -206,6 +357,9 @@ class DocumentIngestionOrchestrator:
             source_type=persisted_source_type,
             source_display_name=persisted_display_name,
             content_hash=persisted_content_hash,
+            index_status="indexed",
+            indexed_chunk_count=indexed_chunk_count,
+            embedded_chunk_count=embedded_chunk_count,
         )
 
     async def _parse_pdf(
@@ -283,6 +437,24 @@ class DocumentIngestionOrchestrator:
                 failure_reason=exc.failure_reason,
             ) from exc
         return normalized_raw_text
+
+    def _extract_pages(self, parser_output: Dict[str, Any]) -> List[str]:
+        pages = parser_output.get("pages")
+        if not isinstance(pages, list):
+            return []
+        return [page for page in pages if isinstance(page, str)]
+
+    def _mark_source_document_failed(self, source_document_id: Optional[int]) -> None:
+        if source_document_id is None:
+            return
+        try:
+            with self._unit_of_work_factory() as unit_of_work:
+                unit_of_work.source_documents.update_status(
+                    source_document_id=source_document_id,
+                    status="failed",
+                )
+        except Exception:
+            return
 
     def _build_content_hash(self, raw_text: str) -> str:
         return hashlib.sha256(raw_text.encode("utf-8")).hexdigest()

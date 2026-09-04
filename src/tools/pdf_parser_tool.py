@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import base64
 import binascii
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from io import BytesIO
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from src.tools.base import Tool
 from src.tools.models import ToolContext, ToolResult, ToolSpec
@@ -22,6 +22,7 @@ from src.services import (
 class ParsedPDFDocument:
     raw_text: str
     page_count: int
+    pages: List[str] = field(default_factory=list)
 
 
 class PDFParserClientError(Exception):
@@ -76,9 +77,9 @@ class PyPDFParserClient(PDFParserClient):
                         ),
                         error_code="EXTRACTED_TEXT_LIMIT_EXCEEDED",
                     )
-                page_texts.append(stripped)
+            page_texts.append(stripped)
 
-        raw_text = "\n\n".join(page_texts).strip()
+        raw_text = "\n\n".join(page for page in page_texts if page).strip()
         if not raw_text:
             raise PDFParserClientError("No extractable text found in PDF")
         try:
@@ -89,7 +90,11 @@ class PyPDFParserClient(PDFParserClient):
                 error_code=exc.error_code,
             ) from exc
 
-        return ParsedPDFDocument(raw_text=raw_text, page_count=len(reader.pages))
+        return ParsedPDFDocument(
+            raw_text=raw_text,
+            page_count=len(reader.pages),
+            pages=page_texts,
+        )
 
 
 class PDFParserTool(Tool):
@@ -108,11 +113,15 @@ class PDFParserTool(Tool):
             },
             output_schema={
                 "type": "object",
-                "required": ["raw_text", "page_count", "char_count"],
+                "required": ["raw_text", "page_count", "char_count", "pages"],
                 "properties": {
                     "raw_text": {"type": "string"},
                     "page_count": {"type": "integer"},
                     "char_count": {"type": "integer"},
+                    "pages": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
                 },
             },
         )
@@ -183,5 +192,6 @@ class PDFParserTool(Tool):
                 "raw_text": parsed.raw_text,
                 "page_count": parsed.page_count,
                 "char_count": len(parsed.raw_text),
+                "pages": list(getattr(parsed, "pages", [])),
             },
         )

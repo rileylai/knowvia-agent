@@ -16,7 +16,7 @@ if str(REPO_ROOT) not in sys.path:
 from src.app.dependencies import get_embedding_client, get_provider_router
 from src.app.main import app
 from src.db.base import Base
-from src.db.models import KnowledgeChunk, NotionBlock, NotionPage, WorkflowRun
+from src.db.models import KnowledgeChunk, NotionBlock, NotionPage, SourceDocument, WorkflowRun
 from src.db.session import get_db_session, get_db_session_factory, get_unit_of_work_factory
 from src.db.unit_of_work import SqlAlchemyUnitOfWork
 from src.providers import (
@@ -98,6 +98,7 @@ def _build_session_factory() -> sessionmaker:
         tables=[
             NotionPage.__table__,
             NotionBlock.__table__,
+            SourceDocument.__table__,
             KnowledgeChunk.__table__,
             WorkflowRun.__table__,
         ],

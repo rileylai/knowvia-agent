@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 
-from src.app.dependencies import get_business_unit_of_work_factory, get_tool_registry
+from src.app.dependencies import (
+    build_embedding_batch_service,
+    get_business_unit_of_work_factory,
+    get_cost_tracker,
+    get_embedding_client,
+    get_tool_registry,
+)
 from src.app.schemas import (
     ChatTextIngestionRequest,
     SourceDocumentCreateRequest,
@@ -30,11 +38,13 @@ from src.orchestrators import (
     URLIngestionError,
     URLIngestionOrchestrator,
 )
+from src.providers import EmbeddingClient
 from src.services import (
     MAX_OCR_IMAGE_BYTES,
     MAX_OCR_IMAGE_COUNT,
     MAX_OCR_TOTAL_BYTES,
     MAX_PDF_BYTES,
+    CostTracker,
     UploadValidationError,
     WorkflowRunService,
     validate_file_bytes,
@@ -102,11 +112,15 @@ def _build_document_ingestion_orchestrator(
     db_session_factory: SessionFactory,
     unit_of_work_factory: UnitOfWorkFactory,
     tool_registry: ToolRegistry,
+    embedding_client: Optional[EmbeddingClient],
+    cost_tracker: CostTracker,
 ) -> DocumentIngestionOrchestrator:
     return DocumentIngestionOrchestrator(
         tool_registry=tool_registry,
         unit_of_work_factory=unit_of_work_factory,
         workflow_run_service=WorkflowRunService(db_session_factory),
+        embedding_batch_service=build_embedding_batch_service(embedding_client),
+        cost_tracker=cost_tracker,
     )
 
 
@@ -238,11 +252,15 @@ async def ingest_pdf_document(
     db_session_factory: SessionFactory = Depends(get_db_session_factory),
     unit_of_work_factory: UnitOfWorkFactory = Depends(get_business_unit_of_work_factory),
     tool_registry: ToolRegistry = Depends(get_tool_registry),
+    embedding_client: Optional[EmbeddingClient] = Depends(get_embedding_client),
+    cost_tracker: CostTracker = Depends(get_cost_tracker),
 ) -> SourceDocumentCreateResponse:
     orchestrator = _build_document_ingestion_orchestrator(
         db_session_factory=db_session_factory,
         unit_of_work_factory=unit_of_work_factory,
         tool_registry=tool_registry,
+        embedding_client=embedding_client,
+        cost_tracker=cost_tracker,
     )
     request_workflow_id = str(getattr(request.state, "workflow_id", ""))
 
@@ -285,6 +303,9 @@ async def ingest_pdf_document(
         source_type=result.source_type,
         source_display_name=result.source_display_name,
         content_hash=result.content_hash,
+        index_status=result.index_status,
+        indexed_chunk_count=result.indexed_chunk_count,
+        embedded_chunk_count=result.embedded_chunk_count,
     )
 
 

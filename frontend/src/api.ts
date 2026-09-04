@@ -1,7 +1,10 @@
 export type QACitation = {
-  notion_path: string;
-  page_id: string | null;
+  notion_path?: string | null;
+  page_id?: string | null;
   score: number;
+  source_kind?: string;
+  source_display_name?: string | null;
+  locator?: string | null;
 };
 
 export type QAResponse = {
@@ -13,6 +16,18 @@ export type QAResponse = {
   citations: QACitation[];
   provider: string | null;
   model: string | null;
+};
+
+export type PDFIndexResponse = {
+  workflow_run_id: number;
+  status: string;
+  source_document_id: number;
+  source_type: string;
+  source_display_name: string;
+  content_hash: string;
+  index_status: string | null;
+  indexed_chunk_count: number;
+  embedded_chunk_count: number;
 };
 
 type ErrorDetail = {
@@ -67,4 +82,39 @@ export async function askQuestion(
   }
 
   return payload as QAResponse;
+}
+
+export async function indexPDF(
+  file: File,
+  request: typeof fetch = fetch,
+): Promise<PDFIndexResponse> {
+  const formData = new FormData();
+  formData.append("document", file, file.name);
+
+  let response: Response;
+  try {
+    response = await request("/api/ingest/document", {
+      method: "POST",
+      body: formData,
+    });
+  } catch {
+    throw new Error("Unable to reach the Knowvia backend.");
+  }
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error(
+      response.ok
+        ? "Knowvia returned an unreadable response."
+        : `Knowvia returned an error (${response.status}).`,
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(errorMessage(payload, response.status));
+  }
+
+  return payload as PDFIndexResponse;
 }

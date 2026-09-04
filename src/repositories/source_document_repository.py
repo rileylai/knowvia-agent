@@ -27,12 +27,16 @@ class SourceDocumentRepository:
         source_display_name: str,
         raw_text: str,
         content_hash: str,
+        owner_scope: str = "local",
+        status: str = "parsed",
     ) -> SourceDocument:
         source_document = SourceDocument(
             source_type=source_type,
             source_display_name=source_display_name,
             raw_text=raw_text,
             content_hash=content_hash,
+            owner_scope=owner_scope,
+            status=status,
         )
 
         if self._session.bind is not None and self._session.bind.dialect.name == "sqlite":
@@ -45,3 +49,15 @@ class SourceDocumentRepository:
 
     def get_source_document_by_id(self, source_document_id: int) -> Optional[SourceDocument]:
         return self._session.get(SourceDocument, source_document_id)
+
+    def update_status(self, *, source_document_id: int, status: str) -> SourceDocument:
+        source_document = self.get_source_document_by_id(source_document_id)
+        if source_document is None:
+            raise ValueError(f"SourceDocument not found: {source_document_id}")
+        normalized_status = status.strip().lower()
+        if not normalized_status:
+            raise ValueError("status must not be empty")
+        source_document.status = normalized_status
+        self._session.flush()
+        self._session.refresh(source_document)
+        return source_document

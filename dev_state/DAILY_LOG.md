@@ -119,8 +119,9 @@ Frontend 不在本輪驗收範圍內，未啟動。
   使用單一 client-side navigation，不含 session persistence。
 - Chat 連接現有 `POST /api/qa`，顯示 idle、loading、success、
   `insufficient_info` 與 error state。送出期間會停用輸入與按鈕。
-- Citation 只讀取 backend response 的 `notion_path`、`page_id` 與 `score`。
-- Knowledge 顯示目前的 Notion-only baseline；upload 與 URL controls 維持 disabled。
+- Citation 只讀取 backend response 的 source metadata 與 `score`，保留既有 Notion
+  citation 相容性。
+- Knowledge 顯示 PDF baseline；PDF upload 已在本輪啟用，URL control 維持 disabled。
 - Memory 只顯示 phase 4.0 placeholder，沒有 localStorage 或模擬資料。
 - Local Vite proxy 將 `/api` 轉送至 `KNOWVIA_API_BASE_URL`。若 backend 設定
   `API_BEARER_TOKEN`，token 由 dev server 加入 request，不進入 browser bundle。
@@ -136,10 +137,8 @@ Frontend 不在本輪驗收範圍內，未啟動。
 
 ### Manual Verification
 
-Not yet manually verified.
-
-等待使用者驗證 navigation、Chat success、backend citation、`insufficient_info`、
-backend offline error，以及 Knowledge 與 Memory placeholder。
+- 使用者已完成 navigation、Chat success、backend citation、`insufficient_info`、
+  backend offline error，以及 Knowledge 與 Memory placeholder 人工驗收。
 
 ### Issues
 
@@ -148,8 +147,8 @@ backend offline error，以及 Knowledge 與 Memory placeholder。
 
 ### Next
 
-- 使用者完成 frontend manual verification 後，再決定是否將 `1.0` 標記為
-  `done`。本輪不開始 `2.0 Generic Knowledge Contract`。
+- `0.2.1`、`1.0`、`1.0.1` 與 `1.0.2` 的人工驗收已完成；下一個 implementation
+  slice 為 `2.0 Generic Knowledge Contract` 與 `2.1 PDF Knowledge Pipeline`。
 
 ## 2026-09-04 Runtime isolation and frontend follow-ups
 
@@ -199,12 +198,117 @@ backend offline error，以及 Knowledge 與 Memory placeholder。
 
 ### Manual Verification
 
-Not yet manually verified.
-
-等待使用者確認 Docker state、舊 LearnLoop data 保留、三份 PDF、keyboard/IME
-行為，以及有 evidence 與無 evidence 的 Chat 結果。
+- `0.2.1` Docker state、Knowvia database identity、pgvector、health/readiness 與
+  LearnLoop data preservation：PASS。
+- `1.0` navigation、Chat loading/success/error、Knowledge/Memory placeholder：PASS。
+- `1.0.1` Enter、Shift+Enter 與 IME 行為：PASS。
+- `1.0.2` 有 evidence 與無 evidence 的 Chat、`insufficient_info` 與 zero citations：PASS。
 
 ### Next
 
-- `0.2.1`、`1.0.1`、`1.0.2` 與 parent `1.0` 維持
-  `manual_verification`。`2.0` 與 `2.1` 未開始。
+- `2.0` 與 `2.1` implementation 已開始，完成後由使用者進行本輪 PDF manual
+  verification。
+
+## 2026-09-04 Generic Knowledge Contract and PDF Knowledge Pipeline
+
+### Scope
+
+- Local positive QA source 改用 `mock_data/` 既有三份 PDF；本輪不進行 Notion
+  discovery、page selection、private content reading 或 Notion local baseline 建立。
+- `2.0` 只抽出 PDF vertical slice 真正需要的 generic contract，未建立新的
+  `KnowledgeSource` table 或 PDF-specific chunk table。
+
+### Done
+
+- `SourceDocument` 增加 `owner_scope`、`status`；`KnowledgeChunk` 增加 source
+  display、locator、citation metadata、embedding identity、owner scope 與
+  eligibility metadata。
+- PDF ingestion endpoint 現在同步執行 validate → parse → normalize → persist
+  `SourceDocument` → deterministic chunk → existing embedding batch/provider
+  abstraction → persist `KnowledgeChunk` → mark indexed。
+- Incomplete indexing 會將 snapshot 標為 failed，且不會進入 retrieval。Retriever
+  只擴充 source eligibility，未改變 pgvector 或 lexical fallback 演算法。
+- QA citation 改由 backend retrieved metadata 組成，PDF 使用 parser 可可靠提供的
+  `page N` locator；無 page metadata 時使用 deterministic chunk locator。
+- Knowledge surface 已啟用 PDF upload 的 idle、uploading/indexing、success、error
+  states；`Add URL` 維持 disabled。Chat citation 同時支援 PDF 與既有 Notion metadata。
+- Telegram legacy PDF path 維持 parse-only，不接回 Knowvia active indexing path。
+
+### Automated Evidence
+
+- PDF pipeline tests：`3 passed`。
+- PDF API tests：`15 passed`。
+- QA API regression：`5 passed`；QA orchestrator PDF citation regression 已加入。
+- Parser、retriever、chunk repository targeted regression：`19 passed`。
+- Frontend App tests：`16 passed`。
+- Frontend production build：PASS。
+- Alembic migration fresh SQLite upgrade/downgrade：`2 passed`。
+- Frozen full backend suite：`637 passed, 5 skipped`。
+
+### Live Local Verification
+
+- 三份 sample PDF 均完成正式 `/api/ingest/document` live upload/index，結果為
+  `22/22`、`17/17`、`40/40` chunks/embeddings，三個 snapshots 均為 `indexed`。
+- Bounded live positive QA：`HTTP 200`、`insufficient_info=false`、retrieved
+  `5` 個 PDF chunks、`5` 筆 backend-owned PDF citations；citation locator 使用
+  parser provenance 的 `page N`。
+- Bounded live insufficient-info QA：`HTTP 200`、`insufficient_info=true`、`citations=[]`。
+- 執行時只回報 bounded metadata，不輸出 PDF raw text、embedding input 或 vector。
+
+### Manual Verification
+
+Not yet manually verified.
+
+請依本輪回覆中的 guide 驗證 Knowledge PDF upload/index、Chat PDF citation、negative
+insufficient-info、invalid upload error，以及 `Add URL` disabled。
+
+### Next
+
+- 完成本輪 frozen regression 與 bounded live local verification後，等待 `2.0`、`2.1`
+  manual verification。
+- 不開始 `2.2 URL Knowledge Pipeline`。
+
+## 2026-09-04 PDF Positive QA Follow-ups
+
+### Scope
+
+- 針對使用者 browser 回報的 PDF positive QA failure，使用已 indexed 的
+  `Choose a design pattern for your agentic AI system` PDF 做 A/B/C bounded probes。
+- 不執行 Notion discovery、sync 或 private content QA；不加入新的 retrieval subsystem。
+
+### Diagnosis
+
+- A、B、C 的 pgvector top-5 都只命中目標 PDF，且每筆 metadata 都是
+  `source_status=indexed`、`eligibility_status=eligible`。
+- A：`insufficient_info=false`、`5` citations；C：`insufficient_info=false`、`3`
+  citations。
+- B：top-5 時 `insufficient_info=true`、`citations=[]`；擴至 top-10 後為
+  `insufficient_info=false`、`7` citations。
+- Ownership 判定為 retrieval coverage 與 evidence sufficiency 的最小組合，並非
+  eligibility failure 或 mixed-language retrieval failure。
+
+### Implementation
+
+- 新增 isolated DB + fake provider 的 public `/api/qa` regression，先以 default
+  `top_k=5` 重現，再將 generic QA default 改為 `top_k=10` 後通過。
+- 保留 `insufficient_info=true → citations=[]`；未修改 similarity threshold、prompt、
+  reranker、BM25、RRF 或其他 retrieval algorithm。
+- `2.1.2` 的 success card 已使用 backend `indexed_chunk_count` 與
+  `embedded_chunk_count`；既有 frontend test 已覆蓋實際 count rendering。
+
+### Post-fix Live Verification
+
+- 未指定 `top_k` 的正式 `/api/qa` default=10：A 為 `HTTP 200`、
+  `insufficient_info=false`、`10` retrieved、`9` citations；B 為
+  `HTTP 200`、`insufficient_info=false`、`10` retrieved、`7` citations；C 為
+  `HTTP 200`、`insufficient_info=false`、`10` retrieved、`7` citations。
+- Negative PDF question 仍為 `HTTP 200`、`insufficient_info=true`、`citations=[]`。
+- Positive citations 均為目標 PDF 的 backend-owned `page N` locator；沒有輸出 raw
+  PDF text、完整 prompt 或 provider response。
+
+### Manual Verification
+
+Not yet manually verified.
+
+等待使用者重新確認 PDF upload success card 的 chunk count，以及 A、B、C、negative
+question、invalid upload error 與 `Add URL` disabled。

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -25,6 +27,9 @@ class SourceDocumentCreateResponse(BaseModel):
     source_type: str
     source_display_name: str
     content_hash: str
+    index_status: Optional[str] = None
+    indexed_chunk_count: int = 0
+    embedded_chunk_count: int = 0
 
 
 class URLIngestionRequest(BaseModel):

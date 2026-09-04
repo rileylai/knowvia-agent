@@ -202,6 +202,60 @@ def test_qa_orchestrator_uses_query_embeddings_and_dedupes_citations() -> None:
     assert metadata["estimated_cost"] == pytest.approx(0.00000975)
 
 
+def test_qa_orchestrator_builds_pdf_citations_from_retrieved_metadata() -> None:
+    session_factory = _build_session_factory()
+    session = session_factory()
+    retriever = _FakeRetriever(
+        result=RetrievalResult(
+            chunks=[
+                RetrievedChunk(
+                    chunk_id=11,
+                    chunk_index=2,
+                    chunk_text="PDF evidence about bounded execution.",
+                    notion_path="",
+                    notion_page_id=None,
+                    source_kind="pdf",
+                    score=0.845123,
+                    source_document_id=7,
+                    source_display_name="agent-notes.pdf",
+                    locator="page 3",
+                )
+            ],
+            retrieval_mode=RETRIEVAL_MODE_LEXICAL_FALLBACK,
+            retrieval_fallback_reason=None,
+        )
+    )
+    provider_router = ProviderRouter()
+    provider_router.register_provider(_FakeProvider())
+    orchestrator = _build_orchestrator(
+        session=session,
+        session_factory=session_factory,
+        retriever=retriever,
+        embedding_client=None,
+        provider_router=provider_router,
+    )
+
+    result = asyncio.run(
+        orchestrator.answer_question(
+            query="What does the PDF say about execution?",
+            top_k=5,
+            page_ids=None,
+            section_paths=None,
+            source_kinds=["pdf"],
+            provider_name="openai",
+            model="gpt-4o-mini",
+            request_workflow_id="wf-qa-pdf-citation",
+        )
+    )
+
+    assert result.insufficient_info is False
+    assert len(result.citations) == 1
+    assert result.citations[0].source_kind == "pdf"
+    assert result.citations[0].source_display_name == "agent-notes.pdf"
+    assert result.citations[0].locator == "page 3"
+    assert result.citations[0].score == pytest.approx(0.845123)
+
+
 @pytest.mark.parametrize(
     "provider_answer",
     [

@@ -114,6 +114,10 @@ Retriever 在排序前套用：
 - chunk completeness 與 index status。
 - production eligibility。
 
+對 PDF 而言，`SourceDocument.status` 必須是 `indexed`，且所有 derived chunks 必須
+在完整 embedding persistence 後才標記為 `eligible`。Indexing failure 的 snapshot
+保持不可檢索。
+
 Pending、rejected、stale、synthetic、uncommitted 或不符合 source policy 的
 資料不得進入 production retrieval。
 

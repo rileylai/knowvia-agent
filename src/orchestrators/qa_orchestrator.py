@@ -64,6 +64,9 @@ class QACitationResult:
     notion_path: str
     page_id: Optional[str]
     score: float
+    source_kind: str = "notion"
+    source_display_name: Optional[str] = None
+    locator: Optional[str] = None
 
 
 @dataclass
@@ -531,24 +534,41 @@ class QAOrchestrator:
     def _build_context_text(self, retrieved_chunks: List[RetrievedChunk]) -> str:
         context_lines = []
         for idx, chunk in enumerate(retrieved_chunks, start=1):
+            source_display_name = (
+                chunk.source_display_name or chunk.notion_path or "unknown source"
+            )
+            locator = chunk.locator or chunk.notion_path or f"chunk {chunk.chunk_index + 1}"
             context_lines.append(
-                f"[C{idx}] path={chunk.notion_path} score={chunk.score:.4f}\n{chunk.chunk_text}"
+                f"[C{idx}] source_kind={chunk.source_kind} "
+                f"source={source_display_name} locator={locator} "
+                f"score={chunk.score:.4f}\n{chunk.chunk_text}"
             )
         return "\n\n".join(context_lines)
 
     def _build_citations(self, retrieved_chunks: List[RetrievedChunk]) -> List[QACitationResult]:
         citations: List[QACitationResult] = []
-        seen_paths = set()
+        seen_citations = set()
         for chunk in retrieved_chunks:
-            path = chunk.notion_path.strip()
-            if not path or path in seen_paths:
+            legacy_path = chunk.notion_path.strip()
+            source_kind = chunk.source_kind.strip().lower() or "notion"
+            source_display_name = (
+                chunk.source_display_name or legacy_path or "unknown source"
+            ).strip()
+            locator = (
+                chunk.locator or legacy_path or f"chunk {chunk.chunk_index + 1}"
+            ).strip()
+            citation_key = (source_kind, source_display_name, locator)
+            if not source_display_name or not locator or citation_key in seen_citations:
                 continue
-            seen_paths.add(path)
+            seen_citations.add(citation_key)
             citations.append(
                 QACitationResult(
-                    notion_path=path,
+                    notion_path=legacy_path,
                     page_id=chunk.notion_page_id,
                     score=round(chunk.score, 6),
+                    source_kind=source_kind,
+                    source_display_name=source_display_name,
+                    locator=locator,
                 )
             )
         return citations

@@ -15,7 +15,13 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from src.db.base import Base  # noqa: E402
-from src.db.models import KnowledgeChunk, NotionBlock, NotionPage, WorkflowRun  # noqa: E402
+from src.db.models import (  # noqa: E402
+    KnowledgeChunk,
+    NotionBlock,
+    NotionPage,
+    SourceDocument,
+    WorkflowRun,
+)
 from src.db.unit_of_work import SqlAlchemyUnitOfWork  # noqa: E402
 from src.orchestrators import (  # noqa: E402
     NotionIncrementalIndexOrchestrator,
@@ -159,6 +165,7 @@ def build_manual_sync_eval_session_factory():
         tables=[
             NotionPage.__table__,
             NotionBlock.__table__,
+            SourceDocument.__table__,
             KnowledgeChunk.__table__,
             WorkflowRun.__table__,
         ],

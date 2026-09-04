@@ -25,9 +25,10 @@ pixel、page count 或其他 source-specific limits。Parser 失敗時不得寫�
 
 ### Current
 
-PDF、Image/OCR、URL、YouTube 與 chat text 已能 parse/normalize 並保存
-`SourceDocument`。目前不會自動建立 generic chunks 或 vectors，因此這些來源
-尚未進入 QA retrieval。
+PDF 已走完整的 synchronous generic pipeline：validate、parse、normalize、保存
+`SourceDocument`、deterministic chunk、existing embedding provider abstraction、
+`KnowledgeChunk` 與 production eligibility。Image/OCR、URL、YouTube 與 chat text
+仍只 parse/normalize 並保存 `SourceDocument`，尚未進入 QA retrieval。
 
 Notion page index 已能讀取 page tree、建立 deterministic paths、chunk、embed，
 並寫入 Notion-derived `KnowledgeChunk`。
@@ -87,8 +88,9 @@ Backend 在每一步檢查 timeout、argument、permission、context budget 與 
 
 ### Current
 
-目前已有 synchronous `/api/qa`，使用 Notion-only retriever 與 Provider Router。
-Conversation session、bounded Agent loop 與 SSE 尚未實作。
+目前已有 synchronous `/api/qa`，使用共用 retriever、source eligibility filter 與
+Provider Router；Notion 與已完整 indexed 的 PDF 都可成為 evidence。Conversation
+session、bounded Agent loop 與 SSE 尚未實作。
 
 ## Memory search
 

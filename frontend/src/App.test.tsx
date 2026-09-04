@@ -51,8 +51,9 @@ describe("Knowvia frontend harness", () => {
 
     await user.click(screen.getByRole("button", { name: "Knowledge" }));
     expect(screen.getByRole("heading", { name: "Knowledge" })).toBeVisible();
-    expect(screen.getByText(/Notion-only baseline/i)).toBeVisible();
-    expect(screen.getByRole("button", { name: "Upload source" })).toBeDisabled();
+    expect(screen.getByText(/PDF knowledge baseline/i)).toBeVisible();
+    expect(screen.getByRole("button", { name: "Upload source" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Add URL" })).toBeDisabled();
 
     await user.click(screen.getByRole("button", { name: "Memory" }));
     expect(screen.getByRole("heading", { name: "Memory" })).toBeVisible();
@@ -63,7 +64,7 @@ describe("Knowvia frontend harness", () => {
 
   it("shows loading, prevents duplicate submission, then renders the answer", async () => {
     const deferred = deferredResponse();
-    const fetchMock = vi.fn(() => deferred.promise);
+    const fetchMock = vi.fn((..._args: Parameters<typeof fetch>) => deferred.promise);
     vi.stubGlobal("fetch", fetchMock);
     render(<App />);
 
@@ -203,6 +204,126 @@ describe("Knowvia frontend harness", () => {
     expect(await screen.findByText("Knowledge/NLP/Week5/Attention")).toBeVisible();
     expect(screen.getByText("91.3% match")).toBeVisible();
     expect(screen.getByText("page-nlp-week5")).toBeVisible();
+  });
+
+  it("uploads a PDF, shows indexing, then renders safe index metadata", async () => {
+    const deferred = deferredResponse();
+    const fetchMock = vi.fn((..._args: Parameters<typeof fetch>) => deferred.promise);
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+    const file = new File(["%PDF-1.7 fixture"], "agent-notes.pdf", {
+      type: "application/pdf",
+    });
+    await user.upload(screen.getByLabelText("PDF file"), file);
+
+    expect(screen.getByRole("status")).toHaveTextContent("Uploading and indexing");
+    expect(screen.getByRole("button", { name: "Upload source" })).toBeDisabled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/ingest/document");
+    expect(fetchMock.mock.calls[0][1]?.method).toBe("POST");
+    expect(fetchMock.mock.calls[0][1]?.body).toBeInstanceOf(FormData);
+
+    deferred.resolve(
+      new Response(
+        JSON.stringify({
+          workflow_run_id: 24,
+          status: "succeeded",
+          source_document_id: 9,
+          source_type: "pdf",
+          source_display_name: "agent-notes.pdf",
+          content_hash: "safe-hash",
+          index_status: "indexed",
+          indexed_chunk_count: 2,
+          embedded_chunk_count: 2,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    expect(await screen.findByText("PDF indexed")).toBeVisible();
+    expect(screen.getByText("agent-notes.pdf")).toBeVisible();
+    expect(screen.getByText("2 chunks · 2 embedded")).toBeVisible();
+  });
+
+  it("shows upload errors and blocks duplicate uploads while indexing", async () => {
+    const deferred = deferredResponse();
+    const fetchMock = vi.fn(() => deferred.promise);
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+    const input = screen.getByLabelText("PDF file");
+    const file = new File(["not a pdf"], "notes.txt", { type: "text/plain" });
+    fireEvent.change(input, { target: { files: [file] } });
+    expect(screen.getByRole("alert")).toHaveTextContent("Choose a PDF file");
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    const pdf = new File(["%PDF-1.7 fixture"], "notes.pdf", {
+      type: "application/pdf",
+    });
+    const pdfFiles = {
+      0: pdf,
+      length: 1,
+      item: (index: number) => (index === 0 ? pdf : null),
+    } as unknown as FileList;
+    fireEvent.change(input, { target: { files: pdfFiles } });
+    fireEvent.change(input, { target: { files: pdfFiles } });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("status")).toHaveTextContent("Uploading and indexing");
+
+    deferred.resolve(
+      new Response(
+        JSON.stringify({
+          workflow_run_id: 25,
+          status: "succeeded",
+          source_document_id: 10,
+          source_type: "pdf",
+          source_display_name: "notes.pdf",
+          content_hash: "safe-hash",
+          index_status: "indexed",
+          indexed_chunk_count: 1,
+          embedded_chunk_count: 1,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    expect(await screen.findByText("PDF indexed")).toBeVisible();
+  });
+
+  it("renders PDF citations and keeps legacy Notion citations compatible", async () => {
+    const pdfResponse = {
+      ...successPayload,
+      citations: [
+        {
+          notion_path: null,
+          page_id: null,
+          score: 0.845,
+          source_kind: "pdf",
+          source_display_name: "agent-notes.pdf",
+          locator: "page 3",
+        },
+      ],
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify(pdfResponse), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    );
+    render(<App />);
+
+    await submitQuestion("What is in the PDF?");
+
+    expect(await screen.findByText("agent-notes.pdf")).toBeVisible();
+    expect(screen.getByText("page 3")).toBeVisible();
+    expect(screen.getByText("84.5% match")).toBeVisible();
   });
 
   it("preserves the backend insufficient_info result as a distinct state", async () => {

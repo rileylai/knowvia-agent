@@ -7,6 +7,8 @@ from src.rag.chunker import (
     ChunkerBlock,
     ChunkerPage,
     NotionChunkDraft,
+    TextChunkDraft,
+    chunk_text_document,
     chunk_notion_page,
 )
 from src.rag.retriever import (
@@ -67,9 +69,11 @@ __all__ = [
     "SERIALIZER_VERSION",
     "TITLE_BODY_VERSION",
     "TITLE_HEADING_BODY_VERSION",
+    "TextChunkDraft",
     "build_block_paths",
     "build_document_embedding_input",
     "build_query_embedding_input",
     "chunk_notion_page",
+    "chunk_text_document",
     "sha256_text",
 ]
