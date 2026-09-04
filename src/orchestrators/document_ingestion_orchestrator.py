@@ -127,6 +127,8 @@ class DocumentIngestionOrchestrator:
                 failure_reason=exc.failure_reason,
             ) from exc
 
+        file_hash = self._build_file_hash(file_bytes)
+
         workflow_run = self._workflow_run_service.start_workflow(
             workflow_type="ingestion",
             metadata_json=json.dumps(
@@ -146,6 +148,45 @@ class DocumentIngestionOrchestrator:
         embedded_chunk_count = 0
         embedding_metadata: Dict[str, Any] = {}
         try:
+            if self._index_knowledge:
+                with self._unit_of_work_factory() as unit_of_work:
+                    existing_source = (
+                        unit_of_work.source_documents.find_indexed_pdf_source_by_file_hash(
+                            file_hash=file_hash,
+                            owner_scope="local",
+                        )
+                    )
+                if existing_source is not None:
+                    self._workflow_run_service.mark_workflow_succeeded(
+                        workflow_run.id,
+                        metadata_json=json.dumps(
+                            {
+                                "operation": "ingest_pdf_duplicate_guard",
+                                "source_document_id": existing_source.id,
+                                "source_type": "pdf",
+                                "source_display_name": existing_source.display_name,
+                                "file_hash": file_hash,
+                                "content_hash": existing_source.content_hash,
+                                "index_status": "indexed",
+                                "result_status": "already_indexed",
+                                "indexed_chunk_count": existing_source.chunk_count,
+                                "embedded_chunk_count": existing_source.chunk_count,
+                            },
+                            sort_keys=True,
+                        ),
+                    )
+                    return DocumentIngestionResult(
+                        workflow_run_id=workflow_run.id,
+                        status="already_indexed",
+                        source_document_id=existing_source.id,
+                        source_type=existing_source.source_kind,
+                        source_display_name=existing_source.display_name,
+                        content_hash=existing_source.content_hash,
+                        index_status=existing_source.status,
+                        indexed_chunk_count=existing_source.chunk_count,
+                        embedded_chunk_count=existing_source.chunk_count,
+                    )
+
             parsed = await self._parse_pdf(
                 file_name=normalized_file_name,
                 file_bytes=file_bytes,
@@ -164,12 +205,14 @@ class DocumentIngestionOrchestrator:
                     ) from exc
             raw_text = self._extract_raw_text(parsed)
             content_hash = self._build_content_hash(raw_text)
+
             with self._unit_of_work_factory() as unit_of_work:
                 source_document = unit_of_work.source_documents.create_source_document(
                     source_type="pdf",
                     source_display_name=normalized_file_name,
                     raw_text=raw_text,
                     content_hash=content_hash,
+                    file_hash=file_hash,
                     owner_scope="local",
                     status="indexing" if self._index_knowledge else "parsed",
                 )
@@ -458,6 +501,9 @@ class DocumentIngestionOrchestrator:
 
     def _build_content_hash(self, raw_text: str) -> str:
         return hashlib.sha256(raw_text.encode("utf-8")).hexdigest()
+
+    def _build_file_hash(self, file_bytes: bytes) -> str:
+        return hashlib.sha256(file_bytes).hexdigest()
 
     def _normalize_failure_reason(self, error_code: str) -> str:
         normalized = error_code.strip().upper()

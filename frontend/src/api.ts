@@ -30,6 +30,15 @@ export type PDFIndexResponse = {
   embedded_chunk_count: number;
 };
 
+export type KnowledgeSource = {
+  id: number;
+  display_name: string;
+  source_kind: string;
+  status: string;
+  chunk_count: number;
+  updated_at?: string | null;
+};
+
 type ErrorDetail = {
   message?: unknown;
 };
@@ -117,4 +126,32 @@ export async function indexPDF(
   }
 
   return payload as PDFIndexResponse;
+}
+
+export async function listKnowledgeSources(
+  request: typeof fetch = fetch,
+): Promise<KnowledgeSource[]> {
+  let response: Response;
+  try {
+    response = await request("/api/knowledge/sources");
+  } catch {
+    throw new Error("Unable to reach the Knowvia backend.");
+  }
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error(
+      response.ok
+        ? "Knowvia returned an unreadable response."
+        : `Knowvia returned an error (${response.status}).`,
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(errorMessage(payload, response.status));
+  }
+
+  return payload as KnowledgeSource[];
 }

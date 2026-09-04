@@ -219,6 +219,13 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 .source-success strong { display: block; margin-bottom: 7px; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 23px; font-weight: 500; }
 .source-success p { margin: 0; color: var(--ink-soft); font-size: 11px; overflow-wrap: anywhere; }
 .source-success-meta { display: grid; gap: 5px; color: var(--ink-soft); font-size: 9px; text-align: right; text-transform: uppercase; }
+.source-inventory { margin-top: 66px; }
+.source-inventory h2 { margin: 7px 0 18px; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 29px; font-weight: 500; }
+.source-inventory-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--ink); }
+.source-inventory-item { padding: 17px 0; border-bottom: 1px solid var(--line); }
+.source-inventory-item strong { display: block; overflow-wrap: anywhere; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 19px; font-weight: 500; }
+.source-inventory-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; color: var(--ink-soft); font-size: 9px; text-transform: uppercase; }
+.inventory-empty { margin: 0; padding: 18px 0; color: var(--ink-soft); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
 
 .memory-placeholder { display: grid; grid-template-columns: auto 1fr; gap: clamp(24px, 5vw, 64px); align-items: center; margin-top: 62px; padding: 34px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
 .memory-placeholder > span { color: var(--acid); font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: clamp(80px, 12vw, 150px); line-height: 0.8; -webkit-text-stroke: 1px var(--ink); }

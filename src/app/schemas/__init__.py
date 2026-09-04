@@ -11,6 +11,7 @@ from src.app.schemas.ops import ReadinessCheck, ReadinessResponse
 from src.app.schemas.qa import QACitation, QARequest, QAResponse
 from src.app.schemas.source_ingest import (
     ChatTextIngestionRequest,
+    KnowledgeSourceResponse,
     SourceDocumentCreateRequest,
     SourceDocumentCreateResponse,
     YouTubeIngestionRequest,
@@ -73,6 +74,7 @@ __all__ = [
     "QARequest",
     "QAResponse",
     "ChatTextIngestionRequest",
+    "KnowledgeSourceResponse",
     "SourceDocumentCreateRequest",
     "SourceDocumentCreateResponse",
     "SupplementAcceptRequest",

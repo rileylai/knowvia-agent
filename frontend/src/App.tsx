@@ -1,9 +1,17 @@
-import { ChangeEvent, FormEvent, KeyboardEvent, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
-import { askQuestion, indexPDF, type PDFIndexResponse, type QAResponse } from "./api";
+import {
+  askQuestion,
+  indexPDF,
+  listKnowledgeSources,
+  type KnowledgeSource,
+  type PDFIndexResponse,
+  type QAResponse,
+} from "./api";
 
 type Surface = "knowledge" | "chat" | "memory";
 type RequestState = "idle" | "loading" | "success" | "error";
+type InventoryState = "loading" | "success" | "empty" | "error";
 
 const surfaces: Array<{ id: Surface; label: string; index: string }> = [
   { id: "knowledge", label: "Knowledge", index: "01" },
@@ -15,8 +23,32 @@ function KnowledgeSurface() {
   const [requestState, setRequestState] = useState<RequestState>("idle");
   const [indexResult, setIndexResult] = useState<PDFIndexResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sources, setSources] = useState<KnowledgeSource[]>([]);
+  const [inventoryState, setInventoryState] = useState<InventoryState>("loading");
+  const [inventoryError, setInventoryError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isSubmitting = useRef(false);
+
+  const refreshInventory = async () => {
+    setInventoryState("loading");
+    setInventoryError(null);
+    try {
+      const result = await listKnowledgeSources();
+      setSources(result);
+      setInventoryState(result.length > 0 ? "success" : "empty");
+    } catch (caughtError) {
+      setInventoryError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Unable to load indexed sources.",
+      );
+      setInventoryState("error");
+    }
+  };
+
+  useEffect(() => {
+    void refreshInventory();
+  }, []);
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -41,6 +73,7 @@ function KnowledgeSurface() {
       const result = await indexPDF(file);
       setIndexResult(result);
       setRequestState("success");
+      void refreshInventory();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -117,7 +150,14 @@ function KnowledgeSurface() {
           {requestState === "success" && indexResult && (
             <div className="source-success" role="status">
               <div>
-                <strong>PDF indexed</strong>
+                <strong>
+                  {indexResult.status === "already_indexed"
+                    ? "Already indexed"
+                    : "PDF indexed"}
+                </strong>
+                {indexResult.status === "already_indexed" && (
+                  <p>This PDF is already indexed.</p>
+                )}
                 <p>{indexResult.source_display_name}</p>
               </div>
               <div className="source-success-meta">
@@ -131,6 +171,54 @@ function KnowledgeSurface() {
           )}
         </div>
       </div>
+
+      <section className="source-inventory" aria-labelledby="indexed-sources-heading">
+        <div className="section-kicker">Source inventory / indexed only</div>
+        <h2 id="indexed-sources-heading">Indexed Sources</h2>
+        <div aria-live="polite">
+          {inventoryState === "loading" && (
+            <div className="loading-state" role="status">
+              <span className="loading-orbit" aria-hidden="true" />
+              <div>
+                <strong>Loading indexed sources</strong>
+                <p>Checking the current PDF source inventory.</p>
+              </div>
+            </div>
+          )}
+
+          {inventoryState === "error" && inventoryError && (
+            <div className="error-state" role="alert">
+              <span aria-hidden="true">!</span>
+              <div>
+                <strong>Source inventory unavailable</strong>
+                <p>{inventoryError}</p>
+              </div>
+            </div>
+          )}
+
+          {inventoryState === "empty" && (
+            <p className="inventory-empty">No indexed sources yet.</p>
+          )}
+
+          {inventoryState === "success" && (
+            <ul className="source-inventory-list">
+              {sources.map((source) => (
+                <li key={source.id} className="source-inventory-item">
+                  <div>
+                    <strong>{source.display_name}</strong>
+                    <div className="source-inventory-meta">
+                      <span>{source.source_kind}</span>
+                      <span>{source.status}</span>
+                      <span>{source.chunk_count} chunks</span>
+                      {source.updated_at && <span>updated · {source.updated_at}</span>}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
     </section>
   );
 }

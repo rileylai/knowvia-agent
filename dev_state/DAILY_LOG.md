@@ -257,7 +257,8 @@ Frontend 不在本輪驗收範圍內，未啟動。
 
 ### Manual Verification
 
-Not yet manually verified.
+後續 browser manual verification 已完成，詳見下方 `PDF Follow-up Manual Verification` 與
+`PDF Source Inventory and Exact Duplicate Guard` 紀錄。
 
 請依本輪回覆中的 guide 驗證 Knowledge PDF upload/index、Chat PDF citation、negative
 insufficient-info、invalid upload error，以及 `Add URL` disabled。
@@ -308,10 +309,10 @@ insufficient-info、invalid upload error，以及 `Add URL` disabled。
 
 ### Manual Verification
 
-Not yet manually verified.
+後續 browser manual verification 已完成，詳見下方 `PDF Follow-up Manual Verification`
+紀錄。
 
-等待使用者重新確認 PDF upload success card 的 chunk count，以及 A、B、C、negative
-question、invalid upload error 與 `Add URL` disabled。
+上述項目已由後續 browser manual verification 確認，結果記錄於下方驗收紀錄。
 
 ## 2026-09-04 PDF Follow-up Manual Verification
 
@@ -338,3 +339,86 @@ question、invalid upload error 與 `Add URL` disabled。
 - Append `2.1.3 PDF Source Inventory and Exact Duplicate Guard`，目前維持 `planned`。
 - `2.0` 與 `2.1` 維持 `manual_verification`；本輪不開始 `2.1.3` implementation，
   也不開始 `2.2`。
+
+## 2026-09-05 PDF Source Inventory and Exact Duplicate Guard
+
+### Scope
+
+- 實作 `2.1.3 PDF Source Inventory and Exact Duplicate Guard`。
+- 本輪只處理 indexed PDF inventory 與 exact duplicate protection；不開始 `2.2`
+  URL Knowledge Pipeline，也不執行 Notion discovery、sync 或 private content 操作。
+
+### Implementation
+
+- 沿用 `SourceDocument` 的 `owner_scope`、`source_type`、`content_hash`、`status`
+  與 `updated_at`，新增 raw PDF `file_hash`；沒有新增 `KnowledgeSource` table。
+- `file_hash` 使用 raw uploaded PDF bytes 的 SHA-256，既有 `content_hash` 維持
+  normalized extracted text 的 SHA-256。既有 records 的 `file_hash=NULL` 未 backfill。
+- 新增只回傳 source-level metadata 的 `GET /api/knowledge/sources`。Inventory 只列
+  `local` owner、`pdf`、`indexed` source，chunk count 只計入 eligible PDF chunks。
+- PDF index flow 在 parser 前以 raw `file_hash` 查找同 owner、同 source kind、同 hash 的
+  indexed source。命中時回傳 `already_indexed`、reuse existing source 與 chunk count，
+  不重新 parse、chunk、embedding 或建立 searchable chunks。
+- 相同 raw bytes 即使 filename 不同仍會 dedup；同 filename、不同 raw bytes 仍允許建立
+  新 source。filename 不作 authoritative identity。
+- Knowledge surface 新增 Indexed Sources 的 loading、success、empty、error states，
+  upload 成功後重新載入 inventory；`Add URL` 維持 disabled。
+
+### Automated Evidence
+
+- `2.1.3` hash 與 source-management targeted backend tests：`12 passed`。
+- PDF/source/retrieval/citation/API targeted regression：`52 passed`。
+- Frontend tests：`21 passed`。
+- Frontend production build：PASS。
+- Frozen full backend suite：`645 passed, 5 skipped`。
+- `git diff --check`：PASS。
+- Local Knowvia migration 已升級至新增 `file_hash` 欄位與 index 的 revision；既有資料未
+  修改。
+
+### Existing Duplicate Report
+
+- local indexed PDF 有 `1` 組既存 normalized-content duplicate：`2` 個
+  `SourceDocument`、合計 `80` 個 eligible chunks。這些 records 的 raw `file_hash` 為
+  `NULL`，因此不將該組報告當成 raw-file exact duplicate。
+- 既有 duplicate records 未刪除、未重建 database 或 volume；後續另行決定 cleanup
+  policy。
+
+### Bounded Live Verification
+
+- `GET /api/knowledge/sources`：`HTTP 200`，回傳 `4` 筆 indexed PDF source-level
+  records，合計 `119` 個 eligible chunks。
+- Migration 前的既有 duplicate probe 使用 normalized-text identity，不作為本輪 raw
+  file identity 的 verification evidence。
+- 本輪 browser manual verification 已使用新版 pipeline 建立含 raw `file_hash` 的 source，
+  再以不同 filename 上傳相同 raw bytes；結果為 `Already indexed`，沒有新增
+  `SourceDocument` 或 searchable chunks。
+- Verification 只使用 `mock_data/` PDF，沒有呼叫 Notion，也沒有輸出 raw PDF text、
+  embedding、provider response 或 secrets。
+
+### Manual Verification
+
+已完成 browser manual verification。
+
+- Knowledge 頁面可看到 Indexed Sources；每筆 PDF source 顯示 filename、source kind、
+  Indexed status、chunk count 與可用的 updated time。
+- 使用新版 pipeline 建立含 raw `file_hash` 的 PDF source 後，再上傳完全相同 raw bytes
+  但不同 filename 的 PDF，顯示 `Already indexed`。
+- Exact duplicate 沒有重新 indexing，沒有新增 `SourceDocument`，也沒有增加 searchable
+  chunk count。
+- 不同 raw bytes 的 PDF 可以建立新 source。
+- PDF positive QA 正常回答並提供 backend-owned PDF citations；unsupported query 仍為
+  `insufficient_info` 且 zero citations。
+- `Add URL` 維持 disabled。
+- 舊有 `file_hash=NULL` records 未修改或刪除。
+
+### Known Limitation
+
+- 帶有 `in this document` 的 query 仍缺少 deterministic referent，因為目前沒有
+  Conversation Session 或 current-source scope。這不是 `2.1.3` blocker；
+  conversational referent 與 current source context 留到後續 Conversation Sessions /
+  context work，不新增新的 `3.x` implementation follow-up。
+
+### Next
+
+- `2.0`、`2.1` 與 `2.1.3` 已完成 browser manual acceptance，狀態更新為 `done`。
+- 不開始 `2.2 URL Knowledge Pipeline`。

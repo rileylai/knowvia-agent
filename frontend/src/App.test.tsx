@@ -29,6 +29,22 @@ function deferredResponse() {
   return { promise, resolve };
 }
 
+function jsonResponse(payload: unknown, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+const indexedSource = {
+  id: 41,
+  display_name: "agent-patterns.pdf",
+  source_kind: "pdf",
+  status: "indexed",
+  chunk_count: 40,
+  updated_at: "2026-09-05T09:30:00Z",
+};
+
 async function submitQuestion(question = "How does attention work?") {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText("Question"), question);
@@ -42,6 +58,7 @@ describe("Knowvia frontend harness", () => {
   });
 
   it("shows all three surfaces and marks Memory as a future capability", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse([])));
     const user = userEvent.setup();
     render(<App />);
 
@@ -54,12 +71,57 @@ describe("Knowvia frontend harness", () => {
     expect(screen.getByText(/PDF knowledge baseline/i)).toBeVisible();
     expect(screen.getByRole("button", { name: "Upload source" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Add URL" })).toBeDisabled();
+    expect(screen.getByText("No indexed sources yet.")).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "Memory" }));
     expect(screen.getByRole("heading", { name: "Memory" })).toBeVisible();
     expect(
       screen.getByText("Persistent memory will be available in a later phase."),
     ).toBeVisible();
+  });
+
+  it("renders the indexed PDF source inventory", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(jsonResponse([indexedSource])),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+
+    expect(await screen.findByText("agent-patterns.pdf")).toBeVisible();
+    expect(screen.getByText("pdf")).toBeVisible();
+    expect(screen.getByText("indexed")).toBeVisible();
+    expect(screen.getByText("40 chunks")).toBeVisible();
+    expect(screen.getByText(/updated · 2026-09-05T09:30:00Z/)).toBeVisible();
+  });
+
+  it("shows inventory loading state", async () => {
+    const deferred = deferredResponse();
+    vi.stubGlobal("fetch", vi.fn(() => deferred.promise));
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+
+    expect(screen.getByText("Loading indexed sources")).toBeVisible();
+    deferred.resolve(jsonResponse([]));
+  });
+
+  it("shows a visible inventory error", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new TypeError("Failed to fetch")),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Unable to reach the Knowvia backend.",
+    );
   });
 
   it("shows loading, prevents duplicate submission, then renders the answer", async () => {
@@ -208,7 +270,11 @@ describe("Knowvia frontend harness", () => {
 
   it("uploads a PDF, shows indexing, then renders safe index metadata", async () => {
     const deferred = deferredResponse();
-    const fetchMock = vi.fn((..._args: Parameters<typeof fetch>) => deferred.promise);
+    const fetchMock = vi.fn((input: RequestInfo | URL, _init?: RequestInit) =>
+      input === "/api/knowledge/sources"
+        ? Promise.resolve(jsonResponse([]))
+        : deferred.promise,
+    );
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
     render(<App />);
@@ -219,12 +285,14 @@ describe("Knowvia frontend harness", () => {
     });
     await user.upload(screen.getByLabelText("PDF file"), file);
 
-    expect(screen.getByRole("status")).toHaveTextContent("Uploading and indexing");
+    expect(screen.getByText("Uploading and indexing")).toBeVisible();
     expect(screen.getByRole("button", { name: "Upload source" })).toBeDisabled();
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0][0]).toBe("/api/ingest/document");
-    expect(fetchMock.mock.calls[0][1]?.method).toBe("POST");
-    expect(fetchMock.mock.calls[0][1]?.body).toBeInstanceOf(FormData);
+    const uploadCalls = fetchMock.mock.calls.filter(
+      ([input]) => input === "/api/ingest/document",
+    );
+    expect(uploadCalls).toHaveLength(1);
+    expect(uploadCalls[0][1]?.method).toBe("POST");
+    expect(uploadCalls[0][1]?.body).toBeInstanceOf(FormData);
 
     deferred.resolve(
       new Response(
@@ -248,9 +316,92 @@ describe("Knowvia frontend harness", () => {
     expect(screen.getByText("2 chunks · 2 embedded")).toBeVisible();
   });
 
+  it("shows an exact duplicate upload as already indexed", async () => {
+    const fetchMock = vi.fn((...args: Parameters<typeof fetch>) => {
+      const [input, init] = args;
+      if (input === "/api/knowledge/sources") {
+        return Promise.resolve(jsonResponse([indexedSource]));
+      }
+      expect(init?.method).toBe("POST");
+      return Promise.resolve(
+        jsonResponse({
+          workflow_run_id: 26,
+          status: "already_indexed",
+          source_document_id: indexedSource.id,
+          source_type: "pdf",
+          source_display_name: indexedSource.display_name,
+          content_hash: "safe-hash",
+          index_status: "indexed",
+          indexed_chunk_count: indexedSource.chunk_count,
+          embedded_chunk_count: indexedSource.chunk_count,
+        }),
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+    await user.upload(
+      screen.getByLabelText("PDF file"),
+      new File(["%PDF-1.7 fixture"], "renamed.pdf", { type: "application/pdf" }),
+    );
+
+    expect(await screen.findByText("Already indexed")).toBeVisible();
+    expect(screen.getByText("This PDF is already indexed.")).toBeVisible();
+    expect(screen.getByText("40 chunks · 40 embedded")).toBeVisible();
+  });
+
+  it("refreshes the inventory after a successful upload", async () => {
+    let inventoryCallCount = 0;
+    const fetchMock = vi.fn((...args: Parameters<typeof fetch>) => {
+      const [input, init] = args;
+      if (input === "/api/knowledge/sources") {
+        inventoryCallCount += 1;
+        return Promise.resolve(
+          jsonResponse(inventoryCallCount === 1 ? [] : [indexedSource]),
+        );
+      }
+      expect(init?.method).toBe("POST");
+      return Promise.resolve(
+        jsonResponse({
+          workflow_run_id: 27,
+          status: "succeeded",
+          source_document_id: indexedSource.id,
+          source_type: "pdf",
+          source_display_name: indexedSource.display_name,
+          content_hash: "safe-hash",
+          index_status: "indexed",
+          indexed_chunk_count: indexedSource.chunk_count,
+          embedded_chunk_count: indexedSource.chunk_count,
+        }),
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+    expect(await screen.findByText("No indexed sources yet.")).toBeVisible();
+    await user.upload(
+      screen.getByLabelText("PDF file"),
+      new File(["%PDF-1.7 fixture"], indexedSource.display_name, {
+        type: "application/pdf",
+      }),
+    );
+
+    expect(await screen.findByText("PDF indexed")).toBeVisible();
+    expect(screen.getAllByText(indexedSource.display_name)).toHaveLength(2);
+    expect(screen.getByText("40 chunks")).toBeVisible();
+  });
+
   it("shows upload errors and blocks duplicate uploads while indexing", async () => {
     const deferred = deferredResponse();
-    const fetchMock = vi.fn(() => deferred.promise);
+    const fetchMock = vi.fn((input: RequestInfo | URL) =>
+      input === "/api/knowledge/sources"
+        ? Promise.resolve(jsonResponse([]))
+        : deferred.promise,
+    );
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
     render(<App />);
@@ -260,7 +411,9 @@ describe("Knowvia frontend harness", () => {
     const file = new File(["not a pdf"], "notes.txt", { type: "text/plain" });
     fireEvent.change(input, { target: { files: [file] } });
     expect(screen.getByRole("alert")).toHaveTextContent("Choose a PDF file");
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(
+      fetchMock.mock.calls.filter(([input]) => input === "/api/ingest/document"),
+    ).toHaveLength(0);
 
     const pdf = new File(["%PDF-1.7 fixture"], "notes.pdf", {
       type: "application/pdf",
@@ -272,8 +425,10 @@ describe("Knowvia frontend harness", () => {
     } as unknown as FileList;
     fireEvent.change(input, { target: { files: pdfFiles } });
     fireEvent.change(input, { target: { files: pdfFiles } });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("status")).toHaveTextContent("Uploading and indexing");
+    expect(
+      fetchMock.mock.calls.filter(([input]) => input === "/api/ingest/document"),
+    ).toHaveLength(1);
+    expect(screen.getByText("Uploading and indexing")).toBeVisible();
 
     deferred.resolve(
       new Response(

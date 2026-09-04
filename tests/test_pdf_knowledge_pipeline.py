@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 from dataclasses import dataclass
 from typing import Optional
 
@@ -165,6 +166,10 @@ def test_pdf_ingestion_persists_source_document_and_embedded_knowledge_chunks() 
         assert source_document.source_type == "pdf"
         assert source_document.status == "indexed"
         assert source_document.owner_scope == "local"
+        assert source_document.file_hash is not None
+        assert source_document.file_hash == hashlib.sha256(
+            b"%PDF-1.7 fixture"
+        ).hexdigest()
 
         chunks = session.query(KnowledgeChunk).order_by(KnowledgeChunk.chunk_index).all()
         assert len(chunks) == 2

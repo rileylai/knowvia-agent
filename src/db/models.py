@@ -68,6 +68,9 @@ class SourceDocument(Base):
     source_type: Mapped[str] = mapped_column(String(64), nullable=False)
     source_display_name: Mapped[str] = mapped_column(String(512), nullable=False)
     content_hash: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    file_hash: Mapped[Optional[str]] = mapped_column(
+        String(64), nullable=True, index=True
+    )
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
     owner_scope: Mapped[str] = mapped_column(
         String(128), nullable=False, server_default="local", index=True

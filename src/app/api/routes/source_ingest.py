@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from sqlalchemy.orm import Session
 
 from src.app.dependencies import (
     build_embedding_batch_service,
@@ -13,6 +14,7 @@ from src.app.dependencies import (
 )
 from src.app.schemas import (
     ChatTextIngestionRequest,
+    KnowledgeSourceResponse,
     SourceDocumentCreateRequest,
     SourceDocumentCreateResponse,
     YouTubeIngestionRequest,
@@ -21,6 +23,7 @@ from src.app.schemas import (
 from src.db.session import (
     SessionFactory,
     UnitOfWorkFactory,
+    get_db_session,
     get_db_session_factory,
 )
 from src.orchestrators import (
@@ -39,6 +42,7 @@ from src.orchestrators import (
     URLIngestionOrchestrator,
 )
 from src.providers import EmbeddingClient
+from src.repositories import SourceDocumentRepository
 from src.services import (
     MAX_OCR_IMAGE_BYTES,
     MAX_OCR_IMAGE_COUNT,
@@ -56,6 +60,26 @@ from src.services import (
 from src.tools import ToolRegistry
 
 router = APIRouter()
+
+
+@router.get("/api/knowledge/sources", response_model=list[KnowledgeSourceResponse])
+def list_indexed_knowledge_sources(
+    db_session: Session = Depends(get_db_session),
+) -> list[KnowledgeSourceResponse]:
+    summaries = SourceDocumentRepository(db_session).list_indexed_pdf_sources(
+        owner_scope="local"
+    )
+    return [
+        KnowledgeSourceResponse(
+            id=summary.id,
+            display_name=summary.display_name,
+            source_kind=summary.source_kind,
+            status=summary.status,
+            chunk_count=summary.chunk_count,
+            updated_at=summary.updated_at,
+        )
+        for summary in summaries
+    ]
 
 
 def _upload_http_exception(exc: UploadValidationError) -> HTTPException:
