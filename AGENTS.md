@@ -1,123 +1,76 @@
-# AGENTS.md
+# Knowvia Agent repository instructions
 
-## 1. Project Mission
+## Language
 
-LearnLoop Agent is a local-first Notion knowledge agent.
-It indexes existing Notion notes as read-only knowledge, generates AI supplement proposals from learning materials, and writes accepted content only into `AI Supplement Zone`.
+- Codex 回覆使用繁體中文。
+- Human-facing project documentation 使用繁體中文。
+- 技術名稱保留英文；code identifiers、API、schema、database fields 與 test names
+  使用英文。
+- Runtime log message 使用英文。
 
-## 2. Core Safety Rules
+## Documentation
 
-1. Never directly overwrite existing Notion notes.
-2. Never directly edit manually created notes.
-3. Never directly edit old AI supplement blocks.
-4. Never create per-page writable original-note mode in MVP.
-5. All AI writes must follow: `Change Request -> Human Accept -> Append to AI Supplement Zone`.
-6. Pending and rejected change requests must not be used in production RAG.
-7. Notion is the source of truth.
-8. User manual Notion edits require manual incremental sync.
-9. Accepted agent appends trigger immediate page re-index.
-10. Never log secrets or private raw source content.
+- 撰寫或大幅修改 human-facing Markdown 前，先使用 `/avoid-ai-writing` skill。
+- Desired behavior 讀 `docs/`；development priority 與 current phase 讀
+  `dev_state/PROJECT_ROADMAP.md`；已確認的 decisions 讀
+  `dev_state/DECISIONS.md`。
+- Current implementation 以 application code、tests、migrations、config 與
+  dependency lockfile 為準。
+- 不把 planned、future 或 legacy capability 寫成已完成；詳細產品與 guardrail 規則
+  留在 relevant spec，不要複製到本文件。
+- Development state 只使用 tracked `dev_state/`，保留
+  `PROJECT_ROADMAP.md`、`DAILY_LOG.md` 與 `DECISIONS.md`。
 
-## 3. Architecture Rule
+## Documentation Navigation
 
-- Use flow: API Route -> Orchestrator -> Service / Tool -> Repository -> External System.
-- LLM flow: API Route -> Orchestrator -> Provider Router -> Provider Adapter.
-- Tool flow: API Route -> Orchestrator -> Tool Registry -> Local Tool Adapter or future MCP Client.
-- API routes and orchestrators must not directly import or call OpenAI, Claude, Gemini, Notion, Redis, PostgreSQL, or external APIs.
-- Queue backend must be accessed only through a QueueClient interface.
-- LLM calls must go through a provider router/interface.
-- External capabilities must go through schema-friendly tool interfaces.
-- DB access still goes through repositories; queue access still goes through QueueClient.
-- Raw PostgreSQL and Redis must not become LLM-facing tools.
-- Tool interfaces should be MCP-compatible so they can later be exposed through MCP, but standalone MCP servers are not implemented in MVP.
-- Business rules, permission checks, output validation, RAG inclusion rules, and Notion write safety must remain deterministic backend logic, not delegated to the LLM.
-- Do not add LangChain or LangGraph in MVP unless a future ADR explicitly approves it.
+不要預設讀取全部文件。依 task 只讀必要的 source of truth：
 
-## 4. Documentation Navigation
+| 要處理的問題 | 優先閱讀 |
+| --- | --- |
+| 產品 scope、MVP、非目標、使用者行為 | `docs/00-product-spec.md` |
+| 架構邊界、component responsibility、current/target architecture | `docs/01-architecture.md` |
+| Entity、schema、資料 authority、API/tool conceptual contract | `docs/02-data-and-contracts.md` |
+| End-to-end workflow、ingestion、chat、memory flow | `docs/03-workflows.md` |
+| Grounding、citation、tool safety、memory policy、evaluation | `docs/04-quality-and-guardrails.md` |
+| SDD、TDD、manual acceptance、repository workflow | `docs/05-development.md` |
+| Local deployment、Docker、demo flow | `docs/06-deployment-and-demo.md` |
+| 目前 development priority、status、下一個 slice | `dev_state/PROJECT_ROADMAP.md` |
+| 已確認、不能自行推翻的產品／架構 decision | `dev_state/DECISIONS.md` |
+| 最近工作、驗證結果、目前問題 | `dev_state/DAILY_LOG.md` |
 
-- `docs/00-design-doc.md`: main design source.
-- `docs/01-architecture.md`: system architecture details.
-- `docs/02-workflows.md`: workflow definitions and state transitions.
-- `docs/03-guardrails.md`: safety and write policy.
-- `docs/04-memory-design.md`: state ownership, persistence, and sync model.
-- `docs/05-rag-design.md`: indexing, chunking, retrieval, citation.
-- `docs/06-notion-permission-model.md`: Notion ownership and permissions.
-- `docs/07-evaluation-plan.md`: eval metrics and golden tests.
-- `docs/08-observability.md`: logs, metrics, tracing, cost.
-- `docs/09-api-contract.md`: API contract.
-- `docs/10-deployment.md`: local-first deployment and future V2 cloud.
-- `CONTRIBUTING.md`: coding, testing, documentation, and collaboration rules.
-- `docs/11-telegram-operator-contract.md`: Telegram operator commands,
-  callbacks, authorization, safe output, and queue boundaries.
-- `docs/prompts/`: prompt templates.
-- `docs/decisions/`: ADRs.
+- 先判斷 task 類型，再讀最少必要文件。
+- 跨多個 concern 時，再讀對應文件；不要 mechanical preload 全部 docs。
+- Desired behavior 以相關 spec 與 decision 為準，current implementation 以 code
+  與 tests 為準。
 
-## 5. Task Start Rule
+## Development workflow
 
-Before making code changes, always read:
+- 使用 Spec-Driven Development（SDD）與 Test-Driven Development（TDD）。
+- 每次只處理一個小 vertical slice：先定義 observable behavior，再寫 failing
+  automated test，完成 minimal implementation 與 regression。
+- Phase 0 cleanup 後，每個主要 feature slice 必須有最小 frontend manual acceptance
+  path。
+- Automated tests 不取代 frontend manual verification；尚未人工驗證時，在
+  `dev_state/DAILY_LOG.md` 明確記錄 `Not yet manually verified.`。
+- Documentation-only task 不開始 runtime implementation，也不順手修改 unrelated
+  files。
 
-1. `AGENTS.md`
-2. `docs/00-design-doc.md`
-3. `dev_state/PROJECT_ROADMAP.md`
-4. `dev_state/DAILY_LOG.md`
-5. Task-related docs from the map above.
+## Fixed project constraints
 
-Task-related examples:
+- 產品只有一個 bounded Knowledge Agent；不建立 Multi-Agent system，也不加入
+  LangChain 或 LangGraph migration。
+- MCP 是 adapter boundary，不放 business logic。
+- Notion page listing 與 sync 是 deterministic backend operation。
+- Long-term memory 只接受 explicit save。
+- Backend 擁有 citations、permission boundaries、validation、persistence policy 與
+  termination control。
+- Redis/RQ 不列入 Knowvia MVP core。
+- Telegram、Supplement、ChangeRequest 與 Notion write-back 是 Legacy；除非使用者
+  明確要求，不得接回 Knowvia execution path。
 
-- DB or repository task: read `docs/01-architecture.md` and `CONTRIBUTING.md`.
-- Workflow or queue task: read `docs/02-workflows.md` and `docs/08-observability.md`.
-- Notion or write-policy task: read `docs/03-guardrails.md` and `docs/06-notion-permission-model.md`.
-- RAG task: read `docs/05-rag-design.md`.
-- API task: read `docs/09-api-contract.md`.
+## Git and safety
 
-Repo docs are development and maintenance context by default.
-`AGENTS.md` is development-agent guidance, not the LearnLoop runtime system prompt.
-They are not production RAG source unless a future ADR and implementation explicitly wire them into runtime retrieval.
-
-## 6. Coding Style Rules
-
-- Use Python for backend.
-- Use FastAPI for API layer when implementation starts.
-- Use simple, explicit code.
-- Prefer small functions.
-- Use type hints.
-- Use Pydantic schemas for API inputs/outputs.
-- Use clear error names and `failure_reason` values.
-- Keep business logic out of routes.
-- Keep RQ-specific code behind queue interface.
-- Keep Notion/OpenAI clients behind tools/providers.
-- Add English comments only when they explain purpose or non-obvious logic.
-- Do not over-comment obvious lines.
-
-## 7. Documentation Style Rules
-
-- Use simple English.
-- Keep critical product label `AI Supplement Zone`.
-- Prefer short sections and tables.
-- Record major decisions as ADR files under `docs/decisions/`.
-- Update `dev_state/DAILY_LOG.md` after meaningful local development work.
-- If behavior changes, update related docs.
-
-## 8. Definition of Done
-
-A task is done only when:
-
-- The implementation matches the design doc.
-- Unit tests or documentation acceptance checks pass.
-- Guardrails are not weakened.
-- Relevant docs are updated.
-- `dev_state/DAILY_LOG.md` has a short entry for meaningful local development work.
-- No secrets or private Notion content are committed.
-
-## 9. Current MVP Constraints
-
-- Local-only MVP.
-- Telegram first.
-- No WhatsApp, LINE, Discord, Bilibili in MVP.
-- No standalone MCP server in MVP; MCP-oriented provider/tool interfaces are allowed.
-- No LangChain or LangGraph in MVP.
-- No always-on cloud sync.
-- No direct original note editing.
-- No inline proposal edit UI.
-- No reranker.
-- No LLM-as-judge.
+- 不自行 commit、push、merge、stash，或使用 destructive git commands。
+- 不修改使用者未要求的 unrelated files。
+- 不把 secrets、credentials、private source content、private page ids 或完整
+  database URLs 寫入 repository 或 logs。
