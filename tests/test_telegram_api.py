@@ -15,7 +15,7 @@ from src.app.dependencies import (
     get_tool_registry,
 )
 from src.app.api.routes.telegram import get_telegram_session_store
-from src.app.main import app
+from src.app.legacy import app
 from src.db.base import Base
 from src.db.models import (
     ChangeRequest,

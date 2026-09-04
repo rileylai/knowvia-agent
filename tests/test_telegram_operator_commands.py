@@ -18,7 +18,7 @@ from src.app.dependencies import (
     get_tool_registry,
     get_workflow_observability_service,
 )
-from src.app.main import app
+from src.app.legacy import app
 from src.db.base import Base
 from src.db.models import (
     ChangeRequest,

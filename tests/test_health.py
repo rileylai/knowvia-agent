@@ -15,7 +15,7 @@ def test_health_endpoint_returns_ok() -> None:
 
 
 def test_health_logs_workflow_id(caplog) -> None:
-    caplog.set_level(logging.INFO, logger="learnloop.request")
+    caplog.set_level(logging.INFO, logger="knowvia.request")
     client = TestClient(app)
 
     response = client.get("/health")
@@ -26,7 +26,7 @@ def test_health_logs_workflow_id(caplog) -> None:
     records = [
         record
         for record in caplog.records
-        if record.name == "learnloop.request"
+        if record.name == "knowvia.request"
         and record.getMessage() == "request_completed"
     ]
     assert records

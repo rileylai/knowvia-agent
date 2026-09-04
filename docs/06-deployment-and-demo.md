@@ -23,8 +23,8 @@ cloud sync。這些是 Future Work。
 source persistence 與 QA 是 synchronous path；非 Notion source 尚未完成 generic
 chunk/index pipeline。
 
-目前 local setup 仍可能因 legacy readiness check 要求 Redis/RQ。這是 runtime
-disconnect 前的 current behavior，不是 Knowvia target architecture。
+Knowvia API startup、API preflight 與 core readiness 不建立或要求 Redis/RQ。
+Redis service 只在需要執行 legacy worker 時使用。
 
 ## 本地設定
 
@@ -39,13 +39,19 @@ cp .env.example .env
 set -a
 source .env
 set +a
-docker compose up -d
+docker compose up -d postgres
 uv run --no-env-file --frozen alembic upgrade head
 uv run --no-env-file --frozen uvicorn src.app.main:app --reload
 ```
 
-不需要 Telegram 的 Knowvia development 不應啟動 legacy worker。需要確認目前
-process 狀態時可使用：
+需要 legacy worker 時，另外安裝 `legacy-worker` extra 並啟動 Redis：
+
+```bash
+uv sync --extra legacy-worker
+docker compose up -d redis
+```
+
+需要確認目前 process 狀態時可使用：
 
 ```bash
 curl http://127.0.0.1:8000/health
@@ -53,7 +59,7 @@ curl http://127.0.0.1:8000/ready
 ```
 
 `/health` 是 liveness check。`/ready` 是 dependency-aware check；在 runtime
-disconnect 完成前，其結果可能包含 Redis/RQ requirement。
+disconnect 完成後，其結果只包含 Knowvia core dependency checks。
 
 ## Configuration 邊界
 

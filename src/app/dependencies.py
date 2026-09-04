@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Optional, Tuple
+from typing import Optional
 
 from fastapi import Depends, Header, HTTPException
 
@@ -26,11 +26,6 @@ from src.providers import (
     OpenAIEmbeddingClient,
     ProviderRouter,
 )
-from src.queue import (
-    QueueClient,
-    RQQueueClient,
-    classify_rq_execution_exception,
-)
 from src.services import (
     CostTracker,
     CostBudgetService,
@@ -42,35 +37,18 @@ from src.services import (
     ReadinessService,
     TrustBoundaryError,
     TrustBoundaryService,
-    InMemoryTelegramSessionStore,
-    RedisTelegramSessionStore,
-    TelegramSessionStore,
-    InMemoryTelegramSyncSessionStore,
-    RedisTelegramSyncSessionStore,
-    TelegramSyncSessionStore,
-    InMemoryTelegramIndexSessionStore,
-    RedisTelegramIndexSessionStore,
-    TelegramIndexSessionStore,
     WorkflowObservabilityService,
 )
 from src.tools import (
     DEFAULT_MOCK_NOTION_DATA_DIR,
-    DisabledTelegramBotClient,
     ImageOCRTool,
     InMemoryNotionReaderClient,
-    InMemoryNotionPageSnapshot,
-    InMemoryNotionWriterClient,
     JSONMockNotionReaderClient,
     NotionReaderTool,
     NotionAPIReaderClient,
-    NotionAPIWriterClient,
     NotionReaderClient,
-    NotionWriterTool,
-    NotionWriterClient,
     PDFParserTool,
     PyPDFParserClient,
-    TelegramBotTool,
-    TelegramHTTPBotClient,
     TesseractImageOCRParserClient,
     TrafilaturaURLArticleParserClient,
     ToolRegistry,
@@ -88,25 +66,25 @@ def get_business_unit_of_work_factory(
 
 def get_readiness_service() -> ReadinessService:
     settings = get_settings()
-    queue_client = get_queue_client()
     notion_backend = normalize_notion_backend(settings.notion_backend)
     return ReadinessService(
         probe=SqlAlchemyReadinessProbe(engine=engine),
         mode=settings.app_env,
         openai_configured=bool(settings.openai_api_key),
-        queue_client=queue_client,
-        queue_required=settings.app_env not in {"test", "demo", "mock"},
         notion_backend=notion_backend,
         notion_configured=(notion_backend == "mock" or bool(settings.notion_token)),
     )
 
 
 @lru_cache(maxsize=1)
-def get_queue_client() -> Optional[QueueClient]:
+def get_queue_client() -> Optional["QueueClient"]:
+    """Build the legacy queue adapter only when a legacy caller opts in."""
+
     settings = get_settings()
     if not settings.redis_url:
         return None
 
+    from src.queue import QueueClient, RQQueueClient
     from redis import Redis
 
     return RQQueueClient(connection=Redis.from_url(settings.redis_url))
@@ -123,6 +101,12 @@ def get_trust_boundary() -> TrustBoundaryService:
 
 @lru_cache(maxsize=1)
 def get_telegram_session_store() -> TelegramSessionStore:
+    from src.services import (
+        InMemoryTelegramSessionStore,
+        RedisTelegramSessionStore,
+        TelegramSessionStore,
+    )
+
     settings = get_settings()
     if settings.redis_url:
         from redis import Redis
@@ -135,6 +119,12 @@ def get_telegram_session_store() -> TelegramSessionStore:
 
 @lru_cache(maxsize=1)
 def get_telegram_sync_session_store() -> TelegramSyncSessionStore:
+    from src.services import (
+        InMemoryTelegramSyncSessionStore,
+        RedisTelegramSyncSessionStore,
+        TelegramSyncSessionStore,
+    )
+
     settings = get_settings()
     if settings.redis_url:
         from redis import Redis
@@ -145,6 +135,12 @@ def get_telegram_sync_session_store() -> TelegramSyncSessionStore:
 
 @lru_cache(maxsize=1)
 def get_telegram_index_session_store() -> TelegramIndexSessionStore:
+    from src.services import (
+        InMemoryTelegramIndexSessionStore,
+        RedisTelegramIndexSessionStore,
+        TelegramIndexSessionStore,
+    )
+
     settings = get_settings()
     if settings.redis_url:
         from redis import Redis
@@ -206,7 +202,7 @@ def require_api_bearer_token(
 
 def _build_mock_notion_clients(
     settings,
-) -> Tuple[NotionReaderClient, NotionWriterClient]:
+) -> NotionReaderClient:
     if settings.mock_notion_data_dir:
         notion_reader_client = JSONMockNotionReaderClient.from_directory(
             settings.mock_notion_data_dir
@@ -218,42 +214,24 @@ def _build_mock_notion_clients(
     else:
         notion_reader_client = InMemoryNotionReaderClient(pages={})
 
-    writer_pages = {}
-    for page_summary in notion_reader_client.list_pages():
-        page_tree = notion_reader_client.fetch_page_tree(page_summary.page_id)
-        if page_tree is None:
-            continue
-        writer_pages[page_tree.page_id] = InMemoryNotionPageSnapshot(
-            page_id=page_tree.page_id,
-            title=page_tree.title,
-            notion_path=page_tree.notion_path,
-        )
-    return notion_reader_client, InMemoryNotionWriterClient(pages=writer_pages)
+    return notion_reader_client
 
 
 def _build_notion_clients(
     settings,
-) -> Tuple[NotionReaderClient, NotionWriterClient]:
+) -> NotionReaderClient:
     backend = normalize_notion_backend(settings.notion_backend)
     if backend == NOTION_BACKEND_LIVE:
         if not settings.notion_token:
             raise NotionBackendConfigurationError(
                 "NOTION_BACKEND=live requires NOTION_TOKEN"
             )
-        return (
-            NotionAPIReaderClient(
-                token=settings.notion_token,
-                timeout_seconds=settings.notion_request_timeout_seconds,
-                max_attempts=settings.notion_read_max_attempts,
-                retry_base_seconds=settings.notion_read_retry_base_seconds,
-                retry_max_seconds=settings.notion_read_retry_max_seconds,
-                infrastructure_exception_classifier=classify_rq_execution_exception,
-            ),
-            NotionAPIWriterClient(
-                token=settings.notion_token,
-                timeout_seconds=settings.notion_request_timeout_seconds,
-                infrastructure_exception_classifier=classify_rq_execution_exception,
-            ),
+        return NotionAPIReaderClient(
+            token=settings.notion_token,
+            timeout_seconds=settings.notion_request_timeout_seconds,
+            max_attempts=settings.notion_read_max_attempts,
+            retry_base_seconds=settings.notion_read_retry_base_seconds,
+            retry_max_seconds=settings.notion_read_retry_max_seconds,
         )
     return _build_mock_notion_clients(settings)
 
@@ -262,20 +240,12 @@ def _build_notion_clients(
 def get_tool_registry() -> ToolRegistry:
     registry = ToolRegistry()
     settings = get_settings()
-    notion_reader_client, notion_writer_client = _build_notion_clients(settings)
+    notion_reader_client = _build_notion_clients(settings)
     registry.register_tool(NotionReaderTool(notion_reader_client))
-    registry.register_tool(NotionWriterTool(notion_writer_client))
     registry.register_tool(PDFParserTool(PyPDFParserClient()))
     registry.register_tool(URLArticleParserTool(TrafilaturaURLArticleParserClient()))
     registry.register_tool(YouTubeTranscriptTool(YouTubeTranscriptAPIClient()))
     registry.register_tool(ImageOCRTool(TesseractImageOCRParserClient()))
-    if settings.telegram_bot_token:
-        telegram_client = TelegramHTTPBotClient(
-            bot_token=settings.telegram_bot_token,
-        )
-    else:
-        telegram_client = DisabledTelegramBotClient()
-    registry.register_tool(TelegramBotTool(telegram_client))
     return registry
 
 
@@ -295,7 +265,6 @@ def get_embedding_client() -> Optional[EmbeddingClient]:
         return None
     return OpenAIEmbeddingClient(
         api_key=settings.openai_api_key,
-        infrastructure_exception_classifier=classify_rq_execution_exception,
     )
 
 

@@ -1,3 +1,5 @@
+from importlib import import_module
+
 from src.repositories.change_request_repository import ChangeRequestRepository
 from src.repositories.api_idempotency_repository import ApiIdempotencyRepository
 from src.repositories.chunk_repository import (
@@ -23,10 +25,16 @@ from src.repositories.synthetic_data_repository import (
     SyntheticDataCounts,
     SyntheticDataRepository,
 )
-from src.repositories.telegram_update_ledger_repository import (
-    TelegramUpdateLedgerRepository,
-)
 from src.repositories.workflow_run_repository import WorkflowRunRepository
+
+
+def __getattr__(name: str):
+    if name != "TelegramUpdateLedgerRepository":
+        raise AttributeError(name)
+    module = import_module("src.repositories.telegram_update_ledger_repository")
+    value = getattr(module, name)
+    globals()[name] = value
+    return value
 
 __all__ = [
     "ChangeRequestRepository",

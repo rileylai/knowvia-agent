@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check local LearnLoop dependencies and configuration without exposing secrets."""
+"""Check local Knowvia dependencies and configuration without exposing secrets."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ TESSERACT_REQUIRED_LANGUAGES: Tuple[str, ...] = (
 )
 TESSERACT_LANGUAGE_CHECK_TIMEOUT_SECONDS = 5.0
 
-RUNTIME_DEPENDENCIES: Tuple[Tuple[str, str], ...] = (
+CORE_RUNTIME_DEPENDENCIES: Tuple[Tuple[str, str], ...] = (
     ("alembic", "alembic"),
     ("fastapi", "fastapi"),
     ("pillow", "PIL"),
@@ -31,12 +31,13 @@ RUNTIME_DEPENDENCIES: Tuple[Tuple[str, str], ...] = (
     ("pytesseract", "pytesseract"),
     ("python-multipart", "multipart"),
     ("psycopg", "psycopg"),
-    ("rq", "rq"),
     ("sqlalchemy", "sqlalchemy"),
     ("trafilatura", "trafilatura"),
     ("youtube-transcript-api", "youtube_transcript_api"),
     ("uvicorn", "uvicorn"),
 )
+
+LEGACY_WORKER_DEPENDENCIES: Tuple[Tuple[str, str], ...] = (("rq", "rq"),)
 
 DEV_DEPENDENCIES: Tuple[Tuple[str, str], ...] = (
     ("fakeredis", "fakeredis"),
@@ -46,9 +47,10 @@ DEV_DEPENDENCIES: Tuple[Tuple[str, str], ...] = (
 )
 
 PROFILE_DEPENDENCIES: Mapping[str, Tuple[Tuple[str, str], ...]] = {
-    "api": RUNTIME_DEPENDENCIES,
-    "ocr": RUNTIME_DEPENDENCIES,
-    "test": RUNTIME_DEPENDENCIES + DEV_DEPENDENCIES,
+    "api": CORE_RUNTIME_DEPENDENCIES,
+    "ocr": CORE_RUNTIME_DEPENDENCIES,
+    "test": CORE_RUNTIME_DEPENDENCIES + DEV_DEPENDENCIES,
+    "legacy-worker": CORE_RUNTIME_DEPENDENCIES + LEGACY_WORKER_DEPENDENCIES,
 }
 
 CONFIGURATION_KEYS: Tuple[str, ...] = (
@@ -231,7 +233,7 @@ def _check_configuration(
             detail = (
                 "configured"
                 if configured
-                else "not configured; async Telegram and local readiness are disabled"
+                else "not configured; the legacy queue is disabled"
             )
             required = False
         elif key == "MOCK_NOTION_DATA_DIR":
@@ -365,7 +367,7 @@ def _report_as_json(report: PreflightReport) -> str:
 
 
 def _render_human(report: PreflightReport) -> str:
-    lines = ["LearnLoop preflight", f"profile={report.profile}"]
+    lines = ["Knowvia preflight", f"profile={report.profile}"]
     for check in report.checks:
         lines.append(
             f"[{check.status.upper()}] {check.key}: {check.detail}"
@@ -386,7 +388,7 @@ def _render_human(report: PreflightReport) -> str:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Check LearnLoop local dependencies and configuration safely."
+        description="Check Knowvia local dependencies and configuration safely."
     )
     parser.add_argument(
         "--profile",

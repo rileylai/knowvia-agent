@@ -1,3 +1,5 @@
+from importlib import import_module
+
 from src.services.cost_tracker import (
     CostTracker,
     EmbeddingTokenPricing,
@@ -79,65 +81,6 @@ from src.services.workflow_observability import (
 from src.services.infrastructure_errors import InfrastructureExecutionTimeout
 from src.services.metrics import MetricsService
 from src.services.trust_boundary import TrustBoundaryError, TrustBoundaryService
-from src.services.telegram_update_idempotency import (
-    TELEGRAM_UPDATE_FAILED,
-    TELEGRAM_UPDATE_RUNNING,
-    TELEGRAM_UPDATE_SUCCEEDED,
-    TelegramUpdateClaim,
-    TelegramUpdateIdempotencyError,
-    TelegramUpdateIdempotencyService,
-)
-from src.services.telegram_session_store import (
-    TELEGRAM_CALLBACK_KIND_PICKER,
-    TELEGRAM_CALLBACK_KIND_OPERATOR,
-    TELEGRAM_CALLBACK_KIND_REVIEW,
-    TELEGRAM_CALLBACK_KIND_UNKNOWN,
-    TELEGRAM_CALLBACK_TTL_SECONDS,
-    TELEGRAM_UPLOAD_SESSION_TTL_SECONDS,
-    TELEGRAM_PICKER_CALLBACK_ACTIONS,
-    TELEGRAM_OPERATOR_CALLBACK_ACTIONS,
-    TELEGRAM_REVIEW_CALLBACK_ACTIONS,
-    InMemoryTelegramSessionStore,
-    RedisTelegramSessionStore,
-    TelegramCallbackAction,
-    TelegramSessionStore,
-    TelegramUploadAttachment,
-    TelegramUploadSession,
-    infer_telegram_callback_kind,
-)
-from src.services.telegram_sync_session_store import (
-    TELEGRAM_SYNC_MAX_DISCOVERED_PAGES,
-    TELEGRAM_SYNC_MAX_SELECTED_PAGES,
-    TELEGRAM_SYNC_SESSION_TTL_SECONDS,
-    InMemoryTelegramSyncSessionStore,
-    RedisTelegramSyncSessionStore,
-    TelegramSyncPage,
-    TelegramSyncSession,
-    TelegramSyncSessionStore,
-)
-from src.services.telegram_index_session_store import (
-    TELEGRAM_INDEX_SESSION_TTL_SECONDS,
-    InMemoryTelegramIndexSessionStore,
-    RedisTelegramIndexSessionStore,
-    TelegramFullIndexSession,
-    TelegramIndexSessionStore,
-)
-from src.services.notion_hierarchy import (
-    HierarchyPickerButton,
-    HierarchyPickerView,
-    NotionHierarchyNode,
-    NotionHierarchyPage,
-    NotionPageHierarchy,
-    NotionHierarchyPicker,
-    TELEGRAM_MESSAGE_MAX_LENGTH,
-    TELEGRAM_PICKER_PAGE_SIZE,
-)
-from src.services.telegram_recovery import (
-    RECOVERABLE_TELEGRAM_FAILURES,
-    TelegramRecoveryError,
-    TelegramRecoveryInspection,
-    TelegramRecoveryService,
-)
 from src.services.api_idempotency import (
     API_IDEMPOTENCY_FAILED,
     API_IDEMPOTENCY_RUNNING,
@@ -171,6 +114,82 @@ from src.policies.synthetic_data import (
     SYNTHETIC_NOTION_PAGE_IDS,
     is_known_synthetic_notion_page_id,
 )
+
+_LEGACY_EXPORTS = {
+    name: (module_name, name)
+    for module_name, names in {
+        "src.services.telegram_update_idempotency": (
+            "TELEGRAM_UPDATE_FAILED",
+            "TELEGRAM_UPDATE_RUNNING",
+            "TELEGRAM_UPDATE_SUCCEEDED",
+            "TelegramUpdateClaim",
+            "TelegramUpdateIdempotencyError",
+            "TelegramUpdateIdempotencyService",
+        ),
+        "src.services.telegram_session_store": (
+            "TELEGRAM_CALLBACK_KIND_PICKER",
+            "TELEGRAM_CALLBACK_KIND_OPERATOR",
+            "TELEGRAM_CALLBACK_KIND_REVIEW",
+            "TELEGRAM_CALLBACK_KIND_UNKNOWN",
+            "TELEGRAM_CALLBACK_TTL_SECONDS",
+            "TELEGRAM_UPLOAD_SESSION_TTL_SECONDS",
+            "TELEGRAM_PICKER_CALLBACK_ACTIONS",
+            "TELEGRAM_OPERATOR_CALLBACK_ACTIONS",
+            "TELEGRAM_REVIEW_CALLBACK_ACTIONS",
+            "InMemoryTelegramSessionStore",
+            "RedisTelegramSessionStore",
+            "TelegramCallbackAction",
+            "TelegramSessionStore",
+            "TelegramUploadAttachment",
+            "TelegramUploadSession",
+            "infer_telegram_callback_kind",
+        ),
+        "src.services.telegram_sync_session_store": (
+            "TELEGRAM_SYNC_MAX_DISCOVERED_PAGES",
+            "TELEGRAM_SYNC_MAX_SELECTED_PAGES",
+            "TELEGRAM_SYNC_SESSION_TTL_SECONDS",
+            "InMemoryTelegramSyncSessionStore",
+            "RedisTelegramSyncSessionStore",
+            "TelegramSyncPage",
+            "TelegramSyncSession",
+            "TelegramSyncSessionStore",
+        ),
+        "src.services.telegram_index_session_store": (
+            "TELEGRAM_INDEX_SESSION_TTL_SECONDS",
+            "InMemoryTelegramIndexSessionStore",
+            "RedisTelegramIndexSessionStore",
+            "TelegramFullIndexSession",
+            "TelegramIndexSessionStore",
+        ),
+        "src.services.notion_hierarchy": (
+            "HierarchyPickerButton",
+            "HierarchyPickerView",
+            "NotionHierarchyNode",
+            "NotionHierarchyPage",
+            "NotionPageHierarchy",
+            "NotionHierarchyPicker",
+            "TELEGRAM_MESSAGE_MAX_LENGTH",
+            "TELEGRAM_PICKER_PAGE_SIZE",
+        ),
+        "src.services.telegram_recovery": (
+            "RECOVERABLE_TELEGRAM_FAILURES",
+            "TelegramRecoveryError",
+            "TelegramRecoveryInspection",
+            "TelegramRecoveryService",
+        ),
+    }.items()
+    for name in names
+}
+
+
+def __getattr__(name: str):
+    target = _LEGACY_EXPORTS.get(name)
+    if target is None:
+        raise AttributeError(name)
+    module = import_module(target[0])
+    value = getattr(module, target[1])
+    globals()[name] = value
+    return value
 
 __all__ = [
     "EmbeddingBatch",
