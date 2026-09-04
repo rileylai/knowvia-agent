@@ -1,0 +1,28 @@
+{
+  "source_document": {
+    "id": 33007,
+    "source_type": "screenshot",
+    "source_display_name": "Screenshot batch (7 images)",
+    "source_attachment_count": 7,
+    "raw_text": "Index supports the query access path. EXPLAIN shows the execution plan. Query rewrite changes the query form. Keyset pagination uses a stable cursor."
+  },
+  "provider_output": {
+    "title": "Index and query analysis",
+    "summary": "Index supports the query access path. EXPLAIN shows the execution plan. Query rewrite changes the query form.",
+    "concepts": [
+      "Index",
+      "EXPLAIN",
+      "execution plan",
+      "query rewrite",
+      "pagination"
+    ],
+    "notes": [
+      "Index supports the query access path.",
+      "EXPLAIN shows the execution plan.",
+      "Query rewrite changes the query form.",
+      "Keyset pagination uses a stable cursor."
+    ],
+    "source": "Screenshot batch (7 images)"
+  },
+  "expected_target_path": "Knowledge/Database/AI Supplement Zone"
+}

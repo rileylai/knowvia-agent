@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+.history/
+
+# Local files
+data/
+dev_state/
+local_storage/
+uploads/
+tmp/
+
+# Deferred LearnLoop parser evaluation
+tests/evals/parser_note_completeness/

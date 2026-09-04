@@ -1,0 +1,73 @@
+sources:
+- page_id: page-title_associated-zh_tw-1
+  title_source_id: title-page-title_associated-zh_tw-1
+  title: 檢索脈絡主題 1
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 1
+- page_id: page-title_associated-zh_tw-2
+  title_source_id: title-page-title_associated-zh_tw-2
+  title: 檢索脈絡主題 2
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 2
+- page_id: page-title_associated-en-1
+  title_source_id: title-page-title_associated-en-1
+  title: Retrieval Context Topic 3
+  notion_path: Synthetic/en/Retrieval Context Topic 3
+- page_id: page-title_associated-en-2
+  title_source_id: title-page-title_associated-en-2
+  title: Retrieval Context Topic 4
+  notion_path: Synthetic/en/Retrieval Context Topic 4
+- page_id: page-title_associated-mixed-1
+  title_source_id: title-page-title_associated-mixed-1
+  title: 檢索 Context Topic 5
+  notion_path: Synthetic/mixed/檢索 Context Topic 5
+- page_id: page-title_associated-mixed-2
+  title_source_id: title-page-title_associated-mixed-2
+  title: 檢索 Context Topic 6
+  notion_path: Synthetic/mixed/檢索 Context Topic 6
+- page_id: page-body_only-zh_tw-1
+  title_source_id: title-page-body_only-zh_tw-1
+  title: 檢索脈絡主題 7
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 7
+- page_id: page-body_only-zh_tw-2
+  title_source_id: title-page-body_only-zh_tw-2
+  title: 檢索脈絡主題 8
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 8
+- page_id: page-body_only-en-1
+  title_source_id: title-page-body_only-en-1
+  title: Retrieval Context Topic 9
+  notion_path: Synthetic/en/Retrieval Context Topic 9
+- page_id: page-body_only-en-2
+  title_source_id: title-page-body_only-en-2
+  title: Retrieval Context Topic 10
+  notion_path: Synthetic/en/Retrieval Context Topic 10
+- page_id: page-body_only-mixed-1
+  title_source_id: title-page-body_only-mixed-1
+  title: 檢索 Context Topic 11
+  notion_path: Synthetic/mixed/檢索 Context Topic 11
+- page_id: page-body_only-mixed-2
+  title_source_id: title-page-body_only-mixed-2
+  title: 檢索 Context Topic 12
+  notion_path: Synthetic/mixed/檢索 Context Topic 12
+- page_id: page-ambiguous-zh_tw-1
+  title_source_id: title-page-ambiguous-zh_tw-1
+  title: 檢索脈絡主題 13 Page 1
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 13 Page 1
+- page_id: page-ambiguous-zh_tw-2
+  title_source_id: title-page-ambiguous-zh_tw-2
+  title: 檢索脈絡主題 14 Page 2
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 14 Page 2
+- page_id: page-ambiguous-en-1
+  title_source_id: title-page-ambiguous-en-1
+  title: Retrieval Context Topic 15 Page 1
+  notion_path: Synthetic/en/Retrieval Context Topic 15 Page 1
+- page_id: page-ambiguous-en-2
+  title_source_id: title-page-ambiguous-en-2
+  title: Retrieval Context Topic 16 Page 2
+  notion_path: Synthetic/en/Retrieval Context Topic 16 Page 2
+- page_id: page-ambiguous-mixed-1
+  title_source_id: title-page-ambiguous-mixed-1
+  title: 檢索 Context Topic 17 Page 1
+  notion_path: Synthetic/mixed/檢索 Context Topic 17 Page 1
+- page_id: page-ambiguous-mixed-2
+  title_source_id: title-page-ambiguous-mixed-2
+  title: 檢索 Context Topic 18 Page 2
+  notion_path: Synthetic/mixed/檢索 Context Topic 18 Page 2

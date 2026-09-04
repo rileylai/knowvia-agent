@@ -1,0 +1,81 @@
+version: 1
+questions:
+  - id: gq-nlp-attention-001
+    category: nlp
+    query: How does scaled dot-product attention use query, key, and value vectors?
+    scope:
+      top_k: 3
+      page_ids:
+        - page-nlp-week5
+      section_paths:
+        - Knowledge/NLP/Week5/Attention
+      source_kinds:
+        - notion
+    expected:
+      source_state: manual_note
+      paths:
+        - Knowledge/NLP/Week5/Attention/Scaled dot-product attention
+      must_include:
+        - scaled dot-product attention
+        - query
+        - key
+        - value
+      must_not_include:
+        - pending change request content
+        - rejected change request content
+    checks:
+      retrieval_hit_rate: true
+      citation_accuracy: true
+      production_rag_exclusion: true
+
+  - id: gq-iso-9001-process-001
+    category: iso_9001
+    query: How does ISO 9001 apply the process approach and the PDCA cycle?
+    scope:
+      top_k: 3
+      page_ids:
+        - page-iso-9001
+      section_paths:
+        - Knowledge/Quality/ISO 9001/Process Approach
+      source_kinds:
+        - notion
+    expected:
+      source_state: manual_note
+      paths:
+        - Knowledge/Quality/ISO 9001/Process Approach/PDCA
+      must_include:
+        - process approach
+        - PDCA
+      must_not_include:
+        - pending change request content
+        - rejected change request content
+    checks:
+      retrieval_hit_rate: true
+      citation_accuracy: true
+      production_rag_exclusion: true
+
+  - id: gq-ai-supplement-zone-positional-encoding-001
+    category: ai_supplement_zone
+    query: According to the accepted supplement, why is positional encoding needed?
+    scope:
+      top_k: 3
+      page_ids:
+        - page-nlp-week5
+      section_paths:
+        - Knowledge/NLP/Week5/AI Supplement Zone
+      source_kinds:
+        - notion
+    expected:
+      source_state: accepted_ai_supplement
+      paths:
+        - Knowledge/NLP/Week5/AI Supplement Zone/2026-06-04/Positional Encoding Supplement
+      must_include:
+        - positional encoding
+        - token order
+      must_not_include:
+        - pending change request content
+        - rejected change request content
+    checks:
+      retrieval_hit_rate: true
+      citation_accuracy: true
+      production_rag_exclusion: true

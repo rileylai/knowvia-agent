@@ -1,0 +1,49 @@
+{
+  "page_id": "page-iso-9001",
+  "title": "ISO 9001 Notes",
+  "notion_path": "Knowledge/Quality/ISO 9001",
+  "demo_metadata": {
+    "synthetic_content": true,
+    "safe_for_public_demo": true,
+    "contains_private_content": false,
+    "scenario": "manual_quality_reference_notes"
+  },
+  "blocks": [
+    {
+      "block_id": "blk-process-approach",
+      "block_type": "heading_2",
+      "content_text": "Process Approach",
+      "children": [
+        {
+          "block_id": "blk-process-overview",
+          "block_type": "paragraph",
+          "content_text": "The process approach links inputs, activities, outputs, and interactions so the quality system can be managed as connected processes."
+        },
+        {
+          "block_id": "blk-pdca",
+          "block_type": "toggle",
+          "content_text": "PDCA",
+          "children": [
+            {
+              "block_id": "blk-pdca-detail",
+              "block_type": "paragraph",
+              "content_text": "Plan defines objectives and resources, Do runs the work, Check reviews evidence, and Act improves the process based on results."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "block_id": "blk-risk-thinking",
+      "block_type": "heading_2",
+      "content_text": "Risk-Based Thinking",
+      "children": [
+        {
+          "block_id": "blk-risk-detail",
+          "block_type": "paragraph",
+          "content_text": "Risk-based thinking asks teams to prevent nonconformity early instead of reacting only after a defect appears."
+        }
+      ]
+    }
+  ]
+}

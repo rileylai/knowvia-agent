@@ -1,0 +1,1743 @@
+chunks:
+- chunk_id: chunk-title_associated-zh_tw-1-1
+  page_id: page-title_associated-zh_tw-1
+  chunk_index: 0
+  chunk_text: 這段內容說明第 1 個可驗證概念與實際使用限制。
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 1/Section 1/1
+  headings:
+  - source_id: heading-root-page-title_associated-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-zh_tw-1-1
+    text: Section 1
+  source_kind: notion
+  record_digest: 66b19edec0055944663bb663c80bbfe632b77707c1747ef3d073995f4c2124d6
+- chunk_id: chunk-title_associated-zh_tw-1-2
+  page_id: page-title_associated-zh_tw-1
+  chunk_index: 1
+  chunk_text: 這段內容說明第 1 個可驗證概念與實際使用限制。
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 1/Section 2/2
+  headings:
+  - source_id: heading-root-page-title_associated-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-zh_tw-1-2
+    text: Section 2
+  source_kind: notion
+  record_digest: 33a4dabab59206d2d8304abc0c69bc44d5da72de104dd340a99d4a11bb2727db
+- chunk_id: chunk-title_associated-zh_tw-1-3
+  page_id: page-title_associated-zh_tw-1
+  chunk_index: 2
+  chunk_text: 這段內容說明第 1 個可驗證概念與實際使用限制。
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 1/Section 3/3
+  headings:
+  - source_id: heading-root-page-title_associated-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-zh_tw-1-3
+    text: Section 3
+  source_kind: notion
+  record_digest: 94f61b57a03187de1b566b7c2addaedc0cd3eb07149499aa33eadfaf84b3d5fe
+- chunk_id: chunk-title_associated-zh_tw-1-4
+  page_id: page-title_associated-zh_tw-1
+  chunk_index: 3
+  chunk_text: 這段內容說明第 1 個可驗證概念與實際使用限制。
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 1/Section 4/4
+  headings:
+  - source_id: heading-root-page-title_associated-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-zh_tw-1-4
+    text: Section 4
+  source_kind: notion
+  record_digest: b0a14ead1f30a135623b79bee3cf5420ae414776d2f46aacea44c1f19d8ad663
+- chunk_id: chunk-title_associated-zh_tw-1-5
+  page_id: page-title_associated-zh_tw-1
+  chunk_index: 4
+  chunk_text: Synthetic evidence title_associated zh_tw page 1 chunk 5.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 1/Section 5/5
+  headings:
+  - source_id: heading-root-page-title_associated-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-zh_tw-1-5
+    text: Section 5
+  source_kind: notion
+  record_digest: f57cd8f9558b02baa125affa93aab377b1be0d7636c54001d6814424b9cd0823
+- chunk_id: chunk-title_associated-zh_tw-1-6
+  page_id: page-title_associated-zh_tw-1
+  chunk_index: 5
+  chunk_text: Synthetic evidence title_associated zh_tw page 1 chunk 6.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 1/Section 6/6
+  headings:
+  - source_id: heading-root-page-title_associated-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-zh_tw-1-6
+    text: Section 6
+  source_kind: notion
+  record_digest: cbb342ae5a61d1ab7c1674c626faf2891fe35b2ed26c44d482b7d434e531ff6a
+- chunk_id: chunk-title_associated-zh_tw-2-1
+  page_id: page-title_associated-zh_tw-2
+  chunk_index: 0
+  chunk_text: 這段內容說明第 2 個可驗證概念與實際使用限制。
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 2/Section 1/1
+  headings:
+  - source_id: heading-root-page-title_associated-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-zh_tw-2-1
+    text: Section 1
+  source_kind: notion
+  record_digest: 3d5394b3670c72177389021cfd9f413cfa959c9044c086154926bce5a5eb230b
+- chunk_id: chunk-title_associated-zh_tw-2-2
+  page_id: page-title_associated-zh_tw-2
+  chunk_index: 1
+  chunk_text: 這段內容說明第 2 個可驗證概念與實際使用限制。
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 2/Section 2/2
+  headings:
+  - source_id: heading-root-page-title_associated-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-zh_tw-2-2
+    text: Section 2
+  source_kind: notion
+  record_digest: d27b081dca0d7d48bcdaa6de60ade6be8e0570c833b9ca0e1fe4df06439b9954
+- chunk_id: chunk-title_associated-zh_tw-2-3
+  page_id: page-title_associated-zh_tw-2
+  chunk_index: 2
+  chunk_text: 這段內容說明第 2 個可驗證概念與實際使用限制。
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 2/Section 3/3
+  headings:
+  - source_id: heading-root-page-title_associated-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-zh_tw-2-3
+    text: Section 3
+  source_kind: notion
+  record_digest: b2bb73a506366edb559ccd543c57ff0bff7d20e63a44976548fda873f3137108
+- chunk_id: chunk-title_associated-zh_tw-2-4
+  page_id: page-title_associated-zh_tw-2
+  chunk_index: 3
+  chunk_text: 這段內容說明第 2 個可驗證概念與實際使用限制。
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 2/Section 4/4
+  headings:
+  - source_id: heading-root-page-title_associated-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-zh_tw-2-4
+    text: Section 4
+  source_kind: notion
+  record_digest: bbca0d96254ba80de38694d476cceac671c73dd2cdae2ed547c76d4f826c9cab
+- chunk_id: chunk-title_associated-zh_tw-2-5
+  page_id: page-title_associated-zh_tw-2
+  chunk_index: 4
+  chunk_text: Synthetic evidence title_associated zh_tw page 2 chunk 5.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 2/Section 5/5
+  headings:
+  - source_id: heading-root-page-title_associated-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-zh_tw-2-5
+    text: Section 5
+  source_kind: notion
+  record_digest: b71c5e71cc903554a5524e2c6c257fb9b62f7903a77c627e5eaca441e92c9a4e
+- chunk_id: chunk-title_associated-zh_tw-2-6
+  page_id: page-title_associated-zh_tw-2
+  chunk_index: 5
+  chunk_text: Synthetic evidence title_associated zh_tw page 2 chunk 6.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 2/Section 6/6
+  headings:
+  - source_id: heading-root-page-title_associated-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-zh_tw-2-6
+    text: Section 6
+  source_kind: notion
+  record_digest: bf9fc3cd0a8260a6cbbb98f70d3b1df7dbfaea6b328c2173e1dd5788ea5a977f
+- chunk_id: chunk-title_associated-en-1-1
+  page_id: page-title_associated-en-1
+  chunk_index: 0
+  chunk_text: This note explains verifiable concept 3 and its practical constraint.
+  notion_path: Synthetic/en/Retrieval Context Topic 3/Section 1/1
+  headings:
+  - source_id: heading-root-page-title_associated-en-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-en-1-1
+    text: Section 1
+  source_kind: notion
+  record_digest: c6cbaf7e5b4cde22e566fd2e6c844fbc8d9831cab78ce72f9d21c8a097180121
+- chunk_id: chunk-title_associated-en-1-2
+  page_id: page-title_associated-en-1
+  chunk_index: 1
+  chunk_text: This note explains verifiable concept 3 and its practical constraint.
+  notion_path: Synthetic/en/Retrieval Context Topic 3/Section 2/2
+  headings:
+  - source_id: heading-root-page-title_associated-en-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-en-1-2
+    text: Section 2
+  source_kind: notion
+  record_digest: 8c7e4c79e7826647a73cf3f7f80608fceb9c5500418a20549aec7167a94fc135
+- chunk_id: chunk-title_associated-en-1-3
+  page_id: page-title_associated-en-1
+  chunk_index: 2
+  chunk_text: This note explains verifiable concept 3 and its practical constraint.
+  notion_path: Synthetic/en/Retrieval Context Topic 3/Section 3/3
+  headings:
+  - source_id: heading-root-page-title_associated-en-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-en-1-3
+    text: Section 3
+  source_kind: notion
+  record_digest: 831588616284d3e21f871c27f537228a1555b7e0b9f5e3e1812edb82b4d7e7b7
+- chunk_id: chunk-title_associated-en-1-4
+  page_id: page-title_associated-en-1
+  chunk_index: 3
+  chunk_text: This note explains verifiable concept 3 and its practical constraint.
+  notion_path: Synthetic/en/Retrieval Context Topic 3/Section 4/4
+  headings:
+  - source_id: heading-root-page-title_associated-en-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-en-1-4
+    text: Section 4
+  source_kind: notion
+  record_digest: 970b6bc09c381a8a763127f60464dd9824cd4f1559b227a8fee956c99ebe2530
+- chunk_id: chunk-title_associated-en-1-5
+  page_id: page-title_associated-en-1
+  chunk_index: 4
+  chunk_text: Synthetic evidence title_associated en page 1 chunk 5.
+  notion_path: Synthetic/en/Retrieval Context Topic 3/Section 5/5
+  headings:
+  - source_id: heading-root-page-title_associated-en-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-en-1-5
+    text: Section 5
+  source_kind: notion
+  record_digest: f00d3aa96084c05dd6650a746e76514757fbd8a51d52bfd621d33ddf39a271cf
+- chunk_id: chunk-title_associated-en-1-6
+  page_id: page-title_associated-en-1
+  chunk_index: 5
+  chunk_text: Synthetic evidence title_associated en page 1 chunk 6.
+  notion_path: Synthetic/en/Retrieval Context Topic 3/Section 6/6
+  headings:
+  - source_id: heading-root-page-title_associated-en-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-en-1-6
+    text: Section 6
+  source_kind: notion
+  record_digest: 531bd533688dcabeced24e40aa3e6a339f4db1898b8c33be14d9d805f449d043
+- chunk_id: chunk-title_associated-en-2-1
+  page_id: page-title_associated-en-2
+  chunk_index: 0
+  chunk_text: This note explains verifiable concept 4 and its practical constraint.
+  notion_path: Synthetic/en/Retrieval Context Topic 4/Section 1/1
+  headings:
+  - source_id: heading-root-page-title_associated-en-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-en-2-1
+    text: Section 1
+  source_kind: notion
+  record_digest: 1271340786b50393f849fd0cc291f49d39ef0a316fef2d6bee8475624615713c
+- chunk_id: chunk-title_associated-en-2-2
+  page_id: page-title_associated-en-2
+  chunk_index: 1
+  chunk_text: This note explains verifiable concept 4 and its practical constraint.
+  notion_path: Synthetic/en/Retrieval Context Topic 4/Section 2/2
+  headings:
+  - source_id: heading-root-page-title_associated-en-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-en-2-2
+    text: Section 2
+  source_kind: notion
+  record_digest: c85af8a1d297831533088c2cfc4e819d9f7aaa59b3ad660dbf26de352a6f2373
+- chunk_id: chunk-title_associated-en-2-3
+  page_id: page-title_associated-en-2
+  chunk_index: 2
+  chunk_text: This note explains verifiable concept 4 and its practical constraint.
+  notion_path: Synthetic/en/Retrieval Context Topic 4/Section 3/3
+  headings:
+  - source_id: heading-root-page-title_associated-en-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-en-2-3
+    text: Section 3
+  source_kind: notion
+  record_digest: 37020003b6be655c616746a70a5cf4783db939bc673e3cccdb80c2415afbd94e
+- chunk_id: chunk-title_associated-en-2-4
+  page_id: page-title_associated-en-2
+  chunk_index: 3
+  chunk_text: This note explains verifiable concept 4 and its practical constraint.
+  notion_path: Synthetic/en/Retrieval Context Topic 4/Section 4/4
+  headings:
+  - source_id: heading-root-page-title_associated-en-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-en-2-4
+    text: Section 4
+  source_kind: notion
+  record_digest: 4437ef6c3343f2e0d4aa08af2a9dae2f5766d3d90b7ec28f869c187d1d4a6479
+- chunk_id: chunk-title_associated-en-2-5
+  page_id: page-title_associated-en-2
+  chunk_index: 4
+  chunk_text: Synthetic evidence title_associated en page 2 chunk 5.
+  notion_path: Synthetic/en/Retrieval Context Topic 4/Section 5/5
+  headings:
+  - source_id: heading-root-page-title_associated-en-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-en-2-5
+    text: Section 5
+  source_kind: notion
+  record_digest: ab77225382a5c92113e1c88da032dda72b4ca185b46e7ab46f58711f824e4854
+- chunk_id: chunk-title_associated-en-2-6
+  page_id: page-title_associated-en-2
+  chunk_index: 5
+  chunk_text: Synthetic evidence title_associated en page 2 chunk 6.
+  notion_path: Synthetic/en/Retrieval Context Topic 4/Section 6/6
+  headings:
+  - source_id: heading-root-page-title_associated-en-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-en-2-6
+    text: Section 6
+  source_kind: notion
+  record_digest: dd5147d6f2592d50535aee5a8a4fcff35b1e974b07aebf6521ea23a35fef87c7
+- chunk_id: chunk-title_associated-mixed-1-1
+  page_id: page-title_associated-mixed-1
+  chunk_index: 0
+  chunk_text: 這段 note explains concept 5 與 practical constraint。
+  notion_path: Synthetic/mixed/檢索 Context Topic 5/Section 1/1
+  headings:
+  - source_id: heading-root-page-title_associated-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-mixed-1-1
+    text: Section 1
+  source_kind: notion
+  record_digest: bc708103cdb9342dbf54035f0453202e73b776ae75a0030f34579650088cee28
+- chunk_id: chunk-title_associated-mixed-1-2
+  page_id: page-title_associated-mixed-1
+  chunk_index: 1
+  chunk_text: 這段 note explains concept 5 與 practical constraint。
+  notion_path: Synthetic/mixed/檢索 Context Topic 5/Section 2/2
+  headings:
+  - source_id: heading-root-page-title_associated-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-mixed-1-2
+    text: Section 2
+  source_kind: notion
+  record_digest: adee25867002547d8642b58f49c347a00cd8166d6a9f3e6c2a44714c4ccd0fac
+- chunk_id: chunk-title_associated-mixed-1-3
+  page_id: page-title_associated-mixed-1
+  chunk_index: 2
+  chunk_text: 這段 note explains concept 5 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 5 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 5 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 5 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 5 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 5/Section 3/3
+  headings:
+  - source_id: heading-root-page-title_associated-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-mixed-1-3
+    text: Section 3
+  source_kind: notion
+  record_digest: f3c3fe3b3350b096603813545fd67e13be34ae99064cdee82faaa0e8784840f9
+- chunk_id: chunk-title_associated-mixed-1-4
+  page_id: page-title_associated-mixed-1
+  chunk_index: 3
+  chunk_text: 這段 note explains concept 5 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 5 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 5 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 5 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 5 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 5/Section 4/4
+  headings:
+  - source_id: heading-root-page-title_associated-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-mixed-1-4
+    text: Section 4
+  source_kind: notion
+  record_digest: aebc084b3bee3cb9c6f3dd9f9510a4ddd5c98db7f7827018eb57024b075bfaac
+- chunk_id: chunk-title_associated-mixed-1-5
+  page_id: page-title_associated-mixed-1
+  chunk_index: 4
+  chunk_text: Synthetic evidence title_associated mixed page 1 chunk 5.
+  notion_path: Synthetic/mixed/檢索 Context Topic 5/Section 5/5
+  headings:
+  - source_id: heading-root-page-title_associated-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-mixed-1-5
+    text: Section 5
+  source_kind: notion
+  record_digest: 7548f86baaf4417cbee6338b5de3e14099dd008c8ed5d3b23b8f02a3f12ffd92
+- chunk_id: chunk-title_associated-mixed-1-6
+  page_id: page-title_associated-mixed-1
+  chunk_index: 5
+  chunk_text: Synthetic evidence title_associated mixed page 1 chunk 6.
+  notion_path: Synthetic/mixed/檢索 Context Topic 5/Section 6/6
+  headings:
+  - source_id: heading-root-page-title_associated-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-mixed-1-6
+    text: Section 6
+  source_kind: notion
+  record_digest: 7465307c5a0e3a2d8a6c42acf281c44f08ce3f82672dff12816bc498f9accb85
+- chunk_id: chunk-title_associated-mixed-2-1
+  page_id: page-title_associated-mixed-2
+  chunk_index: 0
+  chunk_text: 這段 note explains concept 6 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 6 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 6 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 6 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 6 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 6/Section 1/1
+  headings:
+  - source_id: heading-root-page-title_associated-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-mixed-2-1
+    text: Section 1
+  source_kind: notion
+  record_digest: 9fe59a5683d5646183888d4b65c3a4f8d69a37ff9e05d04539dd782c49a9b387
+- chunk_id: chunk-title_associated-mixed-2-2
+  page_id: page-title_associated-mixed-2
+  chunk_index: 1
+  chunk_text: 這段 note explains concept 6 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 6 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 6 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 6 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 6 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 6/Section 2/2
+  headings:
+  - source_id: heading-root-page-title_associated-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-mixed-2-2
+    text: Section 2
+  source_kind: notion
+  record_digest: cb0b52c316f49d61761072281c2085be756f35675d1aec5b0bc350e60dde0e34
+- chunk_id: chunk-title_associated-mixed-2-3
+  page_id: page-title_associated-mixed-2
+  chunk_index: 2
+  chunk_text: 這段 note explains concept 6 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 6 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 6 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 6 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 6 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 6/Section 3/3
+  headings:
+  - source_id: heading-root-page-title_associated-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-mixed-2-3
+    text: Section 3
+  source_kind: notion
+  record_digest: 4f048b8519fb39604c0e657109f50622e741c4168115ee0d94bcc305a777c08b
+- chunk_id: chunk-title_associated-mixed-2-4
+  page_id: page-title_associated-mixed-2
+  chunk_index: 3
+  chunk_text: 這段 note explains concept 6 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 6 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 6 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 6 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 6 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 6/Section 4/4
+  headings:
+  - source_id: heading-root-page-title_associated-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-mixed-2-4
+    text: Section 4
+  source_kind: notion
+  record_digest: efee106641d7d4487e96cd320132b683b6365578483c7551bf3530b6caf40666
+- chunk_id: chunk-title_associated-mixed-2-5
+  page_id: page-title_associated-mixed-2
+  chunk_index: 4
+  chunk_text: Synthetic evidence title_associated mixed page 2 chunk 5.
+  notion_path: Synthetic/mixed/檢索 Context Topic 6/Section 5/5
+  headings:
+  - source_id: heading-root-page-title_associated-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-mixed-2-5
+    text: Section 5
+  source_kind: notion
+  record_digest: 236a96ae5ff13111b90177f93d91e0fed8871d0e8c0875e6cd1995c6cdb379ee
+- chunk_id: chunk-title_associated-mixed-2-6
+  page_id: page-title_associated-mixed-2
+  chunk_index: 5
+  chunk_text: Synthetic evidence title_associated mixed page 2 chunk 6.
+  notion_path: Synthetic/mixed/檢索 Context Topic 6/Section 6/6
+  headings:
+  - source_id: heading-root-page-title_associated-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-title_associated-mixed-2-6
+    text: Section 6
+  source_kind: notion
+  record_digest: ce4d45e1552f470f3ea8c885e9b2b03c201c16aadd5a59e83dd68b29a2d5a898
+- chunk_id: chunk-body_only-zh_tw-1-1
+  page_id: page-body_only-zh_tw-1
+  chunk_index: 0
+  chunk_text: 這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 7
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 7/Section 1/1
+  headings:
+  - source_id: heading-root-page-body_only-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-zh_tw-1-1
+    text: Section 1
+  source_kind: notion
+  record_digest: ee86ef138d540b7e6fa4d3c42a0a8f6aaf5e2290a24a9d033e4343e1d2e4848a
+- chunk_id: chunk-body_only-zh_tw-1-2
+  page_id: page-body_only-zh_tw-1
+  chunk_index: 1
+  chunk_text: 這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 7
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 7/Section 2/2
+  headings:
+  - source_id: heading-root-page-body_only-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-zh_tw-1-2
+    text: Section 2
+  source_kind: notion
+  record_digest: 3cea4fbd8db13887327cdaad1ee24ad618c79dbffe1c4fa2d4d17edc952e4d20
+- chunk_id: chunk-body_only-zh_tw-1-3
+  page_id: page-body_only-zh_tw-1
+  chunk_index: 2
+  chunk_text: 這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 7
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 7/Section 3/3
+  headings:
+  - source_id: heading-root-page-body_only-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-zh_tw-1-3
+    text: Section 3
+  source_kind: notion
+  record_digest: 1947d338096a260c412e8480db07fdc4c79667fb66585e3c2e8889052cfea317
+- chunk_id: chunk-body_only-zh_tw-1-4
+  page_id: page-body_only-zh_tw-1
+  chunk_index: 3
+  chunk_text: 這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 7
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 7 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 7/Section 4/4
+  headings:
+  - source_id: heading-root-page-body_only-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-zh_tw-1-4
+    text: Section 4
+  source_kind: notion
+  record_digest: 6cab9173da800d8b8cf7d4a70d9e8a2c3f3a25a5da9553e43e30eaa06262492f
+- chunk_id: chunk-body_only-zh_tw-1-5
+  page_id: page-body_only-zh_tw-1
+  chunk_index: 4
+  chunk_text: Synthetic evidence body_only zh_tw page 1 chunk 5.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 7/Section 5/5
+  headings:
+  - source_id: heading-root-page-body_only-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-zh_tw-1-5
+    text: Section 5
+  source_kind: notion
+  record_digest: d1e703f7b8b0260fa86a472cf8b55db75007c8ffca7d1f8802eb5772b1b4566a
+- chunk_id: chunk-body_only-zh_tw-1-6
+  page_id: page-body_only-zh_tw-1
+  chunk_index: 5
+  chunk_text: Synthetic evidence body_only zh_tw page 1 chunk 6.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 7/Section 6/6
+  headings:
+  - source_id: heading-root-page-body_only-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-zh_tw-1-6
+    text: Section 6
+  source_kind: notion
+  record_digest: 09b29fa8d3e1fa06b8739c3b3e974270735427a5687c4d1d60e79867936cc58b
+- chunk_id: chunk-body_only-zh_tw-2-1
+  page_id: page-body_only-zh_tw-2
+  chunk_index: 0
+  chunk_text: 這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 8
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 8/Section 1/1
+  headings:
+  - source_id: heading-root-page-body_only-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-zh_tw-2-1
+    text: Section 1
+  source_kind: notion
+  record_digest: 9d8589782a1ea8eb69458c8e115168875a99675095abeaee3c158a69e00d3e81
+- chunk_id: chunk-body_only-zh_tw-2-2
+  page_id: page-body_only-zh_tw-2
+  chunk_index: 1
+  chunk_text: 這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 8
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 8/Section 2/2
+  headings:
+  - source_id: heading-root-page-body_only-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-zh_tw-2-2
+    text: Section 2
+  source_kind: notion
+  record_digest: 910fe57d14d4e4bf1afe4acd30ee72db77ef70fb31c9b95f7d6d97a683a2f920
+- chunk_id: chunk-body_only-zh_tw-2-3
+  page_id: page-body_only-zh_tw-2
+  chunk_index: 2
+  chunk_text: 這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 8
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 8/Section 3/3
+  headings:
+  - source_id: heading-root-page-body_only-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-zh_tw-2-3
+    text: Section 3
+  source_kind: notion
+  record_digest: e2aac7c1282226777f28b001489292e06119a025cc5bd6e8e9cbd9d21864b22a
+- chunk_id: chunk-body_only-zh_tw-2-4
+  page_id: page-body_only-zh_tw-2
+  chunk_index: 3
+  chunk_text: 這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 8
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 8 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 8/Section 4/4
+  headings:
+  - source_id: heading-root-page-body_only-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-zh_tw-2-4
+    text: Section 4
+  source_kind: notion
+  record_digest: ec1f5a0c74ceb1d8125aa58891ac9c68ce4f2a5785508977069d61638426734c
+- chunk_id: chunk-body_only-zh_tw-2-5
+  page_id: page-body_only-zh_tw-2
+  chunk_index: 4
+  chunk_text: Synthetic evidence body_only zh_tw page 2 chunk 5.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 8/Section 5/5
+  headings:
+  - source_id: heading-root-page-body_only-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-zh_tw-2-5
+    text: Section 5
+  source_kind: notion
+  record_digest: 30a5a928fd7be0801667f8396936b989f1520e2e044678b148ef9f8a291693d8
+- chunk_id: chunk-body_only-zh_tw-2-6
+  page_id: page-body_only-zh_tw-2
+  chunk_index: 5
+  chunk_text: Synthetic evidence body_only zh_tw page 2 chunk 6.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 8/Section 6/6
+  headings:
+  - source_id: heading-root-page-body_only-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-zh_tw-2-6
+    text: Section 6
+  source_kind: notion
+  record_digest: 83ec13df69ee314a44ff948a1dd6ab9d38c7d80fa84732900583c1e2f505b55d
+- chunk_id: chunk-body_only-en-1-1
+  page_id: page-body_only-en-1
+  chunk_index: 0
+  chunk_text: This note explains verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This
+    note explains verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This note
+    explains verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This note explains
+    verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This note explains verifiable
+    concept 9 and its practical constraint. Supporting detail remains public and synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 9/Section 1/1
+  headings:
+  - source_id: heading-root-page-body_only-en-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-en-1-1
+    text: Section 1
+  source_kind: notion
+  record_digest: 43688734c50d0ce497fed23f3d4b7ebb73e4d4de0e6f9f2d025b3d5fb0931f2f
+- chunk_id: chunk-body_only-en-1-2
+  page_id: page-body_only-en-1
+  chunk_index: 1
+  chunk_text: This note explains verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This
+    note explains verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This note
+    explains verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This note explains
+    verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This note explains verifiable
+    concept 9 and its practical constraint. Supporting detail remains public and synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 9/Section 2/2
+  headings:
+  - source_id: heading-root-page-body_only-en-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-en-1-2
+    text: Section 2
+  source_kind: notion
+  record_digest: 4c39202db5cc73d5c951065183b387b5cab7b08f23aaf9aa52eb34e14c3fffec
+- chunk_id: chunk-body_only-en-1-3
+  page_id: page-body_only-en-1
+  chunk_index: 2
+  chunk_text: This note explains verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This
+    note explains verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This note
+    explains verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This note explains
+    verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This note explains verifiable
+    concept 9 and its practical constraint. Supporting detail remains public and synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 9/Section 3/3
+  headings:
+  - source_id: heading-root-page-body_only-en-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-en-1-3
+    text: Section 3
+  source_kind: notion
+  record_digest: 3407e64ffecf1a8461f459a13958caea4e3c9581e26bd6e8a32fe75080416b42
+- chunk_id: chunk-body_only-en-1-4
+  page_id: page-body_only-en-1
+  chunk_index: 3
+  chunk_text: This note explains verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This
+    note explains verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This note
+    explains verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This note explains
+    verifiable concept 9 and its practical constraint. Supporting detail remains public and synthetic.This note explains verifiable
+    concept 9 and its practical constraint. Supporting detail remains public and synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 9/Section 4/4
+  headings:
+  - source_id: heading-root-page-body_only-en-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-en-1-4
+    text: Section 4
+  source_kind: notion
+  record_digest: 16079f93056f005fc24f1984c43432118e9c1067db5a21d5cc0a2082e441f255
+- chunk_id: chunk-body_only-en-1-5
+  page_id: page-body_only-en-1
+  chunk_index: 4
+  chunk_text: Synthetic evidence body_only en page 1 chunk 5.
+  notion_path: Synthetic/en/Retrieval Context Topic 9/Section 5/5
+  headings:
+  - source_id: heading-root-page-body_only-en-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-en-1-5
+    text: Section 5
+  source_kind: notion
+  record_digest: 101ab31c84c52e086c604aa8a6fe05a74f85b4df35e4dabc19f9a839826f2974
+- chunk_id: chunk-body_only-en-1-6
+  page_id: page-body_only-en-1
+  chunk_index: 5
+  chunk_text: Synthetic evidence body_only en page 1 chunk 6.
+  notion_path: Synthetic/en/Retrieval Context Topic 9/Section 6/6
+  headings:
+  - source_id: heading-root-page-body_only-en-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-en-1-6
+    text: Section 6
+  source_kind: notion
+  record_digest: f50fc41ae790a7fd9f0d00e82474c260e075b7a96f2d246fd25373314adb4ccf
+- chunk_id: chunk-body_only-en-2-1
+  page_id: page-body_only-en-2
+  chunk_index: 0
+  chunk_text: This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 10/Section 1/1
+  headings:
+  - source_id: heading-root-page-body_only-en-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-en-2-1
+    text: Section 1
+  source_kind: notion
+  record_digest: 5384fa0858f1aa369e378afdec54e1f1b430494e264deb16c9f847adeb1035c7
+- chunk_id: chunk-body_only-en-2-2
+  page_id: page-body_only-en-2
+  chunk_index: 1
+  chunk_text: This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 10/Section 2/2
+  headings:
+  - source_id: heading-root-page-body_only-en-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-en-2-2
+    text: Section 2
+  source_kind: notion
+  record_digest: f2a4e93b5196556bf94fbba97e5ae560c16ff223faccd2cf2ed645b4d95804d7
+- chunk_id: chunk-body_only-en-2-3
+  page_id: page-body_only-en-2
+  chunk_index: 2
+  chunk_text: This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 10/Section 3/3
+  headings:
+  - source_id: heading-root-page-body_only-en-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-en-2-3
+    text: Section 3
+  source_kind: notion
+  record_digest: 646f8a174f83f29ce284568ba708a15d79493bff246a15782c9c99102a45365c
+- chunk_id: chunk-body_only-en-2-4
+  page_id: page-body_only-en-2
+  chunk_index: 3
+  chunk_text: This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 10 and its practical constraint. Supporting detail remains public and
+    synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 10/Section 4/4
+  headings:
+  - source_id: heading-root-page-body_only-en-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-en-2-4
+    text: Section 4
+  source_kind: notion
+  record_digest: fe760ac7c0d7817724eeeecceb9f50436ad80d20384a5ab70afcff2c83b06993
+- chunk_id: chunk-body_only-en-2-5
+  page_id: page-body_only-en-2
+  chunk_index: 4
+  chunk_text: Synthetic evidence body_only en page 2 chunk 5.
+  notion_path: Synthetic/en/Retrieval Context Topic 10/Section 5/5
+  headings:
+  - source_id: heading-root-page-body_only-en-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-en-2-5
+    text: Section 5
+  source_kind: notion
+  record_digest: 37eaa912f7094c761c75d796d69c806bd27eb7d38c587334168e40ee2d63a50b
+- chunk_id: chunk-body_only-en-2-6
+  page_id: page-body_only-en-2
+  chunk_index: 5
+  chunk_text: Synthetic evidence body_only en page 2 chunk 6.
+  notion_path: Synthetic/en/Retrieval Context Topic 10/Section 6/6
+  headings:
+  - source_id: heading-root-page-body_only-en-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-en-2-6
+    text: Section 6
+  source_kind: notion
+  record_digest: 945295b9bff6e1abd7c7d4bd0c8204d1b61685e4e57d87ef03c1acfc8fd26b2a
+- chunk_id: chunk-body_only-mixed-1-1
+  page_id: page-body_only-mixed-1
+  chunk_index: 0
+  chunk_text: 這段 note explains concept 11 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 11 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 11 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 11 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 11 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 11/Section 1/1
+  headings:
+  - source_id: heading-root-page-body_only-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-mixed-1-1
+    text: Section 1
+  source_kind: notion
+  record_digest: 9d755fbb61baee6ed62f9f3572c45c4c898c526d7334bad251f395b519043c1e
+- chunk_id: chunk-body_only-mixed-1-2
+  page_id: page-body_only-mixed-1
+  chunk_index: 1
+  chunk_text: 這段 note explains concept 11 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 11 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 11 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 11 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 11 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 11/Section 2/2
+  headings:
+  - source_id: heading-root-page-body_only-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-mixed-1-2
+    text: Section 2
+  source_kind: notion
+  record_digest: 994b099cfa0ee80b7b5e96aff8e5ba0ffc79ead6f62a315dc6df9cfb0f908e6b
+- chunk_id: chunk-body_only-mixed-1-3
+  page_id: page-body_only-mixed-1
+  chunk_index: 2
+  chunk_text: 這段 note explains concept 11 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 11 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 11 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 11 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 11 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 11/Section 3/3
+  headings:
+  - source_id: heading-root-page-body_only-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-mixed-1-3
+    text: Section 3
+  source_kind: notion
+  record_digest: 7caa86ff2ad477f60a3af8cf84de896a6da3a997eef7ee88756298d696a6d849
+- chunk_id: chunk-body_only-mixed-1-4
+  page_id: page-body_only-mixed-1
+  chunk_index: 3
+  chunk_text: 這段 note explains concept 11 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 11 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 11 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 11 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 11 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 11/Section 4/4
+  headings:
+  - source_id: heading-root-page-body_only-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-mixed-1-4
+    text: Section 4
+  source_kind: notion
+  record_digest: 432561da32d7d036fd577093f0501bb3ff6975dbb5877441156297cda9f72292
+- chunk_id: chunk-body_only-mixed-1-5
+  page_id: page-body_only-mixed-1
+  chunk_index: 4
+  chunk_text: Synthetic evidence body_only mixed page 1 chunk 5.
+  notion_path: Synthetic/mixed/檢索 Context Topic 11/Section 5/5
+  headings:
+  - source_id: heading-root-page-body_only-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-mixed-1-5
+    text: Section 5
+  source_kind: notion
+  record_digest: 9966ee30a10874ec909a87b336a07292ec5765f7e2d16f90a1b6c8b23dcac27b
+- chunk_id: chunk-body_only-mixed-1-6
+  page_id: page-body_only-mixed-1
+  chunk_index: 5
+  chunk_text: Synthetic evidence body_only mixed page 1 chunk 6.
+  notion_path: Synthetic/mixed/檢索 Context Topic 11/Section 6/6
+  headings:
+  - source_id: heading-root-page-body_only-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-body_only-mixed-1-6
+    text: Section 6
+  source_kind: notion
+  record_digest: 6111ddd484c49512736e155a98316e65bdf2dd7210d80415b8d32bec0cc3f8e2
+- chunk_id: chunk-body_only-mixed-2-1
+  page_id: page-body_only-mixed-2
+  chunk_index: 0
+  chunk_text: 這段 note explains concept 12 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 12 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 12 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 12 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 12 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 12/Section 1/1
+  headings:
+  - source_id: heading-root-page-body_only-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-mixed-2-1
+    text: Section 1
+  source_kind: notion
+  record_digest: 2f5ce52a00c48e7a3a30e7dd2fc4a468126214608d10ad59b4f844b998ef4217
+- chunk_id: chunk-body_only-mixed-2-2
+  page_id: page-body_only-mixed-2
+  chunk_index: 1
+  chunk_text: 這段 note explains concept 12 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 12 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 12 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 12 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 12 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 12/Section 2/2
+  headings:
+  - source_id: heading-root-page-body_only-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-mixed-2-2
+    text: Section 2
+  source_kind: notion
+  record_digest: a6765627eb8c9e1840d51c1b686303915bc5076c41a8133533d31a3d4986b720
+- chunk_id: chunk-body_only-mixed-2-3
+  page_id: page-body_only-mixed-2
+  chunk_index: 2
+  chunk_text: 這段 note explains concept 12 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 12 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 12 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 12 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 12 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 12/Section 3/3
+  headings:
+  - source_id: heading-root-page-body_only-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-mixed-2-3
+    text: Section 3
+  source_kind: notion
+  record_digest: 9c310d3f73b4accfd7d60dba1520489adebfcf329dbfb6822c85a826eda6e862
+- chunk_id: chunk-body_only-mixed-2-4
+  page_id: page-body_only-mixed-2
+  chunk_index: 3
+  chunk_text: 這段 note explains concept 12 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 12 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 12 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 12 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 12 與 practical constraint。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 12/Section 4/4
+  headings:
+  - source_id: heading-root-page-body_only-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-mixed-2-4
+    text: Section 4
+  source_kind: notion
+  record_digest: 2fae8e37a2be2c0a677e4755fc4ce761e8c1af219c666fb1d23e9f177be50716
+- chunk_id: chunk-body_only-mixed-2-5
+  page_id: page-body_only-mixed-2
+  chunk_index: 4
+  chunk_text: Synthetic evidence body_only mixed page 2 chunk 5.
+  notion_path: Synthetic/mixed/檢索 Context Topic 12/Section 5/5
+  headings:
+  - source_id: heading-root-page-body_only-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-mixed-2-5
+    text: Section 5
+  source_kind: notion
+  record_digest: 5ede3ade2855d14706084a9262922ac82f33480937987b148c302aa00132a6c5
+- chunk_id: chunk-body_only-mixed-2-6
+  page_id: page-body_only-mixed-2
+  chunk_index: 5
+  chunk_text: Synthetic evidence body_only mixed page 2 chunk 6.
+  notion_path: Synthetic/mixed/檢索 Context Topic 12/Section 6/6
+  headings:
+  - source_id: heading-root-page-body_only-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-body_only-mixed-2-6
+    text: Section 6
+  source_kind: notion
+  record_digest: 45b5b599462802192eda37ccc643f2c4e8ce1b5bfb95506922d66402f3f7515a
+- chunk_id: chunk-ambiguous-zh_tw-1-1
+  page_id: page-ambiguous-zh_tw-1
+  chunk_index: 0
+  chunk_text: 這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 13
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/1
+  headings:
+  - source_id: heading-root-page-ambiguous-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-zh_tw-1-1
+    text: Shared Section
+  source_kind: notion
+  record_digest: d1f3e63cb144aed9c56a8a236183ca5d74c9449179752063060f66313c04f84f
+- chunk_id: chunk-ambiguous-zh_tw-1-2
+  page_id: page-ambiguous-zh_tw-1
+  chunk_index: 1
+  chunk_text: 這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 13
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/2
+  headings:
+  - source_id: heading-root-page-ambiguous-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-zh_tw-1-2
+    text: Shared Section
+  source_kind: notion
+  record_digest: 02cd9145afa178fb6b30f292db1bf52b9d39021289764611b966aecd5c442e7a
+- chunk_id: chunk-ambiguous-zh_tw-1-3
+  page_id: page-ambiguous-zh_tw-1
+  chunk_index: 2
+  chunk_text: 這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 13
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/3
+  headings:
+  - source_id: heading-root-page-ambiguous-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-zh_tw-1-3
+    text: Shared Section
+  source_kind: notion
+  record_digest: 2401cbe0c1e735fee0d6c43a260f49bba05f027d88c8282497a29c4b1214516a
+- chunk_id: chunk-ambiguous-zh_tw-1-4
+  page_id: page-ambiguous-zh_tw-1
+  chunk_index: 3
+  chunk_text: 這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 13
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 13 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/4
+  headings:
+  - source_id: heading-root-page-ambiguous-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-zh_tw-1-4
+    text: Shared Section
+  source_kind: notion
+  record_digest: 8ccc5cae49a7f0d9549176775cd7b7b721882ab38f22a984d33bef77a36aaacf
+- chunk_id: chunk-ambiguous-zh_tw-1-5
+  page_id: page-ambiguous-zh_tw-1
+  chunk_index: 4
+  chunk_text: Synthetic evidence ambiguous zh_tw page 1 chunk 5.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/5
+  headings:
+  - source_id: heading-root-page-ambiguous-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-zh_tw-1-5
+    text: Shared Section
+  source_kind: notion
+  record_digest: 7a393808341ee8884884a28db0afd34a9e4bfbaf0e69a672743a5f3d234d3851
+- chunk_id: chunk-ambiguous-zh_tw-1-6
+  page_id: page-ambiguous-zh_tw-1
+  chunk_index: 5
+  chunk_text: Synthetic evidence ambiguous zh_tw page 1 chunk 6.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/6
+  headings:
+  - source_id: heading-root-page-ambiguous-zh_tw-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-zh_tw-1-6
+    text: Shared Section
+  source_kind: notion
+  record_digest: 69421d0669289f625a453ac37101d8c170ed1bf0c763b973b33c618ea4774733
+- chunk_id: chunk-ambiguous-zh_tw-2-1
+  page_id: page-ambiguous-zh_tw-2
+  chunk_index: 0
+  chunk_text: 這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/1
+  headings:
+  - source_id: heading-root-page-ambiguous-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-zh_tw-2-1
+    text: Shared Section
+  source_kind: notion
+  record_digest: 96d52d78d63e2784f44b754bae2a83ab7a9e7a01f0765490bc8b17711d56fe27
+- chunk_id: chunk-ambiguous-zh_tw-2-2
+  page_id: page-ambiguous-zh_tw-2
+  chunk_index: 1
+  chunk_text: 這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/2
+  headings:
+  - source_id: heading-root-page-ambiguous-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-zh_tw-2-2
+    text: Shared Section
+  source_kind: notion
+  record_digest: 75c26bfe6c91bdcfe936495c4d6bfea5385a63d34a612a7b0263c10a9a7b36b0
+- chunk_id: chunk-ambiguous-zh_tw-2-3
+  page_id: page-ambiguous-zh_tw-2
+  chunk_index: 2
+  chunk_text: 這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/3
+  headings:
+  - source_id: heading-root-page-ambiguous-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-zh_tw-2-3
+    text: Shared Section
+  source_kind: notion
+  record_digest: c3610b45568488016b8ac8f7e8a78ec3f3e7c9cb157327a350d6f8b0e80be010
+- chunk_id: chunk-ambiguous-zh_tw-2-4
+  page_id: page-ambiguous-zh_tw-2
+  chunk_index: 3
+  chunk_text: 這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting
+    detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14
+    個可驗證概念與實際使用限制。 Supporting detail remains public and synthetic.這段內容說明第 14 個可驗證概念與實際使用限制。 Supporting detail remains public
+    and synthetic.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/4
+  headings:
+  - source_id: heading-root-page-ambiguous-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-zh_tw-2-4
+    text: Shared Section
+  source_kind: notion
+  record_digest: 8fc1ad67a65002f5b25052ef45c169225202c8c0f0e4affc217867f6eefdbd9a
+- chunk_id: chunk-ambiguous-zh_tw-2-5
+  page_id: page-ambiguous-zh_tw-2
+  chunk_index: 4
+  chunk_text: Synthetic evidence ambiguous zh_tw page 2 chunk 5.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/5
+  headings:
+  - source_id: heading-root-page-ambiguous-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-zh_tw-2-5
+    text: Shared Section
+  source_kind: notion
+  record_digest: 84458059292b0ddf0f81f1d7dd5a3b2f64f3a6875203c7117db3ce44b64077f6
+- chunk_id: chunk-ambiguous-zh_tw-2-6
+  page_id: page-ambiguous-zh_tw-2
+  chunk_index: 5
+  chunk_text: Synthetic evidence ambiguous zh_tw page 2 chunk 6.
+  notion_path: Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/6
+  headings:
+  - source_id: heading-root-page-ambiguous-zh_tw-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-zh_tw-2-6
+    text: Shared Section
+  source_kind: notion
+  record_digest: 5257203ab2e7579187e764b45556f0a794022ab3bb8776343f34dac53393b128
+- chunk_id: chunk-ambiguous-en-1-1
+  page_id: page-ambiguous-en-1
+  chunk_index: 0
+  chunk_text: This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/1
+  headings:
+  - source_id: heading-root-page-ambiguous-en-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-en-1-1
+    text: Shared Section
+  source_kind: notion
+  record_digest: 3c3b036c8d24845c6a0e815f268f6129709b23c532ca899185915a96fd207b70
+- chunk_id: chunk-ambiguous-en-1-2
+  page_id: page-ambiguous-en-1
+  chunk_index: 1
+  chunk_text: This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/2
+  headings:
+  - source_id: heading-root-page-ambiguous-en-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-en-1-2
+    text: Shared Section
+  source_kind: notion
+  record_digest: e40aafe1592701bbbdede74a7129e0eb7f0b472280b302b1542762512878606e
+- chunk_id: chunk-ambiguous-en-1-3
+  page_id: page-ambiguous-en-1
+  chunk_index: 2
+  chunk_text: This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/3
+  headings:
+  - source_id: heading-root-page-ambiguous-en-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-en-1-3
+    text: Shared Section
+  source_kind: notion
+  record_digest: 45f30c60fb110ea67733be0c6af67a1eddf1ba905bc34c4c2db450ba63723e1b
+- chunk_id: chunk-ambiguous-en-1-4
+  page_id: page-ambiguous-en-1
+  chunk_index: 3
+  chunk_text: This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 15 and its practical constraint. Supporting detail remains public and
+    synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/4
+  headings:
+  - source_id: heading-root-page-ambiguous-en-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-en-1-4
+    text: Shared Section
+  source_kind: notion
+  record_digest: 7adf3344a534e8102fc812f6da12d9489850f11d4bfd60d38e217998f11c2ed5
+- chunk_id: chunk-ambiguous-en-1-5
+  page_id: page-ambiguous-en-1
+  chunk_index: 4
+  chunk_text: Synthetic evidence ambiguous en page 1 chunk 5.
+  notion_path: Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/5
+  headings:
+  - source_id: heading-root-page-ambiguous-en-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-en-1-5
+    text: Shared Section
+  source_kind: notion
+  record_digest: 8c507fc85a113eccdc10e8a7e7bdf98ff4987bb23b8a86256a5fa393cca57a00
+- chunk_id: chunk-ambiguous-en-1-6
+  page_id: page-ambiguous-en-1
+  chunk_index: 5
+  chunk_text: Synthetic evidence ambiguous en page 1 chunk 6.
+  notion_path: Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/6
+  headings:
+  - source_id: heading-root-page-ambiguous-en-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-en-1-6
+    text: Shared Section
+  source_kind: notion
+  record_digest: 07cfc7cdc223e4e8fbde24f9f05207d86b195a5953d72fae9bd439214df7a397
+- chunk_id: chunk-ambiguous-en-2-1
+  page_id: page-ambiguous-en-2
+  chunk_index: 0
+  chunk_text: This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/1
+  headings:
+  - source_id: heading-root-page-ambiguous-en-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-en-2-1
+    text: Shared Section
+  source_kind: notion
+  record_digest: b97684edefe5528057366c79bf2d840e6f733d6780958f781a5ba8fd906e627a
+- chunk_id: chunk-ambiguous-en-2-2
+  page_id: page-ambiguous-en-2
+  chunk_index: 1
+  chunk_text: This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/2
+  headings:
+  - source_id: heading-root-page-ambiguous-en-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-en-2-2
+    text: Shared Section
+  source_kind: notion
+  record_digest: b451562c2315584d7fa6162e8a4daf2614a53f36947a3e1b224d35cb087b58f8
+- chunk_id: chunk-ambiguous-en-2-3
+  page_id: page-ambiguous-en-2
+  chunk_index: 2
+  chunk_text: This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/3
+  headings:
+  - source_id: heading-root-page-ambiguous-en-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-en-2-3
+    text: Shared Section
+  source_kind: notion
+  record_digest: 4350dd3637aeb2602676930716f94e61df9d8775fdfb845ae35e74ce3c73c32f
+- chunk_id: chunk-ambiguous-en-2-4
+  page_id: page-ambiguous-en-2
+  chunk_index: 3
+  chunk_text: This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.This note explains verifiable concept 16 and its practical constraint. Supporting detail remains public and
+    synthetic.
+  notion_path: Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/4
+  headings:
+  - source_id: heading-root-page-ambiguous-en-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-en-2-4
+    text: Shared Section
+  source_kind: notion
+  record_digest: 663a9351ef91816aded6178d07ad4a2030992a258667d52e833de789f7f84a75
+- chunk_id: chunk-ambiguous-en-2-5
+  page_id: page-ambiguous-en-2
+  chunk_index: 4
+  chunk_text: Synthetic evidence ambiguous en page 2 chunk 5.
+  notion_path: Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/5
+  headings:
+  - source_id: heading-root-page-ambiguous-en-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-en-2-5
+    text: Shared Section
+  source_kind: notion
+  record_digest: a806bcd159550a59e177f3d298d7cb6159f43c60263c919468e26f3137d5ea9c
+- chunk_id: chunk-ambiguous-en-2-6
+  page_id: page-ambiguous-en-2
+  chunk_index: 5
+  chunk_text: Synthetic evidence ambiguous en page 2 chunk 6.
+  notion_path: Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/6
+  headings:
+  - source_id: heading-root-page-ambiguous-en-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-en-2-6
+    text: Shared Section
+  source_kind: notion
+  record_digest: c8b8408333be0980edccdf894313572afab207f887acba2796bef02fb1f56522
+- chunk_id: chunk-ambiguous-mixed-1-1
+  page_id: page-ambiguous-mixed-1
+  chunk_index: 0
+  chunk_text: 這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public
+    and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note
+    explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17
+    與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains
+    public and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/1
+  headings:
+  - source_id: heading-root-page-ambiguous-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-mixed-1-1
+    text: Shared Section
+  source_kind: notion
+  record_digest: a47a5188a660b25901990de88a0bf30122cd273c4a937d36cc7b79d9dc93f0b3
+- chunk_id: chunk-ambiguous-mixed-1-2
+  page_id: page-ambiguous-mixed-1
+  chunk_index: 1
+  chunk_text: 這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public
+    and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note
+    explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17
+    與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains
+    public and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/2
+  headings:
+  - source_id: heading-root-page-ambiguous-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-mixed-1-2
+    text: Shared Section
+  source_kind: notion
+  record_digest: ea2a4742d11836f63481fc54987b79873c32a1af80cd41b91a9b28cb7b65ffe4
+- chunk_id: chunk-ambiguous-mixed-1-3
+  page_id: page-ambiguous-mixed-1
+  chunk_index: 2
+  chunk_text: 這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public
+    and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note
+    explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17
+    與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains
+    public and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/3
+  headings:
+  - source_id: heading-root-page-ambiguous-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-mixed-1-3
+    text: Shared Section
+  source_kind: notion
+  record_digest: 1f200b03ea11a5cb79a220be4cb9f452578ec18b58277f39be9f57d7bd4e4e27
+- chunk_id: chunk-ambiguous-mixed-1-4
+  page_id: page-ambiguous-mixed-1
+  chunk_index: 3
+  chunk_text: 這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public
+    and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note
+    explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17
+    與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    17 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 17 與 practical constraint。 Supporting detail remains
+    public and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/4
+  headings:
+  - source_id: heading-root-page-ambiguous-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-mixed-1-4
+    text: Shared Section
+  source_kind: notion
+  record_digest: 55e3f0bd66855abe64351048e87e69d99c55866e264e1c5f48d07b0afe721e0a
+- chunk_id: chunk-ambiguous-mixed-1-5
+  page_id: page-ambiguous-mixed-1
+  chunk_index: 4
+  chunk_text: Synthetic evidence ambiguous mixed page 1 chunk 5.
+  notion_path: Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/5
+  headings:
+  - source_id: heading-root-page-ambiguous-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-mixed-1-5
+    text: Shared Section
+  source_kind: notion
+  record_digest: 7b5e27928443435028ea4eaaf364fc74efb29af5ae0003884b100862709e8147
+- chunk_id: chunk-ambiguous-mixed-1-6
+  page_id: page-ambiguous-mixed-1
+  chunk_index: 5
+  chunk_text: Synthetic evidence ambiguous mixed page 1 chunk 6.
+  notion_path: Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/6
+  headings:
+  - source_id: heading-root-page-ambiguous-mixed-1
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-mixed-1-6
+    text: Shared Section
+  source_kind: notion
+  record_digest: ec6dc68ea2d2a2be7061e76ac51bc827483e756f033e11022fb2442544b7651c
+- chunk_id: chunk-ambiguous-mixed-2-1
+  page_id: page-ambiguous-mixed-2
+  chunk_index: 0
+  chunk_text: 這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public
+    and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note
+    explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18
+    與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains
+    public and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/1
+  headings:
+  - source_id: heading-root-page-ambiguous-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-mixed-2-1
+    text: Shared Section
+  source_kind: notion
+  record_digest: dc3a91355b6720cb8a278acdf9565dde9d4b4b2ac0f7958a2e0b097bb986d2e1
+- chunk_id: chunk-ambiguous-mixed-2-2
+  page_id: page-ambiguous-mixed-2
+  chunk_index: 1
+  chunk_text: 這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public
+    and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note
+    explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18
+    與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains
+    public and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/2
+  headings:
+  - source_id: heading-root-page-ambiguous-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-mixed-2-2
+    text: Shared Section
+  source_kind: notion
+  record_digest: d11cf27e549cb5cf7ccc10e853661e8749576b935ee55d0d39bda7bdf27deb68
+- chunk_id: chunk-ambiguous-mixed-2-3
+  page_id: page-ambiguous-mixed-2
+  chunk_index: 2
+  chunk_text: 這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public
+    and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note
+    explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18
+    與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains
+    public and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/3
+  headings:
+  - source_id: heading-root-page-ambiguous-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-mixed-2-3
+    text: Shared Section
+  source_kind: notion
+  record_digest: 8cababf7784fc2ea5149224a461f6be205e7d51c2032d89c50cf1e220514b54c
+- chunk_id: chunk-ambiguous-mixed-2-4
+  page_id: page-ambiguous-mixed-2
+  chunk_index: 3
+  chunk_text: 這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains
+    concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical
+    constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting
+    detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public
+    and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note
+    explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18
+    與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains
+    public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段
+    note explains concept 18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept
+    18 與 practical constraint。 Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。
+    Supporting detail remains public and synthetic.這段 note explains concept 18 與 practical constraint。 Supporting detail remains
+    public and synthetic.
+  notion_path: Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/4
+  headings:
+  - source_id: heading-root-page-ambiguous-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-mixed-2-4
+    text: Shared Section
+  source_kind: notion
+  record_digest: 4d82e257ea1e7f4dedde709f5f721628956ac3809459f50bcb2995282e2467d8
+- chunk_id: chunk-ambiguous-mixed-2-5
+  page_id: page-ambiguous-mixed-2
+  chunk_index: 4
+  chunk_text: Synthetic evidence ambiguous mixed page 2 chunk 5.
+  notion_path: Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/5
+  headings:
+  - source_id: heading-root-page-ambiguous-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-mixed-2-5
+    text: Shared Section
+  source_kind: notion
+  record_digest: 2c20e517c7a576bf97913372fb2eb862a6c6d78bdd10d718c63856709d4b0797
+- chunk_id: chunk-ambiguous-mixed-2-6
+  page_id: page-ambiguous-mixed-2
+  chunk_index: 5
+  chunk_text: Synthetic evidence ambiguous mixed page 2 chunk 6.
+  notion_path: Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/6
+  headings:
+  - source_id: heading-root-page-ambiguous-mixed-2
+    text: Knowledge Base
+  - source_id: heading-page-ambiguous-mixed-2-6
+    text: Shared Section
+  source_kind: notion
+  record_digest: 502675c053fe572ce0f48a5112e9a143f8d42b92466e1e38edb3ec039e460421

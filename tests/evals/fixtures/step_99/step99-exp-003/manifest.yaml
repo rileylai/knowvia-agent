@@ -1,0 +1,569 @@
+experiment_id: step99-exp-003
+schema_version: step99_manifest_v1
+fixture_class: public_safe
+dataset:
+  source_experiment_id: step98-exp-002
+  source_manifest_digest: 45e5073bd78255717b694486ede2f23827c13ab11b8839081ccfef54c2795526
+  source_records_path: tests/evals/fixtures/step_98/step98-exp-002/source_records.yaml
+  chunks_path: tests/evals/fixtures/step_98/step98-exp-002/chunks.yaml
+  queries_path: tests/evals/fixtures/step_98/step98-exp-002/queries.yaml
+  page_count: 18
+  chunk_count: 108
+  query_count: 72
+  corpus_fingerprint: bf394ae79784ab531bcae9b85b1252736dceca4226c788c91ebaf2533fcda704
+  qrels_fingerprint: 12edfb96910b935bad496e0465629075d66257002ee107788945d83c23f769f6
+  dataset_fingerprint: 21f44af36e0ad574b52a8df6857a7f2c8e23424cc33a8da3c61957c57feaa963
+  split_version: primary_cell_ordinals_01_02_tuning_v1
+  tuning_query_ids:
+  - q-title_associated-zh_tw-01
+  - q-title_associated-zh_tw-02
+  - q-title_associated-en-01
+  - q-title_associated-en-02
+  - q-title_associated-mixed-01
+  - q-title_associated-mixed-02
+  - q-body_only-zh_tw-01
+  - q-body_only-zh_tw-02
+  - q-body_only-en-01
+  - q-body_only-en-02
+  - q-body_only-mixed-01
+  - q-body_only-mixed-02
+  - q-ambiguous-zh_tw-01
+  - q-ambiguous-zh_tw-02
+  - q-ambiguous-en-01
+  - q-ambiguous-en-02
+  - q-ambiguous-mixed-01
+  - q-ambiguous-mixed-02
+  decision_query_ids:
+  - q-title_associated-zh_tw-03
+  - q-title_associated-zh_tw-04
+  - q-title_associated-zh_tw-05
+  - q-title_associated-zh_tw-06
+  - q-title_associated-zh_tw-07
+  - q-title_associated-zh_tw-08
+  - q-title_associated-en-03
+  - q-title_associated-en-04
+  - q-title_associated-en-05
+  - q-title_associated-en-06
+  - q-title_associated-en-07
+  - q-title_associated-en-08
+  - q-title_associated-mixed-03
+  - q-title_associated-mixed-04
+  - q-title_associated-mixed-05
+  - q-title_associated-mixed-06
+  - q-title_associated-mixed-07
+  - q-title_associated-mixed-08
+  - q-body_only-zh_tw-03
+  - q-body_only-zh_tw-04
+  - q-body_only-zh_tw-05
+  - q-body_only-zh_tw-06
+  - q-body_only-zh_tw-07
+  - q-body_only-zh_tw-08
+  - q-body_only-en-03
+  - q-body_only-en-04
+  - q-body_only-en-05
+  - q-body_only-en-06
+  - q-body_only-en-07
+  - q-body_only-en-08
+  - q-body_only-mixed-03
+  - q-body_only-mixed-04
+  - q-body_only-mixed-05
+  - q-body_only-mixed-06
+  - q-body_only-mixed-07
+  - q-body_only-mixed-08
+  - q-ambiguous-zh_tw-03
+  - q-ambiguous-zh_tw-04
+  - q-ambiguous-zh_tw-05
+  - q-ambiguous-zh_tw-06
+  - q-ambiguous-zh_tw-07
+  - q-ambiguous-zh_tw-08
+  - q-ambiguous-en-03
+  - q-ambiguous-en-04
+  - q-ambiguous-en-05
+  - q-ambiguous-en-06
+  - q-ambiguous-en-07
+  - q-ambiguous-en-08
+  - q-ambiguous-mixed-03
+  - q-ambiguous-mixed-04
+  - q-ambiguous-mixed-05
+  - q-ambiguous-mixed-06
+  - q-ambiguous-mixed-07
+  - q-ambiguous-mixed-08
+  primary_cell_splits:
+    title_associated__zh_tw:
+      tuning:
+      - q-title_associated-zh_tw-01
+      - q-title_associated-zh_tw-02
+      decision:
+      - q-title_associated-zh_tw-03
+      - q-title_associated-zh_tw-04
+      - q-title_associated-zh_tw-05
+      - q-title_associated-zh_tw-06
+      - q-title_associated-zh_tw-07
+      - q-title_associated-zh_tw-08
+    title_associated__en:
+      tuning:
+      - q-title_associated-en-01
+      - q-title_associated-en-02
+      decision:
+      - q-title_associated-en-03
+      - q-title_associated-en-04
+      - q-title_associated-en-05
+      - q-title_associated-en-06
+      - q-title_associated-en-07
+      - q-title_associated-en-08
+    title_associated__mixed:
+      tuning:
+      - q-title_associated-mixed-01
+      - q-title_associated-mixed-02
+      decision:
+      - q-title_associated-mixed-03
+      - q-title_associated-mixed-04
+      - q-title_associated-mixed-05
+      - q-title_associated-mixed-06
+      - q-title_associated-mixed-07
+      - q-title_associated-mixed-08
+    body_only__zh_tw:
+      tuning:
+      - q-body_only-zh_tw-01
+      - q-body_only-zh_tw-02
+      decision:
+      - q-body_only-zh_tw-03
+      - q-body_only-zh_tw-04
+      - q-body_only-zh_tw-05
+      - q-body_only-zh_tw-06
+      - q-body_only-zh_tw-07
+      - q-body_only-zh_tw-08
+    body_only__en:
+      tuning:
+      - q-body_only-en-01
+      - q-body_only-en-02
+      decision:
+      - q-body_only-en-03
+      - q-body_only-en-04
+      - q-body_only-en-05
+      - q-body_only-en-06
+      - q-body_only-en-07
+      - q-body_only-en-08
+    body_only__mixed:
+      tuning:
+      - q-body_only-mixed-01
+      - q-body_only-mixed-02
+      decision:
+      - q-body_only-mixed-03
+      - q-body_only-mixed-04
+      - q-body_only-mixed-05
+      - q-body_only-mixed-06
+      - q-body_only-mixed-07
+      - q-body_only-mixed-08
+    ambiguous__zh_tw:
+      tuning:
+      - q-ambiguous-zh_tw-01
+      - q-ambiguous-zh_tw-02
+      decision:
+      - q-ambiguous-zh_tw-03
+      - q-ambiguous-zh_tw-04
+      - q-ambiguous-zh_tw-05
+      - q-ambiguous-zh_tw-06
+      - q-ambiguous-zh_tw-07
+      - q-ambiguous-zh_tw-08
+    ambiguous__en:
+      tuning:
+      - q-ambiguous-en-01
+      - q-ambiguous-en-02
+      decision:
+      - q-ambiguous-en-03
+      - q-ambiguous-en-04
+      - q-ambiguous-en-05
+      - q-ambiguous-en-06
+      - q-ambiguous-en-07
+      - q-ambiguous-en-08
+    ambiguous__mixed:
+      tuning:
+      - q-ambiguous-mixed-01
+      - q-ambiguous-mixed-02
+      decision:
+      - q-ambiguous-mixed-03
+      - q-ambiguous-mixed-04
+      - q-ambiguous-mixed-05
+      - q-ambiguous-mixed-06
+      - q-ambiguous-mixed-07
+      - q-ambiguous-mixed-08
+  critical_cohorts:
+    title_only_semantic:
+    - q-title_associated-zh_tw-01
+    - q-title_associated-zh_tw-02
+    - q-title_associated-zh_tw-03
+    - q-title_associated-zh_tw-04
+    - q-title_associated-zh_tw-05
+    - q-title_associated-zh_tw-06
+    - q-title_associated-zh_tw-07
+    - q-title_associated-zh_tw-08
+    - q-title_associated-en-01
+    - q-title_associated-en-02
+    - q-title_associated-en-03
+    - q-title_associated-en-04
+    - q-title_associated-en-05
+    - q-title_associated-en-06
+    - q-title_associated-en-07
+    - q-title_associated-en-08
+    - q-title_associated-mixed-01
+    - q-title_associated-mixed-02
+    - q-title_associated-mixed-03
+    - q-title_associated-mixed-04
+    - q-title_associated-mixed-05
+    - q-title_associated-mixed-06
+    - q-title_associated-mixed-07
+    - q-title_associated-mixed-08
+    traditional_chinese:
+    - q-title_associated-zh_tw-01
+    - q-title_associated-zh_tw-02
+    - q-title_associated-zh_tw-03
+    - q-title_associated-zh_tw-04
+    - q-title_associated-zh_tw-05
+    - q-title_associated-zh_tw-06
+    - q-title_associated-zh_tw-07
+    - q-title_associated-zh_tw-08
+    - q-body_only-zh_tw-01
+    - q-body_only-zh_tw-02
+    - q-body_only-zh_tw-03
+    - q-body_only-zh_tw-04
+    - q-body_only-zh_tw-05
+    - q-body_only-zh_tw-06
+    - q-body_only-zh_tw-07
+    - q-body_only-zh_tw-08
+    - q-ambiguous-zh_tw-01
+    - q-ambiguous-zh_tw-02
+    - q-ambiguous-zh_tw-03
+    - q-ambiguous-zh_tw-04
+    - q-ambiguous-zh_tw-05
+    - q-ambiguous-zh_tw-06
+    - q-ambiguous-zh_tw-07
+    - q-ambiguous-zh_tw-08
+    english:
+    - q-title_associated-en-01
+    - q-title_associated-en-02
+    - q-title_associated-en-03
+    - q-title_associated-en-04
+    - q-title_associated-en-05
+    - q-title_associated-en-06
+    - q-title_associated-en-07
+    - q-title_associated-en-08
+    - q-body_only-en-01
+    - q-body_only-en-02
+    - q-body_only-en-03
+    - q-body_only-en-04
+    - q-body_only-en-05
+    - q-body_only-en-06
+    - q-body_only-en-07
+    - q-body_only-en-08
+    - q-ambiguous-en-01
+    - q-ambiguous-en-02
+    - q-ambiguous-en-03
+    - q-ambiguous-en-04
+    - q-ambiguous-en-05
+    - q-ambiguous-en-06
+    - q-ambiguous-en-07
+    - q-ambiguous-en-08
+    mixed_language:
+    - q-title_associated-mixed-01
+    - q-title_associated-mixed-02
+    - q-title_associated-mixed-03
+    - q-title_associated-mixed-04
+    - q-title_associated-mixed-05
+    - q-title_associated-mixed-06
+    - q-title_associated-mixed-07
+    - q-title_associated-mixed-08
+    - q-body_only-mixed-01
+    - q-body_only-mixed-02
+    - q-body_only-mixed-03
+    - q-body_only-mixed-04
+    - q-body_only-mixed-05
+    - q-body_only-mixed-06
+    - q-body_only-mixed-07
+    - q-body_only-mixed-08
+    - q-ambiguous-mixed-01
+    - q-ambiguous-mixed-02
+    - q-ambiguous-mixed-03
+    - q-ambiguous-mixed-04
+    - q-ambiguous-mixed-05
+    - q-ambiguous-mixed-06
+    - q-ambiguous-mixed-07
+    - q-ambiguous-mixed-08
+    body_only:
+    - q-body_only-zh_tw-01
+    - q-body_only-zh_tw-02
+    - q-body_only-zh_tw-03
+    - q-body_only-zh_tw-04
+    - q-body_only-zh_tw-05
+    - q-body_only-zh_tw-06
+    - q-body_only-zh_tw-07
+    - q-body_only-zh_tw-08
+    - q-body_only-en-01
+    - q-body_only-en-02
+    - q-body_only-en-03
+    - q-body_only-en-04
+    - q-body_only-en-05
+    - q-body_only-en-06
+    - q-body_only-en-07
+    - q-body_only-en-08
+    - q-body_only-mixed-01
+    - q-body_only-mixed-02
+    - q-body_only-mixed-03
+    - q-body_only-mixed-04
+    - q-body_only-mixed-05
+    - q-body_only-mixed-06
+    - q-body_only-mixed-07
+    - q-body_only-mixed-08
+    ambiguous:
+    - q-ambiguous-zh_tw-01
+    - q-ambiguous-zh_tw-02
+    - q-ambiguous-zh_tw-03
+    - q-ambiguous-zh_tw-04
+    - q-ambiguous-zh_tw-05
+    - q-ambiguous-zh_tw-06
+    - q-ambiguous-zh_tw-07
+    - q-ambiguous-zh_tw-08
+    - q-ambiguous-en-01
+    - q-ambiguous-en-02
+    - q-ambiguous-en-03
+    - q-ambiguous-en-04
+    - q-ambiguous-en-05
+    - q-ambiguous-en-06
+    - q-ambiguous-en-07
+    - q-ambiguous-en-08
+    - q-ambiguous-mixed-01
+    - q-ambiguous-mixed-02
+    - q-ambiguous-mixed-03
+    - q-ambiguous-mixed-04
+    - q-ambiguous-mixed-05
+    - q-ambiguous-mixed-06
+    - q-ambiguous-mixed-07
+    - q-ambiguous-mixed-08
+  secondary_cohorts:
+    short:
+    - q-title_associated-zh_tw-01
+    - q-title_associated-zh_tw-02
+    - q-title_associated-zh_tw-03
+    - q-title_associated-zh_tw-04
+    - q-title_associated-zh_tw-05
+    - q-title_associated-zh_tw-06
+    - q-title_associated-zh_tw-07
+    - q-title_associated-zh_tw-08
+    - q-title_associated-en-01
+    - q-title_associated-en-02
+    - q-title_associated-en-03
+    - q-title_associated-en-04
+    - q-title_associated-en-05
+    - q-title_associated-en-06
+    - q-title_associated-en-07
+    - q-title_associated-en-08
+    - q-title_associated-mixed-01
+    - q-title_associated-mixed-02
+    exact_title_lookup:
+    - q-title_associated-zh_tw-04
+    - q-title_associated-zh_tw-08
+    - q-title_associated-en-04
+    - q-title_associated-en-08
+    - q-title_associated-mixed-04
+    - q-title_associated-mixed-08
+    standard_length:
+    - q-title_associated-mixed-03
+    - q-title_associated-mixed-04
+    - q-title_associated-mixed-05
+    - q-title_associated-mixed-06
+    - q-title_associated-mixed-07
+    - q-title_associated-mixed-08
+    - q-body_only-zh_tw-01
+    - q-body_only-zh_tw-02
+    - q-body_only-zh_tw-03
+    - q-body_only-zh_tw-04
+    - q-body_only-zh_tw-05
+    - q-body_only-zh_tw-06
+    - q-body_only-zh_tw-07
+    - q-body_only-zh_tw-08
+    - q-body_only-en-01
+    - q-body_only-en-02
+    - q-body_only-en-03
+    - q-body_only-en-04
+    - q-body_only-en-05
+    - q-body_only-en-06
+    - q-body_only-en-07
+    - q-body_only-en-08
+    - q-body_only-mixed-01
+    - q-body_only-mixed-02
+    - q-body_only-mixed-03
+    - q-body_only-mixed-04
+    - q-body_only-mixed-05
+    - q-body_only-mixed-06
+    - q-body_only-mixed-07
+    - q-body_only-mixed-08
+    - q-ambiguous-zh_tw-01
+    - q-ambiguous-zh_tw-02
+    - q-ambiguous-zh_tw-03
+    - q-ambiguous-zh_tw-04
+    - q-ambiguous-zh_tw-05
+    - q-ambiguous-zh_tw-06
+    long:
+    - q-ambiguous-zh_tw-07
+    - q-ambiguous-zh_tw-08
+    - q-ambiguous-en-01
+    - q-ambiguous-en-02
+    - q-ambiguous-en-03
+    - q-ambiguous-en-04
+    - q-ambiguous-en-05
+    - q-ambiguous-en-06
+    - q-ambiguous-en-07
+    - q-ambiguous-en-08
+    - q-ambiguous-mixed-01
+    - q-ambiguous-mixed-02
+    - q-ambiguous-mixed-03
+    - q-ambiguous-mixed-04
+    - q-ambiguous-mixed-05
+    - q-ambiguous-mixed-06
+    - q-ambiguous-mixed-07
+    - q-ambiguous-mixed-08
+vector_provenance:
+  receipt_path: dev_state/artifacts/step_98/step98-exp-002-capture-001/receipt.json
+  vectors_path: dev_state/artifacts/step_98/step98-exp-002-capture-001/vectors.json
+  source_manifest_digest: 45e5073bd78255717b694486ede2f23827c13ab11b8839081ccfef54c2795526
+  capture_run_digest: 16e6dba2b94c287038f0a65dfbe3dfe6769cb031f69600351bcdacc3ad553382
+  vectors_file_sha256: c52d7ccb46acf8d2b0e7ca2fd32edec29c741d6c5e012e2e2e75f5d07a1cbf3f
+  query_vector_set_digest: d53e143b99b68ec3550e90b84ffc0189a062c6b0fdb68abe7554c32bbba9f4f2
+  body_vector_set_digest: a3ea66aee19eb6143882a08020daf051741b7683408237abd8a013673058dbb6
+  provider: openai
+  model: text-embedding-3-small
+  dimensions: 1536
+  query_count: 72
+  body_document_count: 108
+  contextual_vector_sets_forbidden: true
+variants:
+- vector_only
+- keyword_only
+- weighted_rrf
+vector_only:
+  algorithm: exact_cosine_body_only_v1
+  tie_break: similarity_desc_chunk_id_asc
+keyword_only:
+  algorithm: production_lexical_replica_v1
+  token_pattern: '[a-z0-9]+'
+  coverage_weight: '0.75'
+  density_weight: '0.25'
+  phrase_bonus: '0.15'
+  zero_score: omit
+  tie_break: score_desc_chunk_id_asc
+weighted_rrf:
+  formula: wv/(60+rank_vector)+wk/(60+rank_keyword)
+  constant: 60
+  candidate_depth: 20
+  missing_result: zero_contribution
+  tie_break: score_desc_vector_rank_keyword_rank_chunk_id
+  weight_candidates:
+  - id: v050_k050
+    vector: '0.50'
+    keyword: '0.50'
+  - id: v065_k035
+    vector: '0.65'
+    keyword: '0.35'
+  - id: v080_k020
+    vector: '0.80'
+    keyword: '0.20'
+  tuning_selection: ndcg5_mrr5_hit3_hit1_then_higher_vector_weight_v1
+retrieval:
+  quality_scope: all_108_notion_chunks_no_page_or_section_restriction
+  evaluation_top_k:
+  - 1
+  - 3
+  - 5
+  citation_top_k: 5
+  same_scope_all_variants: true
+scoring:
+  version: step99_scoring_v1
+  precision: 12
+thresholds:
+  overall_hit3_gains: 3
+  overall_hit3_losses: 0
+  overall_reciprocal_rank_gain: '2.700'
+citation_gate:
+  relative_to_vector: no_recall_precision_or_invalid_count_regression
+  derived_or_unsupported_header_count: 0
+  independent_recall_precision: '1.000'
+  independent_invalid_count: 0
+safety_gate:
+  production_repository_required: true
+  pgvector_required: true
+  database_prefix: learnloop_step99_
+  expected_eligible_sets_nonempty: true
+  cleanup_required: true
+replay:
+  version: canonical_semantic_json_v1
+  compare_result_digest: true
+  compare_semantic_payload: true
+  create_only: true
+decision_taxonomy:
+- hybrid_candidate_for_step100
+- maintain_vector_primary
+- inconclusive
+artifacts:
+  result_path: dev_state/artifacts/step_99/step99-exp-003-result.json
+  pgvector_evidence_path: dev_state/artifacts/step_99/step99-exp-003-pgvector-evidence.json
+managed_sources:
+- path: dev_state/specs/step-99-hybrid-retrieval-evaluation.md
+  sha256: 5a797ec9780629fa61e3246481690a3432eea7e88e3a91eb9d45c7860c2592df
+- path: scripts/generate_step99_preregistration.py
+  sha256: 62bf6b2b9b86260db1793c7c54fead0ce3918751e6ba40854b2fd1f855fe0c9c
+- path: tests/evals/step99_hybrid_eval.py
+  sha256: 11a193dc3c4b46b7436df5df8b2f3aa2fd33ab5c1a92c6630a420b9a61cd1af3
+- path: tests/evals/step99_pgvector_gate.py
+  sha256: 144b0ad8106804ce9797249267627607901ad1bd86e52d8f0a3f6a72ac4f7547
+- path: tests/evals/test_step99_hybrid_eval.py
+  sha256: 7544153b07c8bc46c6e668b088150b711d9c24dd639c5e151d57f45cc7df2687
+- path: tests/evals/step98_citation_eval.py
+  sha256: 9905487b4abf8795c1661dc6c11cea6c8de755097d428ccfd95f5ba075edf48e
+- path: tests/evals/step98_repository_safety_eval.py
+  sha256: acc8c6a19a3f758b73d59bdf76aef9d57bfad5d10df1221b340f3a53ed68686e
+- path: tests/evals/citation_accuracy_eval.py
+  sha256: aa24c8375c628ecbd3187dd8a5cce984b653de9e3e89872bb7c4ef978860dc46
+- path: tests/evals/golden_questions.py
+  sha256: f09c55cc66683ca832672266d4275231ed5dcf8ee4bd6e49a5d5110ae2dacfca
+- path: tests/evals/golden_questions.yaml
+  sha256: bb9524bb2a9095db45b1ed026b3f024fac164d2fb299139e3bef41e92adf286a
+- path: src/rag/retriever.py
+  sha256: 4f29eb27dfa7c1e459377df464b064d5a8a3938577bbef6ce9e4cac4a41d4ad4
+- path: src/repositories/chunk_repository.py
+  sha256: 5725dca993470b350b4db76a8f68933c0052cd9310aef7055920fa903816f436
+- path: src/policies/synthetic_data.py
+  sha256: 2a9af9ba387dc59596d15d7125583654a12ce70d90c3b2778bdf5be62cb33173
+- path: src/db/base.py
+  sha256: 987edfd9dfe38b2c49492c7d1a4e774015d16b72e2281b018e4160be6b47d560
+- path: src/db/models.py
+  sha256: 1296ee3def8c4bffbbdebb7d98ab95268654a5ba32456fb2a985bf4433f73c9b
+- path: tests/evals/fixtures/step_98/step98-exp-002/source_records.yaml
+  sha256: db0bdfa6d25218835ebcfafde2af5c26fcccfd548b557f4a563b8d7c4b51ee35
+- path: tests/evals/fixtures/step_98/step98-exp-002/chunks.yaml
+  sha256: 39882073cf568cf08e788ee4c3be7a400c8acab31b00389d1eeecb9bafc0c607
+- path: tests/evals/fixtures/step_98/step98-exp-002/queries.yaml
+  sha256: acc2341bfa084ba3301c9e91f37fa99f9b6080e80986ab9a7fd4ee73fe9f8565
+- path: tests/evals/fixtures/step_98/step98-exp-002/manifest.sha256
+  sha256: be33773895734bf74c09aa75ffc76e10deaf96037e7a753a0b38e3aac1019096
+- path: scripts/generate_step99_exp003_preregistration.py
+  sha256: 9b9d02a06e5ff92d703003bf685e550ea778f1fef566e5ccf8d79ab452995996
+- path: tests/evals/step99_hybrid_eval_v3.py
+  sha256: bc2d2c787c7cde4dee75dac33d66cfa03fffa69a56c509bd3565f8aa7ea612cb
+- path: tests/evals/step99_pgvector_gate_v3.py
+  sha256: e1e44bc3362765da5dd6d4ae57275ec0807476192a2b12f6991fa3897b8c4e9a
+- path: tests/evals/fixtures/step_99/step99-exp-001/manifest.yaml
+  sha256: f9f852558711c2d54b1f0f5e3bb63c4f7196531b865463b3f623b43e5f444938
+- path: tests/evals/fixtures/step_99/step99-exp-001/manifest.sha256
+  sha256: 43528d29e95d363ba7dda60e55c82e351e124c539ac0b2efa9c39b693cb4c6d0
+- path: tests/evals/fixtures/step_99/step99-exp-002/manifest.yaml
+  sha256: ced51b82c5ad98f834a72650b9d274dda8ccd55357531274293ad3dcfa418982
+- path: tests/evals/fixtures/step_99/step99-exp-002/manifest.sha256
+  sha256: 328b91e552b88b0cdaeac991831673a0e84b178952f4b7c9186e041249bb6100
+supersedes:
+  experiment_id: step99-exp-002
+  terminal_status: aborted_pre_scoring_source_vector_digest_algorithm
+  tuning_scored: false
+  decision_scored: false
+  canonical_result_created: false
+source_vector_digest_contract: step98_raw_float_canonical_json_v1
+result_canonicalization_contract: step99_canonical_semantic_json_v1

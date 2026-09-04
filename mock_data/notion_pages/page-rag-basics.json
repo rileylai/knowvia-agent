@@ -1,0 +1,44 @@
+{
+  "page_id": "page-rag-basics",
+  "title": "RAG Basics",
+  "notion_path": "Knowledge/AI/RAG Basics",
+  "demo_metadata": {
+    "synthetic_content": true,
+    "safe_for_public_demo": true,
+    "contains_private_content": false,
+    "scenario": "manual_agent_reference_notes"
+  },
+  "blocks": [
+    {
+      "block_id": "blk-overview",
+      "block_type": "heading_2",
+      "content_text": "Overview",
+      "children": [
+        {
+          "block_id": "blk-overview-paragraph",
+          "block_type": "paragraph",
+          "content_text": "Retrieval augmented generation first retrieves relevant notes, then asks the language model to answer from that grounded context."
+        }
+      ]
+    },
+    {
+      "block_id": "blk-agent-workflow",
+      "block_type": "heading_2",
+      "content_text": "Agent Workflow",
+      "children": [
+        {
+          "block_id": "blk-agent-workflow-toggle",
+          "block_type": "toggle",
+          "content_text": "Citation Discipline",
+          "children": [
+            {
+              "block_id": "blk-agent-workflow-detail",
+              "block_type": "paragraph",
+              "content_text": "A safe learning agent should return the Notion path for the chunks it used so the user can verify the answer source."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

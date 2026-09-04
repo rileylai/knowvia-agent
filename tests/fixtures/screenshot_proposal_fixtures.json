@@ -1,0 +1,405 @@
+[
+  {
+    "id": "workflow_252_255_shape_public_safe",
+    "source": "MySQL EXPLAIN 會顯示查詢的執行計畫。SQL 查詢可搭配 EXPLAIN 觀察索引。畫面列出 type、key、rows 欄位。索引可協助查詢條件過濾。",
+    "proposal": {
+      "title": "MySQL EXPLAIN 與 SQL 索引查詢",
+      "target_path": "Knowledge/Database/AI Supplement Zone",
+      "source": {
+        "source_type": "screenshot",
+        "source_display_name": "Public-safe workflow shape"
+      },
+      "summary": "這組截圖統整 MySQL EXPLAIN 與 SQL 的 optimizer workflow，並整理索引資訊。",
+      "concepts": [
+        "MySQL optimizer",
+        "EXPLAIN planner",
+        "SQL runtime",
+        "索引 pipeline",
+        "MySQL",
+        "EXPLAIN",
+        "SQL",
+        "索引",
+        "查詢執行計畫"
+      ],
+      "notes": [
+        "EXPLAIN 顯示 query planner。",
+        "SQL 查詢遵循 optimizer workflow。",
+        "索引可協助 runtime 過濾。",
+        "EXPLAIN 會顯示查詢的執行計畫。",
+        "畫面列出 type、key、rows 欄位。"
+      ]
+    },
+    "retry_proposal": {
+      "title": "MySQL EXPLAIN 與 SQL 索引查詢",
+      "target_path": "Knowledge/Database/AI Supplement Zone",
+      "source": {
+        "source_type": "screenshot",
+        "source_display_name": "Public-safe workflow shape"
+      },
+      "summary": "這組截圖統整 MySQL EXPLAIN 與 SQL 的 optimizer workflow，並整理索引資訊。",
+      "concepts": [
+        "MySQL optimizer",
+        "EXPLAIN planner",
+        "SQL runtime",
+        "MySQL",
+        "EXPLAIN",
+        "SQL",
+        "索引",
+        "查詢執行計畫",
+        "type 欄位",
+        "key 與 rows 欄位"
+      ],
+      "notes": [
+        "EXPLAIN 顯示 query planner。",
+        "SQL 查詢遵循 optimizer workflow。",
+        "索引可協助 runtime 過濾。",
+        "EXPLAIN 會顯示查詢的執行計畫。",
+        "畫面列出 type、key、rows 欄位。"
+      ]
+    }
+  },
+  {
+    "id": "live_shaped_mysql_four_image_title_general_cjk",
+    "images": [
+      {
+        "message_id": 10,
+        "ocr": "[Image 10]\nMySQL EXPLAIN 會顯示 查 詢 資 訊。"
+      },
+      {
+        "message_id": 20,
+        "ocr": "[Image 20]\nSQL 可搭配 EXPLAIN 觀察 type、key、rows 欄位。"
+      },
+      {
+        "message_id": 30,
+        "ocr": "[Image 30]\n畫面列出索 引 與查 詢 欄位。"
+      },
+      {
+        "message_id": 40,
+        "ocr": "[Image 40]\n來源說明 MySQL、SQL 與 EXPLAIN。"
+      }
+    ],
+    "proposal": {
+      "title": "MySQL 資料庫 / 執行流程 / 效能分析",
+      "target_path": "Knowledge/Database/AI Supplement Zone",
+      "source": {
+        "source_type": "screenshot",
+        "source_display_name": "Screenshot batch (4 images)"
+      },
+      "summary": "來源整理 MySQL EXPLAIN 與 SQL 查詢資訊。",
+      "concepts": [
+        "MySQL",
+        "EXPLAIN",
+        "SQL",
+        "查詢資訊"
+      ],
+      "notes": [
+        "EXPLAIN 會顯示查詢資訊。",
+        "SQL 可搭配 EXPLAIN 觀察欄位。",
+        "來源說明 MySQL；畫面列出 type、key、rows 欄位。"
+      ]
+    },
+    "expected_title_anchor_profile": {
+      "title_anchor_count": 4,
+      "matched_title_anchor_count": 1,
+      "unmatched_title_anchor_count": 3,
+      "numeric_anchor_count": 0,
+      "unmatched_numeric_anchor_count": 0
+    }
+  },
+  {
+    "id": "live_shaped_mysql_five_image_batch",
+    "images": [
+      {
+        "message_id": 50,
+        "ocr": "[Image 50]\n來源：MySQL EXPLAIN 與 SQL 索 引 查 詢 資 訊。"
+      },
+      {
+        "message_id": 10,
+        "ocr": "Back\n[Image 10]\nMySQL EXPLAIN 會顯示查 詢 的執 行 計 畫。"
+      },
+      {
+        "message_id": 40,
+        "ocr": "[Image 40]\n畫面列出 type、key、rows 欄位，並顯示索 引 是否被使用。"
+      },
+      {
+        "message_id": 20,
+        "ocr": "[Image 20]\nSQL 查 詢 可搭配 EXPLAIN 觀察索 引。"
+      },
+      {
+        "message_id": 30,
+        "ocr": "[Image 30]\n索 引 可協助查 詢 條件 過 濾。"
+      }
+    ],
+    "proposal": {
+      "title": "MySQL EXPLAIN 與 SQL 索引查詢",
+      "target_path": "Knowledge/Database/AI Supplement Zone",
+      "source": {
+        "source_type": "screenshot",
+        "source_display_name": "Screenshot batch (5 images)"
+      },
+    "summary": "這組五張截圖整理 MySQL EXPLAIN 與 SQL 查詢的執行計畫資訊，包含畫面列出的 type、key、rows 欄位，也說明索引是否被使用；內容提到 SQL 查詢可搭配 EXPLAIN 觀察索引，並以索引協助查詢條件過濾。",
+      "concepts": [
+        "MySQL",
+        "EXPLAIN",
+        "SQL",
+        "索引",
+        "查詢執行計畫"
+      ],
+      "notes": [
+        "EXPLAIN 會顯示查詢的執行計畫。",
+        "SQL 查詢可搭配 EXPLAIN 觀察索引。",
+        "畫面列出 type、key、rows 欄位。",
+        "MySQL 索引可協助查詢條件過濾。"
+      ]
+    },
+    "expected_cleaned_order": [
+      "MySQL EXPLAIN",
+      "SQL 查詢",
+      "索引可協助",
+      "來源：MySQL"
+    ]
+  },
+  {
+    "id": "public_safe_mysql_four_image_batch",
+    "images": [
+      {
+        "message_id": 40,
+        "ocr": "[Image 40]\n摘要：來源說明 MySQL 查 詢 優 化 需搭配 EXPLAIN 與索 引資訊。"
+      },
+      {
+        "message_id": 10,
+        "ocr": "Back\nhttps://example.invalid/mysql\n[Image 10]\nMySQL EXPLAIN 會顯示查 詢 的執 行 計 畫。"
+      },
+      {
+        "message_id": 30,
+        "ocr": "[Image 30]\nEXPLAIN 的 key 欄位可用來觀察索 引 是否被使用。"
+      },
+      {
+        "message_id": 20,
+        "ocr": "[Image 20]\n索 引 可 協助 查 詢 條件 過 濾，並列出 type、key、rows 欄位。"
+      }
+    ],
+    "proposal": {
+      "title": "MySQL EXPLAIN 與索引查詢資訊",
+      "target_path": "Knowledge/Database/AI Supplement Zone",
+      "source": {
+        "source_type": "screenshot",
+        "source_display_name": "Screenshot batch (4 images)"
+      },
+      "summary": "這組截圖整理 MySQL EXPLAIN 與索引在查詢執行計畫中的資訊，並提到 key、rows 等欄位。",
+      "concepts": [
+        "MySQL",
+        "EXPLAIN",
+        "索引",
+        "查詢執行計畫",
+        "key 與 rows 欄位"
+      ],
+      "notes": [
+        "EXPLAIN 會顯示查詢的執行計畫。",
+        "索引可協助查詢條件過濾。",
+        "key 與 rows 是畫面列出的欄位。",
+        "來源提到 MySQL、EXPLAIN 與索引資訊。"
+      ]
+    },
+    "expected_cleaned_order": [
+      "MySQL EXPLAIN",
+      "索引可協助",
+      "EXPLAIN 的 key",
+      "來源說明 MySQL"
+    ]
+  },
+  {
+    "id": "continuous_multi_image_batch",
+    "images": [
+      {
+        "message_id": 30,
+        "ocr": "[Image 30]\nThe second section describes PyTorch batch normalization. It uses running statistics. The command python train.py --batch-size 32 starts the training step."
+      },
+      {
+        "message_id": 10,
+        "ocr": "[Image 10]\nKubernetes Deployment performs a rolling update. The command kubectl rollout status checks the Deployment."
+      }
+    ],
+    "proposal": {
+      "title": "Kubernetes Deployment rollout and PyTorch batch normalization",
+      "target_path": "Knowledge/ML/AI Supplement Zone",
+      "source": {
+        "source_type": "screenshot",
+        "source_display_name": "Screenshot batch (2 images)"
+      },
+      "summary": "The screenshots describe a Kubernetes Deployment rolling update and PyTorch batch normalization with running statistics.",
+      "concepts": [
+        "Kubernetes Deployment",
+        "rolling update",
+        "PyTorch batch normalization",
+        "running statistics",
+        "kubectl rollout status"
+      ],
+      "notes": [
+        "Kubernetes Deployment performs a rolling update.",
+        "PyTorch batch normalization uses running statistics.",
+        "The command kubectl rollout status checks the Deployment.",
+        "The command python train.py --batch-size 32 starts the training step."
+      ]
+    }
+  },
+  {
+    "id": "browser_ui_noise",
+    "images": [
+      {
+        "message_id": 10,
+        "ocr": "Back\nForward\nhttps://example.invalid/course/slide-1\nReload\n[Image 10]\nDocker Compose starts Redis with docker compose up -d."
+      },
+      {
+        "message_id": 20,
+        "ocr": "New Tab\nBookmarks\n[Image 20]\nRQ worker processes delayed jobs after Redis is available."
+      }
+    ],
+    "expected_cleaned": "[Image 10]\nDocker Compose starts Redis with docker compose up -d.\n[Image 20]\nRQ worker processes delayed jobs after Redis is available.",
+    "proposal": {
+      "title": "Docker Compose Redis startup and RQ worker delayed jobs",
+      "target_path": "Knowledge/Engineering/AI Supplement Zone",
+      "source": {
+        "source_type": "screenshot",
+        "source_display_name": "Screenshot batch (2 images)"
+      },
+      "summary": "The screenshots state that Docker Compose starts Redis with docker compose up -d and that an RQ worker processes delayed jobs after Redis is available.",
+      "concepts": [
+        "Docker Compose",
+        "Redis",
+        "docker compose up -d",
+        "RQ worker",
+        "delayed jobs"
+      ],
+      "notes": [
+        "Docker Compose starts Redis.",
+        "The command docker compose up -d starts the service.",
+        "RQ worker processes delayed jobs.",
+        "Redis is available before the delayed jobs are processed."
+      ]
+    }
+  },
+  {
+    "id": "traditional_chinese_source",
+    "images": [
+      {
+        "message_id": 10,
+        "ocr": "[Image 10]\n使用 Docker Compose 啟動 Redis，並以 docker compose up -d 啟動服務。"
+      },
+      {
+        "message_id": 20,
+        "ocr": "[Image 20]\nRedis 可用後，RQ worker 處理 Telegram delayed jobs。"
+      }
+    ],
+    "proposal": {
+      "title": "Docker Compose、Redis 與 RQ worker 的 Telegram delayed jobs",
+      "target_path": "知識庫/工程/AI Supplement Zone",
+      "source": {
+        "source_type": "screenshot",
+        "source_display_name": "Screenshot batch (2 images)"
+      },
+      "summary": "來源說明使用 Docker Compose 啟動 Redis，並由 RQ worker 處理 Telegram delayed jobs。",
+      "concepts": [
+        "Docker Compose",
+        "Redis",
+        "RQ worker",
+        "Telegram delayed jobs"
+      ],
+      "notes": [
+        "來源提到以 docker compose up -d 啟動服務。",
+        "Redis 可用後，RQ worker 處理 Telegram delayed jobs。",
+        "來源同時提到 Docker Compose 與 Redis。"
+      ]
+    },
+    "expected_language": "zh-Hant"
+  },
+  {
+    "id": "unsupported_hallucination",
+    "source": "Kubernetes Deployment performs a rolling update.",
+    "proposal": {
+      "title": "Kubernetes Deployment rollout",
+      "target_path": "Knowledge/ML/AI Supplement Zone",
+      "source": {
+        "source_type": "screenshot",
+        "source_display_name": "Screenshot batch (1 image)"
+      },
+      "summary": "The source describes a Kubernetes Deployment rolling update.",
+      "concepts": [
+        "Kubernetes Deployment",
+        "rolling update",
+        "Redis caching"
+      ],
+      "notes": [
+        "Kubernetes Deployment performs a rolling update.",
+        "Redis caching improves performance.",
+        "The source names a rolling update."
+      ]
+    },
+    "expected_error": "unsupported"
+  },
+  {
+    "id": "public_safe_live_shaped_sql_context_recovery",
+    "images": [
+      {
+        "message_id": 101,
+        "ocr": "[Image 101]\nIndex supports the query access path."
+      },
+      {
+        "message_id": 102,
+        "ocr": "[Image 102]\nEXPLAIN shows the execution plan."
+      },
+      {
+        "message_id": 103,
+        "ocr": "[Image 103]\nQuery rewrite changes the query form."
+      },
+      {
+        "message_id": 104,
+        "ocr": "[Image 104]\nKeyset pagination uses a stable cursor."
+      }
+    ],
+    "initial_proposal": {
+      "title": "PostgreSQL Index and execution plan",
+      "target_path": "Knowledge/Database/AI Supplement Zone",
+      "source": {
+        "source_type": "screenshot",
+        "source_display_name": "Public-safe SQL screenshot batch (4 images)"
+      },
+      "summary": "Index supports the query access path. EXPLAIN shows the execution plan. Query rewrite changes the query form, and keyset pagination uses a stable cursor.",
+      "concepts": [
+        "Index",
+        "EXPLAIN",
+        "execution plan",
+        "query rewrite",
+        "pagination"
+      ],
+      "notes": [
+        "Index supports the query access path.",
+        "EXPLAIN shows the execution plan.",
+        "Query rewrite changes the query form.",
+        "Keyset pagination uses a stable cursor."
+      ]
+    },
+    "repaired_proposal": {
+      "title": "Index, EXPLAIN, query rewrite, and keyset pagination",
+      "target_path": "Knowledge/Database/AI Supplement Zone",
+      "source": {
+        "source_type": "screenshot",
+        "source_display_name": "Public-safe SQL screenshot batch (4 images)"
+      },
+      "summary": "Index supports the query access path. EXPLAIN shows the execution plan. Query rewrite changes the query form, and keyset pagination uses a stable cursor.",
+      "concepts": [
+        "Index",
+        "EXPLAIN",
+        "execution plan",
+        "query rewrite",
+        "pagination"
+      ],
+      "notes": [
+        "Index：Index supports the query access path. Practical application: enterprise systems can evaluate high frequency query paths. Trade-off: read performance and write maintenance cost are trade-offs.",
+        "EXPLAIN：EXPLAIN shows the execution plan. Release checks can inspect the plan with representative data.",
+        "Query rewrite：Query rewrite changes the query form. Practical application: backend systems inspect the query form.",
+        "Keyset pagination：Keyset pagination uses a stable cursor. The access path and cursor behavior are relevant in system design."
+      ]
+    }
+  }
+]

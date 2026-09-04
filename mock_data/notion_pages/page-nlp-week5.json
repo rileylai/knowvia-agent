@@ -1,0 +1,83 @@
+{
+  "page_id": "page-nlp-week5",
+  "title": "NLP Week 5",
+  "notion_path": "Knowledge/NLP/Week5",
+  "demo_metadata": {
+    "synthetic_content": true,
+    "safe_for_public_demo": true,
+    "contains_private_content": false,
+    "scenario": "manual_notes_plus_accepted_ai_supplement"
+  },
+  "blocks": [
+    {
+      "block_id": "blk-attention",
+      "block_type": "heading_2",
+      "content_text": "Attention",
+      "children": [
+        {
+          "block_id": "blk-sdp",
+          "block_type": "paragraph",
+          "content_text": "Scaled dot-product attention compares query and key vectors, converts the scores into weights, and uses those weights to combine value vectors."
+        },
+        {
+          "block_id": "blk-multihead",
+          "block_type": "bulleted_list_item",
+          "content_text": "Multi-head attention lets the model learn several attention patterns in parallel."
+        }
+      ]
+    },
+    {
+      "block_id": "blk-encoder-notes",
+      "block_type": "heading_2",
+      "content_text": "Encoder Notes",
+      "children": [
+        {
+          "block_id": "blk-residual",
+          "block_type": "paragraph",
+          "content_text": "Residual connections and layer normalization help transformer layers train more reliably."
+        }
+      ]
+    },
+    {
+      "block_id": "blk-ai-zone",
+      "block_type": "heading_2",
+      "content_text": "AI Supplement Zone",
+      "children": [
+        {
+          "block_id": "blk-ai-date",
+          "block_type": "toggle",
+          "content_text": "2026-06-04",
+          "children": [
+            {
+              "block_id": "blk-ai-topic",
+              "block_type": "toggle",
+              "content_text": "Positional Encoding Supplement",
+              "children": [
+                {
+                  "block_id": "blk-ai-source",
+                  "block_type": "paragraph",
+                  "content_text": "Source: Synthetic demo article on transformer fundamentals."
+                },
+                {
+                  "block_id": "blk-ai-summary",
+                  "block_type": "paragraph",
+                  "content_text": "Summary: Positional encoding gives the model a representation of token order because self-attention alone does not preserve sequence position."
+                },
+                {
+                  "block_id": "blk-ai-concepts",
+                  "block_type": "paragraph",
+                  "content_text": "Key Concepts: positional encoding; token order; sine and cosine signals."
+                },
+                {
+                  "block_id": "blk-ai-notes",
+                  "block_type": "paragraph",
+                  "content_text": "Notes: This accepted supplement is synthetic and safe for public demo use."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

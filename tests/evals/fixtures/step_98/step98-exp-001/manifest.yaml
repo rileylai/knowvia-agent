@@ -1,0 +1,414 @@
+experiment_id: step98-exp-001
+schema_version: step98_manifest_v1
+source_snapshot_digest: 14c667e2637f59b966249068f69a9ef627cd9879a50a9f9b4d7e8de8724a0efd
+file_digests:
+  source_records.yaml: db0bdfa6d25218835ebcfafde2af5c26fcccfd548b557f4a563b8d7c4b51ee35
+  chunks.yaml: 39882073cf568cf08e788ee4c3be7a400c8acab31b00389d1eeecb9bafc0c607
+  queries.yaml: acc2341bfa084ba3301c9e91f37fa99f9b6080e80986ab9a7fd4ee73fe9f8565
+counts:
+  pages: 18
+  chunks: 108
+  queries: 72
+  hard_negative_pairs: 144
+memberships:
+  primary_cells:
+    title_associated__zh_tw:
+    - q-title_associated-zh_tw-01
+    - q-title_associated-zh_tw-02
+    - q-title_associated-zh_tw-03
+    - q-title_associated-zh_tw-04
+    - q-title_associated-zh_tw-05
+    - q-title_associated-zh_tw-06
+    - q-title_associated-zh_tw-07
+    - q-title_associated-zh_tw-08
+    title_associated__en:
+    - q-title_associated-en-01
+    - q-title_associated-en-02
+    - q-title_associated-en-03
+    - q-title_associated-en-04
+    - q-title_associated-en-05
+    - q-title_associated-en-06
+    - q-title_associated-en-07
+    - q-title_associated-en-08
+    title_associated__mixed:
+    - q-title_associated-mixed-01
+    - q-title_associated-mixed-02
+    - q-title_associated-mixed-03
+    - q-title_associated-mixed-04
+    - q-title_associated-mixed-05
+    - q-title_associated-mixed-06
+    - q-title_associated-mixed-07
+    - q-title_associated-mixed-08
+    body_only__zh_tw:
+    - q-body_only-zh_tw-01
+    - q-body_only-zh_tw-02
+    - q-body_only-zh_tw-03
+    - q-body_only-zh_tw-04
+    - q-body_only-zh_tw-05
+    - q-body_only-zh_tw-06
+    - q-body_only-zh_tw-07
+    - q-body_only-zh_tw-08
+    body_only__en:
+    - q-body_only-en-01
+    - q-body_only-en-02
+    - q-body_only-en-03
+    - q-body_only-en-04
+    - q-body_only-en-05
+    - q-body_only-en-06
+    - q-body_only-en-07
+    - q-body_only-en-08
+    body_only__mixed:
+    - q-body_only-mixed-01
+    - q-body_only-mixed-02
+    - q-body_only-mixed-03
+    - q-body_only-mixed-04
+    - q-body_only-mixed-05
+    - q-body_only-mixed-06
+    - q-body_only-mixed-07
+    - q-body_only-mixed-08
+    ambiguous__zh_tw:
+    - q-ambiguous-zh_tw-01
+    - q-ambiguous-zh_tw-02
+    - q-ambiguous-zh_tw-03
+    - q-ambiguous-zh_tw-04
+    - q-ambiguous-zh_tw-05
+    - q-ambiguous-zh_tw-06
+    - q-ambiguous-zh_tw-07
+    - q-ambiguous-zh_tw-08
+    ambiguous__en:
+    - q-ambiguous-en-01
+    - q-ambiguous-en-02
+    - q-ambiguous-en-03
+    - q-ambiguous-en-04
+    - q-ambiguous-en-05
+    - q-ambiguous-en-06
+    - q-ambiguous-en-07
+    - q-ambiguous-en-08
+    ambiguous__mixed:
+    - q-ambiguous-mixed-01
+    - q-ambiguous-mixed-02
+    - q-ambiguous-mixed-03
+    - q-ambiguous-mixed-04
+    - q-ambiguous-mixed-05
+    - q-ambiguous-mixed-06
+    - q-ambiguous-mixed-07
+    - q-ambiguous-mixed-08
+  critical_cohorts:
+    title_only_semantic:
+    - q-title_associated-zh_tw-01
+    - q-title_associated-zh_tw-02
+    - q-title_associated-zh_tw-03
+    - q-title_associated-zh_tw-05
+    - q-title_associated-zh_tw-06
+    - q-title_associated-zh_tw-07
+    - q-title_associated-en-01
+    - q-title_associated-en-02
+    - q-title_associated-en-03
+    - q-title_associated-en-05
+    - q-title_associated-en-06
+    - q-title_associated-en-07
+    - q-title_associated-mixed-01
+    - q-title_associated-mixed-02
+    - q-title_associated-mixed-03
+    - q-title_associated-mixed-05
+    - q-title_associated-mixed-06
+    - q-title_associated-mixed-07
+    body_only:
+    - q-body_only-zh_tw-01
+    - q-body_only-zh_tw-02
+    - q-body_only-zh_tw-03
+    - q-body_only-zh_tw-04
+    - q-body_only-zh_tw-05
+    - q-body_only-zh_tw-06
+    - q-body_only-zh_tw-07
+    - q-body_only-zh_tw-08
+    - q-body_only-en-01
+    - q-body_only-en-02
+    - q-body_only-en-03
+    - q-body_only-en-04
+    - q-body_only-en-05
+    - q-body_only-en-06
+    - q-body_only-en-07
+    - q-body_only-en-08
+    - q-body_only-mixed-01
+    - q-body_only-mixed-02
+    - q-body_only-mixed-03
+    - q-body_only-mixed-04
+    - q-body_only-mixed-05
+    - q-body_only-mixed-06
+    - q-body_only-mixed-07
+    - q-body_only-mixed-08
+    traditional_chinese:
+    - q-title_associated-zh_tw-01
+    - q-title_associated-zh_tw-02
+    - q-title_associated-zh_tw-03
+    - q-title_associated-zh_tw-04
+    - q-title_associated-zh_tw-05
+    - q-title_associated-zh_tw-06
+    - q-title_associated-zh_tw-07
+    - q-title_associated-zh_tw-08
+    - q-body_only-zh_tw-01
+    - q-body_only-zh_tw-02
+    - q-body_only-zh_tw-03
+    - q-body_only-zh_tw-04
+    - q-body_only-zh_tw-05
+    - q-body_only-zh_tw-06
+    - q-body_only-zh_tw-07
+    - q-body_only-zh_tw-08
+    - q-ambiguous-zh_tw-01
+    - q-ambiguous-zh_tw-02
+    - q-ambiguous-zh_tw-03
+    - q-ambiguous-zh_tw-04
+    - q-ambiguous-zh_tw-05
+    - q-ambiguous-zh_tw-06
+    - q-ambiguous-zh_tw-07
+    - q-ambiguous-zh_tw-08
+    english:
+    - q-title_associated-en-01
+    - q-title_associated-en-02
+    - q-title_associated-en-03
+    - q-title_associated-en-04
+    - q-title_associated-en-05
+    - q-title_associated-en-06
+    - q-title_associated-en-07
+    - q-title_associated-en-08
+    - q-body_only-en-01
+    - q-body_only-en-02
+    - q-body_only-en-03
+    - q-body_only-en-04
+    - q-body_only-en-05
+    - q-body_only-en-06
+    - q-body_only-en-07
+    - q-body_only-en-08
+    - q-ambiguous-en-01
+    - q-ambiguous-en-02
+    - q-ambiguous-en-03
+    - q-ambiguous-en-04
+    - q-ambiguous-en-05
+    - q-ambiguous-en-06
+    - q-ambiguous-en-07
+    - q-ambiguous-en-08
+    mixed_language:
+    - q-title_associated-mixed-01
+    - q-title_associated-mixed-02
+    - q-title_associated-mixed-03
+    - q-title_associated-mixed-04
+    - q-title_associated-mixed-05
+    - q-title_associated-mixed-06
+    - q-title_associated-mixed-07
+    - q-title_associated-mixed-08
+    - q-body_only-mixed-01
+    - q-body_only-mixed-02
+    - q-body_only-mixed-03
+    - q-body_only-mixed-04
+    - q-body_only-mixed-05
+    - q-body_only-mixed-06
+    - q-body_only-mixed-07
+    - q-body_only-mixed-08
+    - q-ambiguous-mixed-01
+    - q-ambiguous-mixed-02
+    - q-ambiguous-mixed-03
+    - q-ambiguous-mixed-04
+    - q-ambiguous-mixed-05
+    - q-ambiguous-mixed-06
+    - q-ambiguous-mixed-07
+    - q-ambiguous-mixed-08
+    ambiguous:
+    - q-ambiguous-zh_tw-01
+    - q-ambiguous-zh_tw-02
+    - q-ambiguous-zh_tw-03
+    - q-ambiguous-zh_tw-04
+    - q-ambiguous-zh_tw-05
+    - q-ambiguous-zh_tw-06
+    - q-ambiguous-zh_tw-07
+    - q-ambiguous-zh_tw-08
+    - q-ambiguous-en-01
+    - q-ambiguous-en-02
+    - q-ambiguous-en-03
+    - q-ambiguous-en-04
+    - q-ambiguous-en-05
+    - q-ambiguous-en-06
+    - q-ambiguous-en-07
+    - q-ambiguous-en-08
+    - q-ambiguous-mixed-01
+    - q-ambiguous-mixed-02
+    - q-ambiguous-mixed-03
+    - q-ambiguous-mixed-04
+    - q-ambiguous-mixed-05
+    - q-ambiguous-mixed-06
+    - q-ambiguous-mixed-07
+    - q-ambiguous-mixed-08
+  secondary_cohorts:
+    exact_title_lookup:
+    - q-title_associated-zh_tw-04
+    - q-title_associated-zh_tw-08
+    - q-title_associated-en-04
+    - q-title_associated-en-08
+    - q-title_associated-mixed-04
+    - q-title_associated-mixed-08
+    short:
+    - q-title_associated-zh_tw-01
+    - q-title_associated-zh_tw-02
+    - q-title_associated-zh_tw-03
+    - q-title_associated-zh_tw-04
+    - q-title_associated-zh_tw-05
+    - q-title_associated-zh_tw-06
+    - q-title_associated-zh_tw-07
+    - q-title_associated-zh_tw-08
+    - q-title_associated-en-01
+    - q-title_associated-en-02
+    - q-title_associated-en-03
+    - q-title_associated-en-04
+    - q-title_associated-en-05
+    - q-title_associated-en-06
+    - q-title_associated-en-07
+    - q-title_associated-en-08
+    - q-title_associated-mixed-01
+    - q-title_associated-mixed-02
+    standard_length:
+    - q-title_associated-mixed-03
+    - q-title_associated-mixed-04
+    - q-title_associated-mixed-05
+    - q-title_associated-mixed-06
+    - q-title_associated-mixed-07
+    - q-title_associated-mixed-08
+    - q-body_only-zh_tw-01
+    - q-body_only-zh_tw-02
+    - q-body_only-zh_tw-03
+    - q-body_only-zh_tw-04
+    - q-body_only-zh_tw-05
+    - q-body_only-zh_tw-06
+    - q-body_only-zh_tw-07
+    - q-body_only-zh_tw-08
+    - q-body_only-en-01
+    - q-body_only-en-02
+    - q-body_only-en-03
+    - q-body_only-en-04
+    - q-body_only-en-05
+    - q-body_only-en-06
+    - q-body_only-en-07
+    - q-body_only-en-08
+    - q-body_only-mixed-01
+    - q-body_only-mixed-02
+    - q-body_only-mixed-03
+    - q-body_only-mixed-04
+    - q-body_only-mixed-05
+    - q-body_only-mixed-06
+    - q-body_only-mixed-07
+    - q-body_only-mixed-08
+    - q-ambiguous-zh_tw-01
+    - q-ambiguous-zh_tw-02
+    - q-ambiguous-zh_tw-03
+    - q-ambiguous-zh_tw-04
+    - q-ambiguous-zh_tw-05
+    - q-ambiguous-zh_tw-06
+    long:
+    - q-ambiguous-zh_tw-07
+    - q-ambiguous-zh_tw-08
+    - q-ambiguous-en-01
+    - q-ambiguous-en-02
+    - q-ambiguous-en-03
+    - q-ambiguous-en-04
+    - q-ambiguous-en-05
+    - q-ambiguous-en-06
+    - q-ambiguous-en-07
+    - q-ambiguous-en-08
+    - q-ambiguous-mixed-01
+    - q-ambiguous-mixed-02
+    - q-ambiguous-mixed-03
+    - q-ambiguous-mixed-04
+    - q-ambiguous-mixed-05
+    - q-ambiguous-mixed-06
+    - q-ambiguous-mixed-07
+    - q-ambiguous-mixed-08
+    deduplication:
+    - q-title_associated-zh_tw-01
+    - q-title_associated-en-01
+    - q-title_associated-mixed-01
+    - q-body_only-zh_tw-01
+    - q-body_only-en-01
+    - q-body_only-mixed-01
+    - q-ambiguous-zh_tw-01
+    - q-ambiguous-en-01
+    - q-ambiguous-mixed-01
+    generic_noise:
+    - q-title_associated-zh_tw-01
+    - q-title_associated-en-01
+    - q-title_associated-mixed-01
+    - q-body_only-zh_tw-01
+    - q-body_only-en-01
+    - q-body_only-mixed-01
+    - q-ambiguous-zh_tw-01
+    - q-ambiguous-en-01
+    - q-ambiguous-mixed-01
+builders:
+  document:
+  - body_only_v1
+  - title_body_v1
+  - title_heading_body_v1
+  query: query_body_only_v1
+  normalization: nfkc_casefold_whitespace_punctuation_v1
+  denylist: generic_context_denylist_v1
+  deduplication: exact_normalized_body_line_v1
+  serializer: context_labels_newlines_v1
+  provenance: embedding_input_provenance_v1
+  digest: sha256_utf8_v1
+implementation:
+  builder_source_path: src/rag/embedding_input_builder.py
+  builder_source_digest: 5e3d10bb60fc76512e5df896cd2940ec407ebe7a6533b8b4f5dae919abec2392
+  scoring_source_path: tests/evals/context_aware_embedding_input_eval.py
+  scoring_source_digest: 054158799cb95387f835ab4a84ba4e9607b93d86d2d4fd0808724a2233444eb6
+  capture_source_path: tests/evals/step98_phase_b_capture.py
+  capture_source_digest: 23d03ca7c373cec03980396507b6c8ffdc2ac9b2b61c922803b719a7b841d02f
+embedding:
+  provider: openai
+  model: text-embedding-3-small
+  dimensions: 1536
+  distance: cosine
+  revision_policy: single_capture_session_if_revision_unavailable
+retrieval:
+  top_k:
+  - 1
+  - 3
+  - 5
+  tie_break: similarity_desc_chunk_id_asc
+scoring:
+  version: step98_scoring_v1
+  precision: 12
+  tolerance: 1e-12
+capture:
+  batch_size: 32
+  concurrency: 1
+  schedule: query_once_then_document_round_robin_v1
+  max_requests: 16
+  max_inputs: 396
+  max_estimated_tokens: 250000
+  max_duration_seconds: 600
+  max_cost_usd: '0.010000'
+  vector_retention_required: true
+thresholds:
+  overall_hit3_gains: 3
+  overall_hit3_losses: 0
+  overall_reciprocal_rank_gain: '3.600'
+  title_semantic_hit3_gains: 2
+  ambiguity_new_errors: 0
+  heading_resolved_errors: 2
+  heading_ambiguity_reciprocal_rank_gain: '1.200'
+  heading_over_title_reciprocal_rank_gain: '1.440'
+citation_contract:
+  version: step98_citation_projection_v1
+  recall: '1.000'
+  precision: '1.000'
+  invalid_count: 0
+  derived_header_count: 0
+  conformance_fixture_count: 8
+production_safety_contract:
+  version: step98_production_safety_v1
+  case_count: 10
+  decoy_types:
+  - pending
+  - rejected
+  - non_notion
+  - wrong_page
+  - wrong_section
+  verify_eligible_set_before_top_k: true

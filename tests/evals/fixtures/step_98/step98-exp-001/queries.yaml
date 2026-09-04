@@ -1,0 +1,1711 @@
+queries:
+- query_id: q-title_associated-zh_tw-01
+  query: 如何理解第 1 個概念的用途與限制？
+  primary_cell: title_associated__zh_tw
+  critical_cohorts:
+  - title_only_semantic
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-zh_tw-1-1: 2
+    chunk-title_associated-zh_tw-1-5: 1
+    chunk-title_associated-zh_tw-2-1: 0
+    chunk-title_associated-zh_tw-2-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 1/Section 1/1
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 1/Section 1/1
+  - Synthetic/zh_tw/檢索脈絡主題 1/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-zh_tw-2-1
+  - chunk-title_associated-zh_tw-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-zh_tw-02
+  query: 如何理解第 1 個概念的用途與限制？
+  primary_cell: title_associated__zh_tw
+  critical_cohorts:
+  - title_only_semantic
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-zh_tw-1-2: 2
+    chunk-title_associated-zh_tw-1-5: 1
+    chunk-title_associated-zh_tw-2-2: 0
+    chunk-title_associated-zh_tw-2-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 1/Section 2/2
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 1/Section 2/2
+  - Synthetic/zh_tw/檢索脈絡主題 1/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-zh_tw-2-2
+  - chunk-title_associated-zh_tw-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-zh_tw-03
+  query: 如何理解第 1 個概念的用途與限制？
+  primary_cell: title_associated__zh_tw
+  critical_cohorts:
+  - title_only_semantic
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-zh_tw-1-3: 2
+    chunk-title_associated-zh_tw-1-5: 1
+    chunk-title_associated-zh_tw-2-3: 0
+    chunk-title_associated-zh_tw-2-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 1/Section 3/3
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 1/Section 3/3
+  - Synthetic/zh_tw/檢索脈絡主題 1/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-zh_tw-2-3
+  - chunk-title_associated-zh_tw-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-zh_tw-04
+  query: 檢索脈絡主題 1
+  primary_cell: title_associated__zh_tw
+  critical_cohorts:
+  - title_only_semantic
+  - traditional_chinese
+  secondary_tags:
+  - exact_title_lookup
+  length_bucket: short
+  relevance:
+    chunk-title_associated-zh_tw-1-4: 2
+    chunk-title_associated-zh_tw-1-5: 1
+    chunk-title_associated-zh_tw-2-4: 0
+    chunk-title_associated-zh_tw-2-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 1/Section 4/4
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 1/Section 4/4
+  - Synthetic/zh_tw/檢索脈絡主題 1/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-zh_tw-2-4
+  - chunk-title_associated-zh_tw-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-zh_tw-05
+  query: 如何理解第 2 個概念的用途與限制？
+  primary_cell: title_associated__zh_tw
+  critical_cohorts:
+  - title_only_semantic
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-zh_tw-2-1: 2
+    chunk-title_associated-zh_tw-2-5: 1
+    chunk-title_associated-zh_tw-1-1: 0
+    chunk-title_associated-zh_tw-1-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 2/Section 1/1
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 2/Section 1/1
+  - Synthetic/zh_tw/檢索脈絡主題 2/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-zh_tw-1-1
+  - chunk-title_associated-zh_tw-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-zh_tw-06
+  query: 如何理解第 2 個概念的用途與限制？
+  primary_cell: title_associated__zh_tw
+  critical_cohorts:
+  - title_only_semantic
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-zh_tw-2-2: 2
+    chunk-title_associated-zh_tw-2-5: 1
+    chunk-title_associated-zh_tw-1-2: 0
+    chunk-title_associated-zh_tw-1-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 2/Section 2/2
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 2/Section 2/2
+  - Synthetic/zh_tw/檢索脈絡主題 2/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-zh_tw-1-2
+  - chunk-title_associated-zh_tw-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-zh_tw-07
+  query: 如何理解第 2 個概念的用途與限制？
+  primary_cell: title_associated__zh_tw
+  critical_cohorts:
+  - title_only_semantic
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-zh_tw-2-3: 2
+    chunk-title_associated-zh_tw-2-5: 1
+    chunk-title_associated-zh_tw-1-3: 0
+    chunk-title_associated-zh_tw-1-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 2/Section 3/3
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 2/Section 3/3
+  - Synthetic/zh_tw/檢索脈絡主題 2/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-zh_tw-1-3
+  - chunk-title_associated-zh_tw-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-zh_tw-08
+  query: 檢索脈絡主題 2
+  primary_cell: title_associated__zh_tw
+  critical_cohorts:
+  - title_only_semantic
+  - traditional_chinese
+  secondary_tags:
+  - exact_title_lookup
+  length_bucket: short
+  relevance:
+    chunk-title_associated-zh_tw-2-4: 2
+    chunk-title_associated-zh_tw-2-5: 1
+    chunk-title_associated-zh_tw-1-4: 0
+    chunk-title_associated-zh_tw-1-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 2/Section 4/4
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 2/Section 4/4
+  - Synthetic/zh_tw/檢索脈絡主題 2/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-zh_tw-1-4
+  - chunk-title_associated-zh_tw-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-en-01
+  query: How should concept 3 be understood and constrained?
+  primary_cell: title_associated__en
+  critical_cohorts:
+  - title_only_semantic
+  - english
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-en-1-1: 2
+    chunk-title_associated-en-1-5: 1
+    chunk-title_associated-en-2-1: 0
+    chunk-title_associated-en-2-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 3/Section 1/1
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 3/Section 1/1
+  - Synthetic/en/Retrieval Context Topic 3/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-en-2-1
+  - chunk-title_associated-en-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-en-02
+  query: How should concept 3 be understood and constrained?
+  primary_cell: title_associated__en
+  critical_cohorts:
+  - title_only_semantic
+  - english
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-en-1-2: 2
+    chunk-title_associated-en-1-5: 1
+    chunk-title_associated-en-2-2: 0
+    chunk-title_associated-en-2-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 3/Section 2/2
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 3/Section 2/2
+  - Synthetic/en/Retrieval Context Topic 3/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-en-2-2
+  - chunk-title_associated-en-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-en-03
+  query: How should concept 3 be understood and constrained?
+  primary_cell: title_associated__en
+  critical_cohorts:
+  - title_only_semantic
+  - english
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-en-1-3: 2
+    chunk-title_associated-en-1-5: 1
+    chunk-title_associated-en-2-3: 0
+    chunk-title_associated-en-2-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 3/Section 3/3
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 3/Section 3/3
+  - Synthetic/en/Retrieval Context Topic 3/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-en-2-3
+  - chunk-title_associated-en-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-en-04
+  query: Retrieval Context Topic 3
+  primary_cell: title_associated__en
+  critical_cohorts:
+  - title_only_semantic
+  - english
+  secondary_tags:
+  - exact_title_lookup
+  length_bucket: short
+  relevance:
+    chunk-title_associated-en-1-4: 2
+    chunk-title_associated-en-1-5: 1
+    chunk-title_associated-en-2-4: 0
+    chunk-title_associated-en-2-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 3/Section 4/4
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 3/Section 4/4
+  - Synthetic/en/Retrieval Context Topic 3/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-en-2-4
+  - chunk-title_associated-en-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-en-05
+  query: How should concept 4 be understood and constrained?
+  primary_cell: title_associated__en
+  critical_cohorts:
+  - title_only_semantic
+  - english
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-en-2-1: 2
+    chunk-title_associated-en-2-5: 1
+    chunk-title_associated-en-1-1: 0
+    chunk-title_associated-en-1-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 4/Section 1/1
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 4/Section 1/1
+  - Synthetic/en/Retrieval Context Topic 4/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-en-1-1
+  - chunk-title_associated-en-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-en-06
+  query: How should concept 4 be understood and constrained?
+  primary_cell: title_associated__en
+  critical_cohorts:
+  - title_only_semantic
+  - english
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-en-2-2: 2
+    chunk-title_associated-en-2-5: 1
+    chunk-title_associated-en-1-2: 0
+    chunk-title_associated-en-1-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 4/Section 2/2
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 4/Section 2/2
+  - Synthetic/en/Retrieval Context Topic 4/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-en-1-2
+  - chunk-title_associated-en-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-en-07
+  query: How should concept 4 be understood and constrained?
+  primary_cell: title_associated__en
+  critical_cohorts:
+  - title_only_semantic
+  - english
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-en-2-3: 2
+    chunk-title_associated-en-2-5: 1
+    chunk-title_associated-en-1-3: 0
+    chunk-title_associated-en-1-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 4/Section 3/3
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 4/Section 3/3
+  - Synthetic/en/Retrieval Context Topic 4/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-en-1-3
+  - chunk-title_associated-en-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-en-08
+  query: Retrieval Context Topic 4
+  primary_cell: title_associated__en
+  critical_cohorts:
+  - title_only_semantic
+  - english
+  secondary_tags:
+  - exact_title_lookup
+  length_bucket: short
+  relevance:
+    chunk-title_associated-en-2-4: 2
+    chunk-title_associated-en-2-5: 1
+    chunk-title_associated-en-1-4: 0
+    chunk-title_associated-en-1-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 4/Section 4/4
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 4/Section 4/4
+  - Synthetic/en/Retrieval Context Topic 4/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-en-1-4
+  - chunk-title_associated-en-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-mixed-01
+  query: Concept 5 的用途與 constraint 是什麼？
+  primary_cell: title_associated__mixed
+  critical_cohorts:
+  - title_only_semantic
+  - mixed_language
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-mixed-1-1: 2
+    chunk-title_associated-mixed-1-5: 1
+    chunk-title_associated-mixed-2-1: 0
+    chunk-title_associated-mixed-2-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 5/Section 1/1
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 5/Section 1/1
+  - Synthetic/mixed/檢索 Context Topic 5/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-mixed-2-1
+  - chunk-title_associated-mixed-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-mixed-02
+  query: Concept 5 的用途與 constraint 是什麼？
+  primary_cell: title_associated__mixed
+  critical_cohorts:
+  - title_only_semantic
+  - mixed_language
+  secondary_tags: []
+  length_bucket: short
+  relevance:
+    chunk-title_associated-mixed-1-2: 2
+    chunk-title_associated-mixed-1-5: 1
+    chunk-title_associated-mixed-2-2: 0
+    chunk-title_associated-mixed-2-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 5/Section 2/2
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 5/Section 2/2
+  - Synthetic/mixed/檢索 Context Topic 5/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-mixed-2-2
+  - chunk-title_associated-mixed-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-mixed-03
+  query: Concept 5 的用途與 constraint 是什麼？
+  primary_cell: title_associated__mixed
+  critical_cohorts:
+  - title_only_semantic
+  - mixed_language
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-title_associated-mixed-1-3: 2
+    chunk-title_associated-mixed-1-5: 1
+    chunk-title_associated-mixed-2-3: 0
+    chunk-title_associated-mixed-2-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 5/Section 3/3
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 5/Section 3/3
+  - Synthetic/mixed/檢索 Context Topic 5/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-mixed-2-3
+  - chunk-title_associated-mixed-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-mixed-04
+  query: 檢索 Context Topic 5
+  primary_cell: title_associated__mixed
+  critical_cohorts:
+  - title_only_semantic
+  - mixed_language
+  secondary_tags:
+  - exact_title_lookup
+  length_bucket: standard_length
+  relevance:
+    chunk-title_associated-mixed-1-4: 2
+    chunk-title_associated-mixed-1-5: 1
+    chunk-title_associated-mixed-2-4: 0
+    chunk-title_associated-mixed-2-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 5/Section 4/4
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 5/Section 4/4
+  - Synthetic/mixed/檢索 Context Topic 5/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-mixed-2-4
+  - chunk-title_associated-mixed-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-mixed-05
+  query: Concept 6 的用途與 constraint 是什麼？
+  primary_cell: title_associated__mixed
+  critical_cohorts:
+  - title_only_semantic
+  - mixed_language
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-title_associated-mixed-2-1: 2
+    chunk-title_associated-mixed-2-5: 1
+    chunk-title_associated-mixed-1-1: 0
+    chunk-title_associated-mixed-1-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 6/Section 1/1
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 6/Section 1/1
+  - Synthetic/mixed/檢索 Context Topic 6/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-mixed-1-1
+  - chunk-title_associated-mixed-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-mixed-06
+  query: Concept 6 的用途與 constraint 是什麼？
+  primary_cell: title_associated__mixed
+  critical_cohorts:
+  - title_only_semantic
+  - mixed_language
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-title_associated-mixed-2-2: 2
+    chunk-title_associated-mixed-2-5: 1
+    chunk-title_associated-mixed-1-2: 0
+    chunk-title_associated-mixed-1-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 6/Section 2/2
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 6/Section 2/2
+  - Synthetic/mixed/檢索 Context Topic 6/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-mixed-1-2
+  - chunk-title_associated-mixed-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-mixed-07
+  query: Concept 6 的用途與 constraint 是什麼？
+  primary_cell: title_associated__mixed
+  critical_cohorts:
+  - title_only_semantic
+  - mixed_language
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-title_associated-mixed-2-3: 2
+    chunk-title_associated-mixed-2-5: 1
+    chunk-title_associated-mixed-1-3: 0
+    chunk-title_associated-mixed-1-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 6/Section 3/3
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 6/Section 3/3
+  - Synthetic/mixed/檢索 Context Topic 6/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-mixed-1-3
+  - chunk-title_associated-mixed-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-title_associated-mixed-08
+  query: 檢索 Context Topic 6
+  primary_cell: title_associated__mixed
+  critical_cohorts:
+  - title_only_semantic
+  - mixed_language
+  secondary_tags:
+  - exact_title_lookup
+  length_bucket: standard_length
+  relevance:
+    chunk-title_associated-mixed-2-4: 2
+    chunk-title_associated-mixed-2-5: 1
+    chunk-title_associated-mixed-1-4: 0
+    chunk-title_associated-mixed-1-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 6/Section 4/4
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 6/Section 4/4
+  - Synthetic/mixed/檢索 Context Topic 6/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-title_associated-mixed-1-4
+  - chunk-title_associated-mixed-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-zh_tw-01
+  query: 如何理解第 7 個概念的用途與限制？
+  primary_cell: body_only__zh_tw
+  critical_cohorts:
+  - body_only
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-zh_tw-1-1: 2
+    chunk-body_only-zh_tw-1-5: 1
+    chunk-body_only-zh_tw-2-1: 0
+    chunk-body_only-zh_tw-2-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 7/Section 1/1
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 7/Section 1/1
+  - Synthetic/zh_tw/檢索脈絡主題 7/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-zh_tw-2-1
+  - chunk-body_only-zh_tw-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-zh_tw-02
+  query: 如何理解第 7 個概念的用途與限制？
+  primary_cell: body_only__zh_tw
+  critical_cohorts:
+  - body_only
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-zh_tw-1-2: 2
+    chunk-body_only-zh_tw-1-5: 1
+    chunk-body_only-zh_tw-2-2: 0
+    chunk-body_only-zh_tw-2-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 7/Section 2/2
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 7/Section 2/2
+  - Synthetic/zh_tw/檢索脈絡主題 7/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-zh_tw-2-2
+  - chunk-body_only-zh_tw-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-zh_tw-03
+  query: 如何理解第 7 個概念的用途與限制？
+  primary_cell: body_only__zh_tw
+  critical_cohorts:
+  - body_only
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-zh_tw-1-3: 2
+    chunk-body_only-zh_tw-1-5: 1
+    chunk-body_only-zh_tw-2-3: 0
+    chunk-body_only-zh_tw-2-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 7/Section 3/3
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 7/Section 3/3
+  - Synthetic/zh_tw/檢索脈絡主題 7/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-zh_tw-2-3
+  - chunk-body_only-zh_tw-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-zh_tw-04
+  query: 如何理解第 7 個概念的用途與限制？
+  primary_cell: body_only__zh_tw
+  critical_cohorts:
+  - body_only
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-zh_tw-1-4: 2
+    chunk-body_only-zh_tw-1-5: 1
+    chunk-body_only-zh_tw-2-4: 0
+    chunk-body_only-zh_tw-2-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 7/Section 4/4
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 7/Section 4/4
+  - Synthetic/zh_tw/檢索脈絡主題 7/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-zh_tw-2-4
+  - chunk-body_only-zh_tw-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-zh_tw-05
+  query: 如何理解第 8 個概念的用途與限制？
+  primary_cell: body_only__zh_tw
+  critical_cohorts:
+  - body_only
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-zh_tw-2-1: 2
+    chunk-body_only-zh_tw-2-5: 1
+    chunk-body_only-zh_tw-1-1: 0
+    chunk-body_only-zh_tw-1-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 8/Section 1/1
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 8/Section 1/1
+  - Synthetic/zh_tw/檢索脈絡主題 8/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-zh_tw-1-1
+  - chunk-body_only-zh_tw-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-zh_tw-06
+  query: 如何理解第 8 個概念的用途與限制？
+  primary_cell: body_only__zh_tw
+  critical_cohorts:
+  - body_only
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-zh_tw-2-2: 2
+    chunk-body_only-zh_tw-2-5: 1
+    chunk-body_only-zh_tw-1-2: 0
+    chunk-body_only-zh_tw-1-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 8/Section 2/2
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 8/Section 2/2
+  - Synthetic/zh_tw/檢索脈絡主題 8/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-zh_tw-1-2
+  - chunk-body_only-zh_tw-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-zh_tw-07
+  query: 如何理解第 8 個概念的用途與限制？
+  primary_cell: body_only__zh_tw
+  critical_cohorts:
+  - body_only
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-zh_tw-2-3: 2
+    chunk-body_only-zh_tw-2-5: 1
+    chunk-body_only-zh_tw-1-3: 0
+    chunk-body_only-zh_tw-1-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 8/Section 3/3
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 8/Section 3/3
+  - Synthetic/zh_tw/檢索脈絡主題 8/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-zh_tw-1-3
+  - chunk-body_only-zh_tw-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-zh_tw-08
+  query: 如何理解第 8 個概念的用途與限制？
+  primary_cell: body_only__zh_tw
+  critical_cohorts:
+  - body_only
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-zh_tw-2-4: 2
+    chunk-body_only-zh_tw-2-5: 1
+    chunk-body_only-zh_tw-1-4: 0
+    chunk-body_only-zh_tw-1-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 8/Section 4/4
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 8/Section 4/4
+  - Synthetic/zh_tw/檢索脈絡主題 8/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-zh_tw-1-4
+  - chunk-body_only-zh_tw-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-en-01
+  query: How should concept 9 be understood and constrained?
+  primary_cell: body_only__en
+  critical_cohorts:
+  - body_only
+  - english
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-en-1-1: 2
+    chunk-body_only-en-1-5: 1
+    chunk-body_only-en-2-1: 0
+    chunk-body_only-en-2-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 9/Section 1/1
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 9/Section 1/1
+  - Synthetic/en/Retrieval Context Topic 9/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-en-2-1
+  - chunk-body_only-en-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-en-02
+  query: How should concept 9 be understood and constrained?
+  primary_cell: body_only__en
+  critical_cohorts:
+  - body_only
+  - english
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-en-1-2: 2
+    chunk-body_only-en-1-5: 1
+    chunk-body_only-en-2-2: 0
+    chunk-body_only-en-2-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 9/Section 2/2
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 9/Section 2/2
+  - Synthetic/en/Retrieval Context Topic 9/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-en-2-2
+  - chunk-body_only-en-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-en-03
+  query: How should concept 9 be understood and constrained?
+  primary_cell: body_only__en
+  critical_cohorts:
+  - body_only
+  - english
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-en-1-3: 2
+    chunk-body_only-en-1-5: 1
+    chunk-body_only-en-2-3: 0
+    chunk-body_only-en-2-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 9/Section 3/3
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 9/Section 3/3
+  - Synthetic/en/Retrieval Context Topic 9/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-en-2-3
+  - chunk-body_only-en-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-en-04
+  query: How should concept 9 be understood and constrained?
+  primary_cell: body_only__en
+  critical_cohorts:
+  - body_only
+  - english
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-en-1-4: 2
+    chunk-body_only-en-1-5: 1
+    chunk-body_only-en-2-4: 0
+    chunk-body_only-en-2-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 9/Section 4/4
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 9/Section 4/4
+  - Synthetic/en/Retrieval Context Topic 9/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-en-2-4
+  - chunk-body_only-en-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-en-05
+  query: How should concept 10 be understood and constrained?
+  primary_cell: body_only__en
+  critical_cohorts:
+  - body_only
+  - english
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-en-2-1: 2
+    chunk-body_only-en-2-5: 1
+    chunk-body_only-en-1-1: 0
+    chunk-body_only-en-1-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 10/Section 1/1
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 10/Section 1/1
+  - Synthetic/en/Retrieval Context Topic 10/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-en-1-1
+  - chunk-body_only-en-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-en-06
+  query: How should concept 10 be understood and constrained?
+  primary_cell: body_only__en
+  critical_cohorts:
+  - body_only
+  - english
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-en-2-2: 2
+    chunk-body_only-en-2-5: 1
+    chunk-body_only-en-1-2: 0
+    chunk-body_only-en-1-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 10/Section 2/2
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 10/Section 2/2
+  - Synthetic/en/Retrieval Context Topic 10/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-en-1-2
+  - chunk-body_only-en-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-en-07
+  query: How should concept 10 be understood and constrained?
+  primary_cell: body_only__en
+  critical_cohorts:
+  - body_only
+  - english
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-en-2-3: 2
+    chunk-body_only-en-2-5: 1
+    chunk-body_only-en-1-3: 0
+    chunk-body_only-en-1-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 10/Section 3/3
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 10/Section 3/3
+  - Synthetic/en/Retrieval Context Topic 10/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-en-1-3
+  - chunk-body_only-en-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-en-08
+  query: How should concept 10 be understood and constrained?
+  primary_cell: body_only__en
+  critical_cohorts:
+  - body_only
+  - english
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-en-2-4: 2
+    chunk-body_only-en-2-5: 1
+    chunk-body_only-en-1-4: 0
+    chunk-body_only-en-1-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 10/Section 4/4
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 10/Section 4/4
+  - Synthetic/en/Retrieval Context Topic 10/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-en-1-4
+  - chunk-body_only-en-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-mixed-01
+  query: Concept 11 的用途與 constraint 是什麼？
+  primary_cell: body_only__mixed
+  critical_cohorts:
+  - body_only
+  - mixed_language
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-mixed-1-1: 2
+    chunk-body_only-mixed-1-5: 1
+    chunk-body_only-mixed-2-1: 0
+    chunk-body_only-mixed-2-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 11/Section 1/1
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 11/Section 1/1
+  - Synthetic/mixed/檢索 Context Topic 11/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-mixed-2-1
+  - chunk-body_only-mixed-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-mixed-02
+  query: Concept 11 的用途與 constraint 是什麼？
+  primary_cell: body_only__mixed
+  critical_cohorts:
+  - body_only
+  - mixed_language
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-mixed-1-2: 2
+    chunk-body_only-mixed-1-5: 1
+    chunk-body_only-mixed-2-2: 0
+    chunk-body_only-mixed-2-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 11/Section 2/2
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 11/Section 2/2
+  - Synthetic/mixed/檢索 Context Topic 11/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-mixed-2-2
+  - chunk-body_only-mixed-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-mixed-03
+  query: Concept 11 的用途與 constraint 是什麼？
+  primary_cell: body_only__mixed
+  critical_cohorts:
+  - body_only
+  - mixed_language
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-mixed-1-3: 2
+    chunk-body_only-mixed-1-5: 1
+    chunk-body_only-mixed-2-3: 0
+    chunk-body_only-mixed-2-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 11/Section 3/3
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 11/Section 3/3
+  - Synthetic/mixed/檢索 Context Topic 11/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-mixed-2-3
+  - chunk-body_only-mixed-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-mixed-04
+  query: Concept 11 的用途與 constraint 是什麼？
+  primary_cell: body_only__mixed
+  critical_cohorts:
+  - body_only
+  - mixed_language
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-mixed-1-4: 2
+    chunk-body_only-mixed-1-5: 1
+    chunk-body_only-mixed-2-4: 0
+    chunk-body_only-mixed-2-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 11/Section 4/4
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 11/Section 4/4
+  - Synthetic/mixed/檢索 Context Topic 11/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-mixed-2-4
+  - chunk-body_only-mixed-2-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-mixed-05
+  query: Concept 12 的用途與 constraint 是什麼？
+  primary_cell: body_only__mixed
+  critical_cohorts:
+  - body_only
+  - mixed_language
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-mixed-2-1: 2
+    chunk-body_only-mixed-2-5: 1
+    chunk-body_only-mixed-1-1: 0
+    chunk-body_only-mixed-1-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 12/Section 1/1
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 12/Section 1/1
+  - Synthetic/mixed/檢索 Context Topic 12/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-mixed-1-1
+  - chunk-body_only-mixed-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-mixed-06
+  query: Concept 12 的用途與 constraint 是什麼？
+  primary_cell: body_only__mixed
+  critical_cohorts:
+  - body_only
+  - mixed_language
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-mixed-2-2: 2
+    chunk-body_only-mixed-2-5: 1
+    chunk-body_only-mixed-1-2: 0
+    chunk-body_only-mixed-1-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 12/Section 2/2
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 12/Section 2/2
+  - Synthetic/mixed/檢索 Context Topic 12/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-mixed-1-2
+  - chunk-body_only-mixed-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-mixed-07
+  query: Concept 12 的用途與 constraint 是什麼？
+  primary_cell: body_only__mixed
+  critical_cohorts:
+  - body_only
+  - mixed_language
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-mixed-2-3: 2
+    chunk-body_only-mixed-2-5: 1
+    chunk-body_only-mixed-1-3: 0
+    chunk-body_only-mixed-1-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 12/Section 3/3
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 12/Section 3/3
+  - Synthetic/mixed/檢索 Context Topic 12/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-mixed-1-3
+  - chunk-body_only-mixed-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-body_only-mixed-08
+  query: Concept 12 的用途與 constraint 是什麼？
+  primary_cell: body_only__mixed
+  critical_cohorts:
+  - body_only
+  - mixed_language
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-body_only-mixed-2-4: 2
+    chunk-body_only-mixed-2-5: 1
+    chunk-body_only-mixed-1-4: 0
+    chunk-body_only-mixed-1-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 12/Section 4/4
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 12/Section 4/4
+  - Synthetic/mixed/檢索 Context Topic 12/Section 5/5
+  hard_negative_chunk_ids:
+  - chunk-body_only-mixed-1-4
+  - chunk-body_only-mixed-1-6
+  wrong_page_chunk_ids: []
+  top_k: 5
+- query_id: q-ambiguous-zh_tw-01
+  query: 如何理解第 13 個概念的用途與限制？
+  primary_cell: ambiguous__zh_tw
+  critical_cohorts:
+  - ambiguous
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-ambiguous-zh_tw-1-1: 2
+    chunk-ambiguous-zh_tw-1-5: 1
+    chunk-ambiguous-zh_tw-2-1: 0
+    chunk-ambiguous-zh_tw-2-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/1
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/1
+  - Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-zh_tw-2-1
+  - chunk-ambiguous-zh_tw-2-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-zh_tw-2-1
+  - chunk-ambiguous-zh_tw-2-6
+  top_k: 5
+- query_id: q-ambiguous-zh_tw-02
+  query: 如何理解第 13 個概念的用途與限制？
+  primary_cell: ambiguous__zh_tw
+  critical_cohorts:
+  - ambiguous
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-ambiguous-zh_tw-1-2: 2
+    chunk-ambiguous-zh_tw-1-5: 1
+    chunk-ambiguous-zh_tw-2-2: 0
+    chunk-ambiguous-zh_tw-2-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/2
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/2
+  - Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-zh_tw-2-2
+  - chunk-ambiguous-zh_tw-2-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-zh_tw-2-2
+  - chunk-ambiguous-zh_tw-2-6
+  top_k: 5
+- query_id: q-ambiguous-zh_tw-03
+  query: 如何理解第 13 個概念的用途與限制？
+  primary_cell: ambiguous__zh_tw
+  critical_cohorts:
+  - ambiguous
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-ambiguous-zh_tw-1-3: 2
+    chunk-ambiguous-zh_tw-1-5: 1
+    chunk-ambiguous-zh_tw-2-3: 0
+    chunk-ambiguous-zh_tw-2-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/3
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/3
+  - Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-zh_tw-2-3
+  - chunk-ambiguous-zh_tw-2-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-zh_tw-2-3
+  - chunk-ambiguous-zh_tw-2-6
+  top_k: 5
+- query_id: q-ambiguous-zh_tw-04
+  query: 如何理解第 13 個概念的用途與限制？
+  primary_cell: ambiguous__zh_tw
+  critical_cohorts:
+  - ambiguous
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-ambiguous-zh_tw-1-4: 2
+    chunk-ambiguous-zh_tw-1-5: 1
+    chunk-ambiguous-zh_tw-2-4: 0
+    chunk-ambiguous-zh_tw-2-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/4
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/4
+  - Synthetic/zh_tw/檢索脈絡主題 13 Page 1/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-zh_tw-2-4
+  - chunk-ambiguous-zh_tw-2-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-zh_tw-2-4
+  - chunk-ambiguous-zh_tw-2-6
+  top_k: 5
+- query_id: q-ambiguous-zh_tw-05
+  query: 如何理解第 14 個概念的用途與限制？
+  primary_cell: ambiguous__zh_tw
+  critical_cohorts:
+  - ambiguous
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-ambiguous-zh_tw-2-1: 2
+    chunk-ambiguous-zh_tw-2-5: 1
+    chunk-ambiguous-zh_tw-1-1: 0
+    chunk-ambiguous-zh_tw-1-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/1
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/1
+  - Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-zh_tw-1-1
+  - chunk-ambiguous-zh_tw-1-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-zh_tw-1-1
+  - chunk-ambiguous-zh_tw-1-6
+  top_k: 5
+- query_id: q-ambiguous-zh_tw-06
+  query: 如何理解第 14 個概念的用途與限制？
+  primary_cell: ambiguous__zh_tw
+  critical_cohorts:
+  - ambiguous
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: standard_length
+  relevance:
+    chunk-ambiguous-zh_tw-2-2: 2
+    chunk-ambiguous-zh_tw-2-5: 1
+    chunk-ambiguous-zh_tw-1-2: 0
+    chunk-ambiguous-zh_tw-1-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/2
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/2
+  - Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-zh_tw-1-2
+  - chunk-ambiguous-zh_tw-1-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-zh_tw-1-2
+  - chunk-ambiguous-zh_tw-1-6
+  top_k: 5
+- query_id: q-ambiguous-zh_tw-07
+  query: 如何理解第 14 個概念的用途與限制？
+  primary_cell: ambiguous__zh_tw
+  critical_cohorts:
+  - ambiguous
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-zh_tw-2-3: 2
+    chunk-ambiguous-zh_tw-2-5: 1
+    chunk-ambiguous-zh_tw-1-3: 0
+    chunk-ambiguous-zh_tw-1-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/3
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/3
+  - Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-zh_tw-1-3
+  - chunk-ambiguous-zh_tw-1-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-zh_tw-1-3
+  - chunk-ambiguous-zh_tw-1-6
+  top_k: 5
+- query_id: q-ambiguous-zh_tw-08
+  query: 如何理解第 14 個概念的用途與限制？
+  primary_cell: ambiguous__zh_tw
+  critical_cohorts:
+  - ambiguous
+  - traditional_chinese
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-zh_tw-2-4: 2
+    chunk-ambiguous-zh_tw-2-5: 1
+    chunk-ambiguous-zh_tw-1-4: 0
+    chunk-ambiguous-zh_tw-1-6: 0
+  required_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/4
+  allowed_citation_paths:
+  - Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/4
+  - Synthetic/zh_tw/檢索脈絡主題 14 Page 2/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-zh_tw-1-4
+  - chunk-ambiguous-zh_tw-1-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-zh_tw-1-4
+  - chunk-ambiguous-zh_tw-1-6
+  top_k: 5
+- query_id: q-ambiguous-en-01
+  query: How should concept 15 be understood and constrained?
+  primary_cell: ambiguous__en
+  critical_cohorts:
+  - ambiguous
+  - english
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-en-1-1: 2
+    chunk-ambiguous-en-1-5: 1
+    chunk-ambiguous-en-2-1: 0
+    chunk-ambiguous-en-2-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/1
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/1
+  - Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-en-2-1
+  - chunk-ambiguous-en-2-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-en-2-1
+  - chunk-ambiguous-en-2-6
+  top_k: 5
+- query_id: q-ambiguous-en-02
+  query: How should concept 15 be understood and constrained?
+  primary_cell: ambiguous__en
+  critical_cohorts:
+  - ambiguous
+  - english
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-en-1-2: 2
+    chunk-ambiguous-en-1-5: 1
+    chunk-ambiguous-en-2-2: 0
+    chunk-ambiguous-en-2-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/2
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/2
+  - Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-en-2-2
+  - chunk-ambiguous-en-2-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-en-2-2
+  - chunk-ambiguous-en-2-6
+  top_k: 5
+- query_id: q-ambiguous-en-03
+  query: How should concept 15 be understood and constrained?
+  primary_cell: ambiguous__en
+  critical_cohorts:
+  - ambiguous
+  - english
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-en-1-3: 2
+    chunk-ambiguous-en-1-5: 1
+    chunk-ambiguous-en-2-3: 0
+    chunk-ambiguous-en-2-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/3
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/3
+  - Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-en-2-3
+  - chunk-ambiguous-en-2-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-en-2-3
+  - chunk-ambiguous-en-2-6
+  top_k: 5
+- query_id: q-ambiguous-en-04
+  query: How should concept 15 be understood and constrained?
+  primary_cell: ambiguous__en
+  critical_cohorts:
+  - ambiguous
+  - english
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-en-1-4: 2
+    chunk-ambiguous-en-1-5: 1
+    chunk-ambiguous-en-2-4: 0
+    chunk-ambiguous-en-2-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/4
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/4
+  - Synthetic/en/Retrieval Context Topic 15 Page 1/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-en-2-4
+  - chunk-ambiguous-en-2-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-en-2-4
+  - chunk-ambiguous-en-2-6
+  top_k: 5
+- query_id: q-ambiguous-en-05
+  query: How should concept 16 be understood and constrained?
+  primary_cell: ambiguous__en
+  critical_cohorts:
+  - ambiguous
+  - english
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-en-2-1: 2
+    chunk-ambiguous-en-2-5: 1
+    chunk-ambiguous-en-1-1: 0
+    chunk-ambiguous-en-1-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/1
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/1
+  - Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-en-1-1
+  - chunk-ambiguous-en-1-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-en-1-1
+  - chunk-ambiguous-en-1-6
+  top_k: 5
+- query_id: q-ambiguous-en-06
+  query: How should concept 16 be understood and constrained?
+  primary_cell: ambiguous__en
+  critical_cohorts:
+  - ambiguous
+  - english
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-en-2-2: 2
+    chunk-ambiguous-en-2-5: 1
+    chunk-ambiguous-en-1-2: 0
+    chunk-ambiguous-en-1-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/2
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/2
+  - Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-en-1-2
+  - chunk-ambiguous-en-1-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-en-1-2
+  - chunk-ambiguous-en-1-6
+  top_k: 5
+- query_id: q-ambiguous-en-07
+  query: How should concept 16 be understood and constrained?
+  primary_cell: ambiguous__en
+  critical_cohorts:
+  - ambiguous
+  - english
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-en-2-3: 2
+    chunk-ambiguous-en-2-5: 1
+    chunk-ambiguous-en-1-3: 0
+    chunk-ambiguous-en-1-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/3
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/3
+  - Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-en-1-3
+  - chunk-ambiguous-en-1-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-en-1-3
+  - chunk-ambiguous-en-1-6
+  top_k: 5
+- query_id: q-ambiguous-en-08
+  query: How should concept 16 be understood and constrained?
+  primary_cell: ambiguous__en
+  critical_cohorts:
+  - ambiguous
+  - english
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-en-2-4: 2
+    chunk-ambiguous-en-2-5: 1
+    chunk-ambiguous-en-1-4: 0
+    chunk-ambiguous-en-1-6: 0
+  required_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/4
+  allowed_citation_paths:
+  - Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/4
+  - Synthetic/en/Retrieval Context Topic 16 Page 2/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-en-1-4
+  - chunk-ambiguous-en-1-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-en-1-4
+  - chunk-ambiguous-en-1-6
+  top_k: 5
+- query_id: q-ambiguous-mixed-01
+  query: Concept 17 的用途與 constraint 是什麼？
+  primary_cell: ambiguous__mixed
+  critical_cohorts:
+  - ambiguous
+  - mixed_language
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-mixed-1-1: 2
+    chunk-ambiguous-mixed-1-5: 1
+    chunk-ambiguous-mixed-2-1: 0
+    chunk-ambiguous-mixed-2-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/1
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/1
+  - Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-mixed-2-1
+  - chunk-ambiguous-mixed-2-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-mixed-2-1
+  - chunk-ambiguous-mixed-2-6
+  top_k: 5
+- query_id: q-ambiguous-mixed-02
+  query: Concept 17 的用途與 constraint 是什麼？
+  primary_cell: ambiguous__mixed
+  critical_cohorts:
+  - ambiguous
+  - mixed_language
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-mixed-1-2: 2
+    chunk-ambiguous-mixed-1-5: 1
+    chunk-ambiguous-mixed-2-2: 0
+    chunk-ambiguous-mixed-2-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/2
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/2
+  - Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-mixed-2-2
+  - chunk-ambiguous-mixed-2-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-mixed-2-2
+  - chunk-ambiguous-mixed-2-6
+  top_k: 5
+- query_id: q-ambiguous-mixed-03
+  query: Concept 17 的用途與 constraint 是什麼？
+  primary_cell: ambiguous__mixed
+  critical_cohorts:
+  - ambiguous
+  - mixed_language
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-mixed-1-3: 2
+    chunk-ambiguous-mixed-1-5: 1
+    chunk-ambiguous-mixed-2-3: 0
+    chunk-ambiguous-mixed-2-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/3
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/3
+  - Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-mixed-2-3
+  - chunk-ambiguous-mixed-2-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-mixed-2-3
+  - chunk-ambiguous-mixed-2-6
+  top_k: 5
+- query_id: q-ambiguous-mixed-04
+  query: Concept 17 的用途與 constraint 是什麼？
+  primary_cell: ambiguous__mixed
+  critical_cohorts:
+  - ambiguous
+  - mixed_language
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-mixed-1-4: 2
+    chunk-ambiguous-mixed-1-5: 1
+    chunk-ambiguous-mixed-2-4: 0
+    chunk-ambiguous-mixed-2-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/4
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/4
+  - Synthetic/mixed/檢索 Context Topic 17 Page 1/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-mixed-2-4
+  - chunk-ambiguous-mixed-2-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-mixed-2-4
+  - chunk-ambiguous-mixed-2-6
+  top_k: 5
+- query_id: q-ambiguous-mixed-05
+  query: Concept 18 的用途與 constraint 是什麼？
+  primary_cell: ambiguous__mixed
+  critical_cohorts:
+  - ambiguous
+  - mixed_language
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-mixed-2-1: 2
+    chunk-ambiguous-mixed-2-5: 1
+    chunk-ambiguous-mixed-1-1: 0
+    chunk-ambiguous-mixed-1-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/1
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/1
+  - Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-mixed-1-1
+  - chunk-ambiguous-mixed-1-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-mixed-1-1
+  - chunk-ambiguous-mixed-1-6
+  top_k: 5
+- query_id: q-ambiguous-mixed-06
+  query: Concept 18 的用途與 constraint 是什麼？
+  primary_cell: ambiguous__mixed
+  critical_cohorts:
+  - ambiguous
+  - mixed_language
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-mixed-2-2: 2
+    chunk-ambiguous-mixed-2-5: 1
+    chunk-ambiguous-mixed-1-2: 0
+    chunk-ambiguous-mixed-1-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/2
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/2
+  - Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-mixed-1-2
+  - chunk-ambiguous-mixed-1-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-mixed-1-2
+  - chunk-ambiguous-mixed-1-6
+  top_k: 5
+- query_id: q-ambiguous-mixed-07
+  query: Concept 18 的用途與 constraint 是什麼？
+  primary_cell: ambiguous__mixed
+  critical_cohorts:
+  - ambiguous
+  - mixed_language
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-mixed-2-3: 2
+    chunk-ambiguous-mixed-2-5: 1
+    chunk-ambiguous-mixed-1-3: 0
+    chunk-ambiguous-mixed-1-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/3
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/3
+  - Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-mixed-1-3
+  - chunk-ambiguous-mixed-1-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-mixed-1-3
+  - chunk-ambiguous-mixed-1-6
+  top_k: 5
+- query_id: q-ambiguous-mixed-08
+  query: Concept 18 的用途與 constraint 是什麼？
+  primary_cell: ambiguous__mixed
+  critical_cohorts:
+  - ambiguous
+  - mixed_language
+  secondary_tags: []
+  length_bucket: long
+  relevance:
+    chunk-ambiguous-mixed-2-4: 2
+    chunk-ambiguous-mixed-2-5: 1
+    chunk-ambiguous-mixed-1-4: 0
+    chunk-ambiguous-mixed-1-6: 0
+  required_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/4
+  allowed_citation_paths:
+  - Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/4
+  - Synthetic/mixed/檢索 Context Topic 18 Page 2/Shared Section/5
+  hard_negative_chunk_ids:
+  - chunk-ambiguous-mixed-1-4
+  - chunk-ambiguous-mixed-1-6
+  wrong_page_chunk_ids:
+  - chunk-ambiguous-mixed-1-4
+  - chunk-ambiguous-mixed-1-6
+  top_k: 5
