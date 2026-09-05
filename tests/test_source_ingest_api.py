@@ -3,8 +3,10 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
+from io import BytesIO
 
 from fastapi.testclient import TestClient
+from PIL import Image
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -171,7 +173,7 @@ class _FakeImageOCRParserClient(ImageOCRParserClient):
         if self._should_fail:
             raise ImageOCRParserClientError(self._failure_message)
         ordered_lines = [
-            f"OCR[{index}] {image.file_name}"
+            f"[Image {index}: {image.file_name}]\nOCR[{index}] {image.file_name}"
             for index, image in enumerate(images, start=1)
         ]
         return ParsedImageOCR(
@@ -203,6 +205,12 @@ def _count_cjk(value: str) -> int:
         or 0x4E00 <= ord(character) <= 0x9FFF
         for character in value
     )
+
+
+def _build_png_bytes(*, color: str = "white") -> bytes:
+    buffer = BytesIO()
+    Image.new("RGB", (16, 12), color=color).save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 def _build_session_factory():
@@ -802,7 +810,7 @@ def test_ingest_youtube_api_returns_transcript_not_found() -> None:
         app.dependency_overrides.clear()
 
 
-def test_ingest_image_ocr_api_creates_one_screenshot_source_in_order() -> None:
+def test_ingest_image_ocr_api_creates_one_ordered_grouped_image_source() -> None:
     session_factory = _build_session_factory()
 
     def _db_override():
@@ -818,57 +826,91 @@ def test_ingest_image_ocr_api_creates_one_screenshot_source_in_order() -> None:
     app.dependency_overrides[get_db_session] = _db_override
     app.dependency_overrides[get_db_session_factory] = lambda: session_factory
     app.dependency_overrides[get_tool_registry] = _tool_registry_override
+    app.dependency_overrides[get_embedding_client] = lambda: _FakeEmbeddingClient()
 
     try:
         client = TestClient(app)
         response = client.post(
             "/api/ingest/image-ocr",
             files=[
-                ("images", ("slide-1.png", b"fake-image-1", "image/png")),
-                ("images", ("slide-2.png", b"fake-image-2", "image/png")),
-                ("images", ("slide-3.png", b"fake-image-3", "image/png")),
+                ("images", ("slide-1.png", _build_png_bytes(), "image/png")),
+                (
+                    "images",
+                    ("slide-2.png", _build_png_bytes(color="lightblue"), "image/png"),
+                ),
+                (
+                    "images",
+                    ("slide-3.png", _build_png_bytes(color="lightgreen"), "image/png"),
+                ),
             ],
         )
         assert response.status_code == 200
         payload = response.json()
-        expected_raw_text = "\n".join(
-            [
-                "OCR[1] slide-1.png",
-                "OCR[2] slide-2.png",
-                "OCR[3] slide-3.png",
-            ]
-        )
         assert payload["status"] == "succeeded"
-        assert payload["source_type"] == "screenshot"
-        assert payload["source_display_name"] == "Screenshot batch (3 images)"
-        assert payload["content_hash"] == hashlib.sha256(
-            expected_raw_text.encode("utf-8")
-        ).hexdigest()
+        assert payload["source_type"] == "image"
+        assert payload["source_document_id"] is not None
+        assert payload["source_display_name"] == "Screenshots · OCR[1] slide-1.png"
+        assert payload["index_status"] == "indexed"
+        assert payload["indexed_chunk_count"] == 3
+        assert payload["embedded_chunk_count"] == 3
+        assert len(payload["workflow_run_ids"]) == 1
+        assert [item["status"] for item in payload["image_results"]] == [
+            "succeeded",
+            "succeeded",
+            "succeeded",
+        ]
+        assert [item["original_filename"] for item in payload["image_results"]] == [
+            "slide-1.png",
+            "slide-2.png",
+            "slide-3.png",
+        ]
+        assert [item["sequence_index"] for item in payload["image_results"]] == [1, 2, 3]
+        assert [item["source_document_id"] for item in payload["image_results"]] == [
+            payload["source_document_id"]
+        ] * 3
 
         session: Session = session_factory()
         try:
-            source_document = session.get(SourceDocument, payload["source_document_id"])
-            assert source_document is not None
-            assert source_document.source_type == "screenshot"
-            assert source_document.source_display_name == "Screenshot batch (3 images)"
-            assert source_document.raw_text == expected_raw_text
+            sources = session.query(SourceDocument).order_by(SourceDocument.id).all()
+            assert len(sources) == 1
+            assert sources[0].original_filename is None
+            assert sources[0].source_display_name == "Screenshots · OCR[1] slide-1.png"
+            metadata = json.loads(sources[0].source_metadata or "{}")
+            assert [item["sequence_index"] for item in metadata["images"]] == [1, 2, 3]
+            assert [item["original_filename"] for item in metadata["images"]] == [
+                "slide-1.png",
+                "slide-2.png",
+                "slide-3.png",
+            ]
+            assert session.query(KnowledgeChunk).count() == 3
+            assert [
+                chunk.locator
+                for chunk in session.query(KnowledgeChunk)
+                .order_by(KnowledgeChunk.chunk_index)
+                .all()
+            ] == [
+                "Image 1 · chunk 1",
+                "Image 2 · chunk 1",
+                "Image 3 · chunk 1",
+            ]
 
-            workflow_run = session.get(WorkflowRun, payload["workflow_run_id"])
-            assert workflow_run is not None
-            assert workflow_run.workflow_type == "ingestion"
-            assert workflow_run.status == "succeeded"
-            assert workflow_run.failure_reason is None
-            workflow_metadata = json.loads(workflow_run.metadata_json or "{}")
-            for latency_key in (
-                "download_ms",
-                "ocr_ms",
-                "llm_ms",
-                "persist_ms",
-                "preview_delivery_ms",
-                "total_business_ms",
-            ):
-                assert latency_key in workflow_metadata
-                assert workflow_metadata[latency_key] >= 0
+            for workflow_run_id in payload["workflow_run_ids"]:
+                workflow_run = session.get(WorkflowRun, workflow_run_id)
+                assert workflow_run is not None
+                assert workflow_run.workflow_type == "ingestion"
+                assert workflow_run.status == "succeeded"
+                assert workflow_run.failure_reason is None
+                workflow_metadata = json.loads(workflow_run.metadata_json or "{}")
+                for latency_key in (
+                    "download_ms",
+                    "ocr_ms",
+                    "llm_ms",
+                    "persist_ms",
+                    "preview_delivery_ms",
+                    "total_business_ms",
+                ):
+                    assert latency_key in workflow_metadata
+                    assert workflow_metadata[latency_key] >= 0
 
             # Step 24 must not perform Notion writes.
             assert session.query(NotionPage).count() == 0
@@ -896,13 +938,17 @@ def test_ingest_image_ocr_preserves_mixed_script_cjk_through_snapshot() -> None:
     app.dependency_overrides[get_db_session] = _db_override
     app.dependency_overrides[get_db_session_factory] = lambda: session_factory
     app.dependency_overrides[get_tool_registry] = _tool_registry_override
+    app.dependency_overrides[get_embedding_client] = lambda: _FakeEmbeddingClient()
 
     try:
         response = TestClient(app).post(
             "/api/ingest/image-ocr",
             files=[
-                ("images", ("first.png", b"fake-image-1", "image/png")),
-                ("images", ("second.png", b"fake-image-2", "image/png")),
+                ("images", ("first.png", _build_png_bytes(), "image/png")),
+                (
+                    "images",
+                    ("second.png", _build_png_bytes(color="lightblue"), "image/png"),
+                ),
             ],
         )
         assert response.status_code == 200
@@ -910,10 +956,7 @@ def test_ingest_image_ocr_preserves_mixed_script_cjk_through_snapshot() -> None:
 
         session: Session = session_factory()
         try:
-            source_document = session.get(
-                SourceDocument,
-                payload["source_document_id"],
-            )
+            source_document = session.get(SourceDocument, payload["source_document_id"])
             assert source_document is not None
             persisted_text = source_document.raw_text
             snapshot = build_screenshot_source_snapshot(persisted_text)
@@ -966,9 +1009,9 @@ def test_ingest_image_ocr_api_returns_ocr_failed() -> None:
         response = client.post(
             "/api/ingest/image-ocr",
             files=[
-                ("images", ("slide-1.png", b"fake-image-1", "image/png")),
-                ("images", ("slide-2.png", b"fake-image-2", "image/png")),
-                ("images", ("slide-3.png", b"fake-image-3", "image/png")),
+                ("images", ("slide-1.png", _build_png_bytes(), "image/png")),
+                ("images", ("slide-2.png", _build_png_bytes(), "image/png")),
+                ("images", ("slide-3.png", _build_png_bytes(), "image/png")),
             ],
         )
         assert response.status_code == 422

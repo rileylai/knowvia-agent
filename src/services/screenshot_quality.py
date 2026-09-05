@@ -909,7 +909,7 @@ def preprocess_screenshot_ocr_text(raw_text: str) -> str:
     # Keep source ordering and line boundaries, but repair OCR spaces inside
     # CJK words before the generic grounding validator sees the source.
     return re.sub(
-        r"(?<=[\u3400-\u4dbf\u4e00-\u9fff])\s+(?=[\u3400-\u4dbf\u4e00-\u9fff])",
+        r"(?<=[\u3400-\u4dbf\u4e00-\u9fff])[ \t]+(?=[\u3400-\u4dbf\u4e00-\u9fff])",
         "",
         cleaned_text,
     )

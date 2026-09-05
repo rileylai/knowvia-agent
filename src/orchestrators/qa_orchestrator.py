@@ -68,6 +68,9 @@ class QACitationResult:
     source_display_name: Optional[str] = None
     locator: Optional[str] = None
     source_url: Optional[str] = None
+    image_index: Optional[int] = None
+    sequence_index: Optional[int] = None
+    original_filename: Optional[str] = None
 
 
 @dataclass
@@ -558,6 +561,7 @@ class QAOrchestrator:
             locator = (
                 chunk.locator or legacy_path or f"chunk {chunk.chunk_index + 1}"
             ).strip()
+            citation_metadata = self._parse_citation_metadata(chunk.citation_metadata)
             citation_key = (source_kind, source_display_name, locator)
             if not source_display_name or not locator or citation_key in seen_citations:
                 continue
@@ -571,9 +575,34 @@ class QAOrchestrator:
                     source_display_name=source_display_name,
                     locator=locator,
                     source_url=chunk.source_url,
+                    image_index=self._optional_int(citation_metadata.get("image_index")),
+                    sequence_index=self._optional_int(
+                        citation_metadata.get("sequence_index")
+                    ),
+                    original_filename=self._optional_string(
+                        citation_metadata.get("original_filename")
+                    ),
                 )
             )
         return citations
+
+    @staticmethod
+    def _parse_citation_metadata(value: Optional[str]) -> dict:
+        if not value:
+            return {}
+        try:
+            parsed = json.loads(value)
+        except (TypeError, ValueError):
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+
+    @staticmethod
+    def _optional_int(value: object) -> Optional[int]:
+        return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+    @staticmethod
+    def _optional_string(value: object) -> Optional[str]:
+        return value.strip() if isinstance(value, str) and value.strip() else None
 
     def _build_workflow_metadata(
         self,

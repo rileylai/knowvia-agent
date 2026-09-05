@@ -115,6 +115,7 @@ def inspect_image_dimensions(file_bytes: bytes, *, file_name: str) -> Tuple[int,
 
         with Image.open(BytesIO(file_bytes)) as image:
             width, height = image.size
+            image.verify()
     except UploadValidationError:
         raise
     except Exception as exc:

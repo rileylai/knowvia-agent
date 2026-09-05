@@ -115,9 +115,6 @@ class TesseractImageOCRParserClient(ImageOCRParserClient):
             )
 
         raw_text = "\n\n".join(extracted_sections).strip()
-        if not raw_text:
-            raise ImageOCRParserClientError("No extractable text found in images")
-
         return ParsedImageOCR(raw_text=raw_text, image_count=len(images))
 
 
@@ -230,15 +227,11 @@ class ImageOCRTool(Tool):
             return ToolResult.failure(code=exc.error_code, message=str(exc))
 
         normalized_raw_text = parsed.raw_text.strip()
-        if not normalized_raw_text:
-            return ToolResult.failure(
-                code="OCR_FAILED",
-                message="No extractable text found in images",
-            )
-        try:
-            validate_extracted_text(normalized_raw_text)
-        except UploadValidationError as exc:
-            return ToolResult.failure(code=exc.error_code, message=exc.message)
+        if normalized_raw_text:
+            try:
+                validate_extracted_text(normalized_raw_text)
+            except UploadValidationError as exc:
+                return ToolResult.failure(code=exc.error_code, message=exc.message)
 
         return ToolResult.success(
             content=(

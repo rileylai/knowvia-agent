@@ -6,6 +6,9 @@ export type QACitation = {
   source_display_name?: string | null;
   locator?: string | null;
   source_url?: string | null;
+  image_index?: number | null;
+  sequence_index?: number | null;
+  original_filename?: string | null;
 };
 
 export type QAResponse = {
@@ -33,11 +36,50 @@ export type PDFIndexResponse = {
   final_url?: string | null;
 };
 
+export type ImageIndexItem = {
+  sequence_index: number;
+  file_name: string;
+  original_filename: string;
+  workflow_run_id?: number | null;
+  status: string;
+  source_document_id?: number | null;
+  source_type: string;
+  source_display_name?: string | null;
+  content_hash?: string | null;
+  file_hash?: string | null;
+  width?: number | null;
+  height?: number | null;
+  index_status?: string | null;
+  indexed_chunk_count: number;
+  embedded_chunk_count: number;
+  error_code?: string | null;
+  message?: string | null;
+  failure_reason?: string | null;
+};
+
+export type ImageIndexResponse = {
+  workflow_run_id?: number | null;
+  workflow_run_ids: number[];
+  status: string;
+  source_document_id?: number | null;
+  source_type: string;
+  source_display_name: string;
+  source_preview?: string | null;
+  image_count: number;
+  content_hash?: string | null;
+  index_status?: string | null;
+  indexed_chunk_count: number;
+  embedded_chunk_count: number;
+  image_results: ImageIndexItem[];
+};
 export type URLIndexResponse = PDFIndexResponse;
 
 export type KnowledgeSource = {
   id: number;
   display_name: string;
+  original_filename?: string | null;
+  source_preview?: string | null;
+  image_count?: number | null;
   source_kind: string;
   status: string;
   chunk_count: number;
@@ -132,6 +174,43 @@ export async function indexPDF(
   }
 
   return payload as PDFIndexResponse;
+}
+
+export async function indexImage(
+  files: File[],
+  request: typeof fetch = fetch,
+): Promise<ImageIndexResponse> {
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append("images", file, file.name);
+  }
+
+  let response: Response;
+  try {
+    response = await request("/api/ingest/image-ocr", {
+      method: "POST",
+      body: formData,
+    });
+  } catch {
+    throw new Error("Unable to reach the Knowvia backend.");
+  }
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error(
+      response.ok
+        ? "Knowvia returned an unreadable response."
+        : `Knowvia returned an error (${response.status}).`,
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(errorMessage(payload, response.status));
+  }
+
+  return payload as ImageIndexResponse;
 }
 
 export async function indexURL(

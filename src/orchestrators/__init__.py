@@ -13,7 +13,9 @@ from src.orchestrators.document_ingestion_orchestrator import (
     DocumentIngestionResult,
 )
 from src.orchestrators.image_ocr_ingestion_orchestrator import (
+    ImageOCRBatchIngestionResult,
     ImageOCRIngestionError,
+    ImageOCRIngestionItemResult,
     ImageOCRIngestionOrchestrator,
     ImageOCRIngestionResult,
     ImageUploadInput,
@@ -185,6 +187,8 @@ __all__ = [
     "DocumentIngestionOrchestrator",
     "DocumentIngestionResult",
     "ImageOCRIngestionError",
+    "ImageOCRBatchIngestionResult",
+    "ImageOCRIngestionItemResult",
     "ImageOCRIngestionOrchestrator",
     "ImageOCRIngestionResult",
     "ImageUploadInput",

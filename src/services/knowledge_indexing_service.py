@@ -67,6 +67,8 @@ class KnowledgeIndexingService:
         raw_text: str,
         request_workflow_id: str,
         pages: Optional[List[str]] = None,
+        page_labels: Optional[List[str]] = None,
+        page_citation_metadata: Optional[List[Mapping[str, object]]] = None,
         citation_metadata: Optional[Mapping[str, object]] = None,
         owner_scope: str = "local",
         empty_chunks_error_code: str = "SOURCE_DOCUMENT_INDEXING_FAILED",
@@ -76,6 +78,7 @@ class KnowledgeIndexingService:
             source_kind=source_kind,
             source_display_name=source_display_name,
             pages=pages,
+            page_labels=page_labels,
         )
         if not chunk_drafts:
             raise KnowledgeIndexingError(
@@ -122,6 +125,9 @@ class KnowledgeIndexingService:
             )
 
         base_citation_metadata = dict(citation_metadata or {})
+        page_metadata = list(page_citation_metadata or [])
+        if page_metadata and len(page_metadata) != len(pages or []):
+            raise ValueError("page_citation_metadata must match pages length")
         indexed_chunks = [
             KnowledgeChunkUpsert(
                 source_document_id=source_document_id,
@@ -135,6 +141,11 @@ class KnowledgeIndexingService:
                 embedding_dimensions=embedding_result.dimensions,
                 citation_metadata={
                     **draft.citation_meta,
+                    **(
+                        page_metadata[draft.page_number - 1]
+                        if draft.page_number is not None and page_metadata
+                        else {}
+                    ),
                     **base_citation_metadata,
                 },
                 owner_scope=owner_scope,

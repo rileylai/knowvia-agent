@@ -212,6 +212,7 @@ class DocumentIngestionOrchestrator:
                 source_document = unit_of_work.source_documents.create_source_document(
                     source_type="pdf",
                     source_display_name=normalized_file_name,
+                    original_filename=normalized_file_name,
                     raw_text=raw_text,
                     content_hash=content_hash,
                     file_hash=file_hash,

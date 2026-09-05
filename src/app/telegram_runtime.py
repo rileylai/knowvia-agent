@@ -94,6 +94,9 @@ def build_telegram_gateway_orchestrator(
             tool_registry=tool_registry,
             unit_of_work_factory=unit_of_work_factory,
             workflow_run_service=workflow_run_service,
+            index_knowledge=False,
+            source_type="screenshot",
+            validate_decoded_images=False,
         ),
         supplement_propose_orchestrator=SupplementProposeOrchestrator(
             provider_router=provider_router,

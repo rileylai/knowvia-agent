@@ -21,15 +21,23 @@ Source
 
 所有 source adapter 都必須在 expensive parse 前檢查大小、格式、redirect、
 pixel、page count 或其他 source-specific limits。Parser 失敗時不得寫入不完整
-的可檢索 snapshot。
+的可檢索 snapshot。Grouped image OCR 在 normalization 後若完全沒有 usable text，
+會以現有 `OCR_FAILED` structured failure fail closed，不建立 indexed source 或
+eligible chunk。
 
 ### Current
 
-PDF 與 URL 已走完整的 synchronous generic pipeline：validate、parse、normalize、
+PDF、URL 與 Image/OCR 已走完整的 synchronous generic pipeline：validate、parse、normalize、
 保存 `SourceDocument`、deterministic chunk、existing embedding provider abstraction、
 `KnowledgeChunk` 與 production eligibility。URL 會在每次 redirect 後重新驗證，並
-以 final URL 與內容 hash 做 indexed snapshot dedup。Image/OCR、YouTube 與 chat text
-仍只 parse/normalize 並保存 `SourceDocument`，尚未進入 QA retrieval。
+以 final URL 與內容 hash 做 indexed snapshot dedup。Image/OCR 會在 OCR 前驗證 decoded
+image、以 raw bytes SHA-256 做 exact duplicate guard，並沿用同一套 generic retrieval；
+multipart 的多張 image 會先依 frontend 確認的順序固定 `sequence_index`，再以一個
+grouped `SourceDocument` 保存 ordered image parts，透過既有 generic indexing service
+產生多個 page-labeled `KnowledgeChunk`，API 回傳 aggregate 與 per-image result；不提供
+screenshot region/line provenance。Grouped exact duplicate 使用 ordered image hashes，
+filename 只作 provenance。YouTube 與 chat text 仍只 parse/normalize 並
+保存 `SourceDocument`，尚未進入 QA retrieval。
 
 Notion page index 已能讀取 page tree、建立 deterministic paths、chunk、embed，
 並寫入 Notion-derived `KnowledgeChunk`。
@@ -90,7 +98,7 @@ Backend 在每一步檢查 timeout、argument、permission、context budget 與 
 ### Current
 
 目前已有 synchronous `/api/qa`，使用共用 retriever、source eligibility filter 與
-Provider Router；Notion、已完整 indexed 的 PDF 與 URL 都可成為 evidence。
+Provider Router；Notion、已完整 indexed 的 PDF、Image 與 URL 都可成為 evidence。
 Conversation session、bounded Agent loop 與 SSE 尚未實作。
 
 ## Memory search

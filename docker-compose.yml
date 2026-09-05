@@ -22,7 +22,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: learnloop-redis
+    container_name: knowvia-redis
     restart: unless-stopped
     ports:
       - "${REDIS_PORT:-6379}:6379"

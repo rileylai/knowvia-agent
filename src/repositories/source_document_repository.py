@@ -11,9 +11,12 @@ from src.db.models import KnowledgeChunk, SourceDocument
 
 
 @dataclass(frozen=True)
-class IndexedPDFSourceSummary:
+class IndexedSourceSummary:
     id: int
     display_name: str
+    original_filename: Optional[str]
+    source_preview: Optional[str]
+    image_count: Optional[int]
     source_kind: str
     status: str
     chunk_count: int
@@ -21,6 +24,10 @@ class IndexedPDFSourceSummary:
     content_hash: str
     file_hash: Optional[str]
     source_url: Optional[str] = None
+
+
+# Backward-compatible name for callers written during the PDF-only inventory slice.
+IndexedPDFSourceSummary = IndexedSourceSummary
 
 
 class SourceDocumentRepository:
@@ -40,6 +47,10 @@ class SourceDocumentRepository:
         *,
         source_type: str,
         source_display_name: str,
+        original_filename: Optional[str] = None,
+        source_preview: Optional[str] = None,
+        source_metadata: Optional[str] = None,
+        image_count: Optional[int] = None,
         raw_text: str,
         content_hash: str,
         file_hash: Optional[str] = None,
@@ -51,6 +62,10 @@ class SourceDocumentRepository:
         source_document = SourceDocument(
             source_type=source_type,
             source_display_name=source_display_name,
+            original_filename=original_filename,
+            source_preview=source_preview,
+            source_metadata=source_metadata,
+            image_count=image_count,
             raw_text=raw_text,
             content_hash=content_hash,
             file_hash=file_hash,
@@ -74,7 +89,7 @@ class SourceDocumentRepository:
         final_url: str,
         content_hash: str,
         owner_scope: str = "local",
-    ) -> Optional[IndexedPDFSourceSummary]:
+    ) -> Optional[IndexedSourceSummary]:
         row = self._indexed_source_query(source_types=["url"], owner_scope=owner_scope).filter(
             SourceDocument.final_url == final_url,
             SourceDocument.content_hash == content_hash,
@@ -89,7 +104,7 @@ class SourceDocumentRepository:
         *,
         file_hash: str,
         owner_scope: str = "local",
-    ) -> Optional[IndexedPDFSourceSummary]:
+    ) -> Optional[IndexedSourceSummary]:
         row = self._indexed_source_query(
             source_types=["pdf"],
             owner_scope=owner_scope,
@@ -98,11 +113,23 @@ class SourceDocumentRepository:
         ).first()
         return self._to_summary(row) if row is not None else None
 
+    def find_indexed_image_source_by_file_hash(
+        self,
+        *,
+        file_hash: str,
+        owner_scope: str = "local",
+    ) -> Optional[IndexedSourceSummary]:
+        row = self._indexed_source_query(
+            source_types=["image"],
+            owner_scope=owner_scope,
+        ).filter(SourceDocument.file_hash == file_hash).first()
+        return self._to_summary(row) if row is not None else None
+
     def list_indexed_pdf_sources(
         self,
         *,
         owner_scope: str = "local",
-    ) -> list[IndexedPDFSourceSummary]:
+    ) -> list[IndexedSourceSummary]:
         return self.list_indexed_sources(
             owner_scope=owner_scope,
             source_types=["pdf"],
@@ -113,7 +140,7 @@ class SourceDocumentRepository:
         *,
         owner_scope: str = "local",
         source_types: Optional[list[str]] = None,
-    ) -> list[IndexedPDFSourceSummary]:
+    ) -> list[IndexedSourceSummary]:
         return [
             self._to_summary(row)
             for row in self._indexed_source_query(
@@ -134,7 +161,7 @@ class SourceDocumentRepository:
                 func.count(KnowledgeChunk.id).label("chunk_count"),
             )
             .filter(
-                KnowledgeChunk.source_kind.in_(["pdf", "url"]),
+                KnowledgeChunk.source_kind.in_(["pdf", "url", "image"]),
                 KnowledgeChunk.eligibility_status == "eligible",
                 KnowledgeChunk.owner_scope == owner_scope,
             )
@@ -144,6 +171,9 @@ class SourceDocumentRepository:
         query = self._session.query(
             SourceDocument.id.label("id"),
             SourceDocument.source_display_name.label("display_name"),
+            SourceDocument.original_filename.label("original_filename"),
+            SourceDocument.source_preview.label("source_preview"),
+            SourceDocument.image_count.label("image_count"),
             SourceDocument.source_type.label("source_kind"),
             SourceDocument.status.label("status"),
             func.coalesce(eligible_chunk_counts.c.chunk_count, 0).label(
@@ -167,10 +197,13 @@ class SourceDocumentRepository:
             query = query.filter(SourceDocument.source_type.in_(source_types))
         return query.order_by(SourceDocument.updated_at.desc(), SourceDocument.id.desc())
 
-    def _to_summary(self, row) -> IndexedPDFSourceSummary:
-        return IndexedPDFSourceSummary(
+    def _to_summary(self, row) -> IndexedSourceSummary:
+        return IndexedSourceSummary(
             id=int(row.id),
             display_name=str(row.display_name),
+            original_filename=row.original_filename,
+            source_preview=row.source_preview,
+            image_count=row.image_count,
             source_kind=str(row.source_kind),
             status=str(row.status),
             chunk_count=int(row.chunk_count or 0),

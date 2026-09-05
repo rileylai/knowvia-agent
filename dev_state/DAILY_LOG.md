@@ -474,3 +474,98 @@ insufficient-info、invalid upload error，以及 `Add URL` disabled。
 
 - `2.0`、`2.1` 與 `2.1.3` 已完成 browser manual acceptance，狀態更新為 `done`。
 - 不開始 `2.2 URL Knowledge Pipeline`。
+
+## 2026-09-05 Screenshot / Image Knowledge Pipeline
+
+### Scope
+
+- 實作 `2.3 Screenshot / Image Knowledge Pipeline`，只加入 image 到既有 generic
+  Knowledge path；不建立 image-specific chunk、vector table、retriever 或第二套 RAG。
+- OCR 使用既有 Pillow/Tesseract adapter；default automated tests 使用 fake OCR 與 fake
+  embedding，不依賴 machine Tesseract 或 private image content。
+
+### Implementation
+
+- Image flow 現在同步執行 validate → decoded image inspection → OCR → normalize →
+  `SourceDocument` → generic chunk → embedding → `KnowledgeChunk` → retrieval eligibility。
+- Image source 使用 `source_type=image`、`owner_scope=local`；exact duplicate authority
+  是同 owner、indexed image、raw upload bytes SHA-256 `file_hash`。命中時回傳
+  `already_indexed`，跳過 OCR、chunk、embedding 與新 records。
+- Image inventory 沿用 `GET /api/knowledge/sources`；image citation 只使用 backend-owned
+  filename、dimensions 與 deterministic `chunk N`，不虛構 region、line 或座標。
+- Knowledge UI 已加入 image upload、processing、success、duplicate、error、inventory
+  refresh 與 image citation metadata rendering；Telegram legacy screenshot path 維持
+  parse-only，不接回 active indexing path。
+
+### Automated Evidence
+
+- TDD image pipeline、OCR、upload validation 與 image API tests：`36 passed`。
+- Frontend tests：`28 passed`；frontend production build：PASS。
+- Backend full suite：`660 passed, 5 skipped`。
+
+### Manual Verification
+
+Frontend manual verification 已完成。確認 multi-image selection、natural ordering、sequence
+number、upload 前 reorder、processing state、grouped logical source、single inventory row、
+image count、chunk count、title、bounded preview，以及 backend image provenance citation。
+同時確認 existing single-image、PDF、URL behavior 沒有因 image flow 改變；empty OCR 會
+fail closed，不建立 indexed zero-chunk source，並顯示 frontend no-text error。
+
+### Known Limitations
+
+- OCR 品質依賴 local Tesseract runtime、`eng+chi_tra+chi_sim` language data 與圖片品質；
+  本輪沒有使用 private screenshot 做 live browser verification。
+- Image citation 沒有可靠的 OCR region/line provenance，因此只回傳 filename、dimensions
+  與 deterministic chunk locator。
+
+### Next
+
+- `2.3`、`2.3.1` 與 `2.3.2` 已完成 frontend manual verification，狀態更新為 `done`。
+- `2.4 YouTube Knowledge Pipeline` 維持 `planned`，本輪不開始。
+
+## 2026-09-05 Screenshot / Image Knowledge Follow-up
+
+### Scope
+
+- 依 stable hierarchical roadmap append `2.3.1 Multi-image Grouped Source UX` 與 `2.3.2 Screenshot Display Name + Preview`。
+- `2.3` parent 與 verification follow-ups 已完成；本輪不開始 `2.4`。
+
+### Implementation
+
+- 確認既有 `POST /api/ingest/image-ocr` 已接受 repeated `images` fields 與既有 max 10 images / 20 MiB limits；active indexed path 現在將一次 upload batch 建立為一個 grouped `SourceDocument`，沒有新增 batch ingestion architecture。
+- Frontend file picker 支援 `multiple`，先以 natural filename ordering 排列並顯示 `01` 起的 sequence，提供最小 Move Up / Move Down；確認後以既有 `images` multipart field 送出，loading 時 disabled 並阻止 duplicate submit。
+- Backend 在 OCR/indexing 前固定 ordered `sequence_index`，以 ordered per-image raw-byte hashes 的 deterministic canonical encoding 建立 batch `file_hash`；同順序相同 bytes 回傳 `already_indexed`，不同順序視為不同 source。Source metadata 保存 sequence、filename、per-image hash 與 dimensions，所有 chunks 仍走既有 `KnowledgeIndexingService`。
+- Batch response 回傳一個 source 與 aggregate summary，同時保留每張 image 的 indexed、already indexed 或 error state；成功後 refresh generic source inventory，因此 top-level inventory 只顯示一筆 source。
+- `source_display_name` 使用 deterministic bounded title：ordered image 1 優先 heading-like OCR line，其次第一個 meaningful sentence；有 usable OCR content 但沒有合理 title 時才 fallback bounded filename stem。完全沒有 usable text 時以現有 `OCR_FAILED` fail closed。單張 prefix 為 `Screenshot ·`，多張為 `Screenshots ·`；`source_preview` 只作 inventory UI display。
+- Citation metadata 保留 `image_index`、`sequence_index`、`original_filename`、file hash 與 dimensions，locator 由 backend 形成 `Image N · chunk M`；沒有 embedding 或額外 LLM title-generation call。
+
+### Automated Evidence
+
+- Focused backend image/OCR/API/QA regression：`43 passed`。
+- Frontend App suite：`30 passed`；frontend production build：PASS。
+- Backend full suite：`667 passed, 5 skipped`；working tree 的 existing compose identity context 本輪未修改 `docker-compose.yml`。
+
+### Manual Verification
+
+Frontend manual verification 已完成並判定 PASS：
+
+- multi-image selection、deterministic ordering、sequence number 與 upload 前 reorder。
+- visible processing state、grouped logical source，以及 Indexed Sources 只有一筆 inventory row。
+- inventory 的 image count、chunk count、bounded title 與 OCR preview。
+- per-image provenance 保留供 backend citation 使用；original filename 不作 top-level display-name authority。
+- empty OCR fail closed，不建立 indexed zero-chunk source，且 frontend 顯示 visible no-text error。
+- existing single-image、PDF、URL behavior 維持原有使用方式。
+
+### Known Limitations
+
+- Display name、preview 與 image locator 都是 deterministic backend metadata，不使用 embedding 或 LLM title service；preview 不會成為 retrieval evidence。
+- Empty OCR 會以現有 `OCR_FAILED` structured failure fail closed；不建立 indexed source，
+  不產生 eligible chunk，frontend 顯示可見的 no-text error。Filename fallback 僅適用於
+  有 usable OCR content 但沒有合理 display title 的情況。
+- OCR-derived title 偶爾會保留少量 OCR noise，屬目前可接受的 OCR limitation，不阻塞 `2.3`。
+- Grouped batch indexing 以 source-level OCR/index transaction 完成；若 OCR 或 generic indexing 失敗，整個 source 失敗，不將不完整 parts 宣稱為成功。
+
+### Next
+
+- `2.3.1` 與 `2.3.2` 已完成 frontend manual verification，狀態為 `done`。
+- `2.3` parent 狀態為 `done`；`2.4` 維持 `planned`，不開始 runtime implementation。

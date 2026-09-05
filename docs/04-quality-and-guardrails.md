@@ -114,9 +114,10 @@ Retriever 在排序前套用：
 - chunk completeness 與 index status。
 - production eligibility。
 
-對 PDF 與 URL 而言，`SourceDocument.status` 必須是 `indexed`，且所有 derived chunks
-必須在完整 embedding persistence 後才標記為 `eligible`。Indexing failure 的
-snapshot 保持不可檢索。
+對 PDF、URL 與 Image 而言，`SourceDocument.status` 必須是 `indexed`，且所有 derived
+chunks 必須在完整 embedding persistence 後才標記為 `eligible`。Indexing failure 的
+snapshot 保持不可檢索。Image 另須通過 MIME、byte size、batch、pixel、decoder 與
+non-empty OCR validation；OCR failure 不建立可檢索 snapshot。
 
 URL ingestion 只接受 HTTP/HTTPS 的 HTML、XHTML 或 plain text。Backend 會限制 URL
 長度、redirect 次數、response 大小與 fetch timeout，並在每次 redirect 後重新檢查

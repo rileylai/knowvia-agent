@@ -23,7 +23,7 @@ class QARequest(BaseModel):
     )
     source_kinds: Optional[List[str]] = Field(
         default=None,
-        description="Optional source kind filter. Supported production kinds are notion, pdf, and url.",
+        description="Optional source kind filter. Supported production kinds are notion, pdf, image, and url.",
     )
     provider_name: str = Field(
         default="openai",
@@ -45,6 +45,9 @@ class QACitation(BaseModel):
     source_display_name: Optional[str] = None
     locator: Optional[str] = None
     source_url: Optional[str] = None
+    image_index: Optional[int] = None
+    sequence_index: Optional[int] = None
+    original_filename: Optional[str] = None
 
 
 class QAResponse(BaseModel):

@@ -51,22 +51,41 @@ id
 knowledge_source_id
 source_type
 source_display_name
+original_filename: optional source provenance for a single uploaded file
+source_preview: optional bounded human-facing OCR preview
+source_metadata: optional bounded structured metadata for grouped image parts
+image_count: optional grouped image count
 raw_text_or_normalized_text
 content_hash
+file_hash: optional raw upload bytes identity for exact duplicate checks
 requested_url: optional
 final_url: optional
 parser_name
 parser_version
-source_metadata
 created_at
 updated_at
 ```
 
-目前 repository 的 PDF 與 URL ingestion 會先建立 `SourceDocument`，再以它作為 snapshot
-boundary 產生 generic `KnowledgeChunk`。`owner_scope` 與 `status` 由 backend 維護；
-本輪 local PDF 與 URL 使用 `owner_scope=local`，完整 indexing 才會進入 `indexed`
-狀態。URL snapshot 另外保存 `requested_url` 與 redirect 後的 `final_url`，用於
-dedup、inventory 與 citation provenance。
+目前 repository 的 PDF、URL 與 Image/OCR ingestion 會先建立 `SourceDocument`，再以它
+作為 snapshot boundary 產生 generic `KnowledgeChunk`。Grouped screenshot batch 仍只有
+一個 `SourceDocument`；ordered image parts 以 bounded `source_metadata` 保存
+`sequence_index`、`original_filename`、raw-byte `file_hash` 與 dimensions，並各自對應
+到 generic chunk page。`owner_scope` 與 `status` 由 backend 維護；local source 完整
+indexing 才會進入 `indexed` 狀態。PDF 與 single image 的 `file_hash` 使用 raw upload
+bytes 的 SHA-256；grouped image 使用 ordered per-image hashes 的 deterministic canonical
+encoding，再做 SHA-256，作為 exact duplicate identity。URL snapshot 另外保存
+`requested_url` 與 redirect 後的 `final_url`，用於 dedup、inventory 與 citation provenance。
+
+Image 的 `source_display_name` 是 backend deterministic derived label。單張使用
+`Screenshot · {title}`，多張使用 `Screenshots · {title}`；title 優先取 ordered image 1
+的 heading-like OCR line，其次取第一個 meaningful sentence，套用集中管理的 bounded
+length。已有 usable OCR content 但沒有合理 title 時，才 fallback 到 bounded filename
+stem；完全沒有 usable text 時 ingestion 以 `OCR_FAILED` fail closed，不建立 indexed
+source 或 eligible chunk。`source_preview` 只供 inventory UI 顯示，不參與 source
+identity、dedup、retrieval eligibility 或 citation authority。`original_filename` 與
+raw-byte file hashes 都保留在 source metadata／chunk citation metadata；前者只代表
+provenance，ordered hash 才是 grouped exact duplicate authority；display name 不參與
+identity。
 
 ## `KnowledgeChunk`
 
@@ -94,12 +113,12 @@ updated_at
 `provenance` 至少要能回到 source document、外部 page 或 block、section 與
 定位資訊。`eligibility_status` 由 backend 計算，不接受 LLM 指示。
 
-目前 code 的 `knowledge_chunks` 同時保留 Notion block/page 連結與 PDF
+目前 code 的 `knowledge_chunks` 同時保留 Notion block/page 連結與 PDF、image、URL 的
 `source_document_id`，並共用向量、embedding identity、provenance、owner scope 與
-eligibility 欄位。Repository 允許 `notion`、`pdf` 與 `url`；PDF 與 URL 只有在其
-`SourceDocument.status=indexed` 且 chunk eligibility 為 `eligible` 時可被 retrieval
-使用。`KnowledgeSource` table 仍是 conceptual entity，本輪沒有為它建立大型新
-schema。
+eligibility 欄位。Repository 允許 `notion`、`pdf`、`image` 與 `url`；PDF、image 與 URL
+只有在其 `SourceDocument.status=indexed` 且 chunk eligibility 為 `eligible` 時可被
+retrieval 使用。`KnowledgeSource` table 仍是 conceptual entity，本輪沒有為它建立
+大型新 schema。
 
 ## `ConversationSession`
 
@@ -186,6 +205,8 @@ evidence，不能自行建立 citation。
 PDF citation 的 `locator` 使用 parser 實際提供的 `page N`；若沒有 page metadata，
 backend 使用 deterministic `chunk N`，不虛構頁碼。URL citation 由 chunk metadata
 帶出 validated 的 `final_url`，並保留 requested URL 供 provenance 查核。
+Image citation 只使用 backend 擁有的 filename、dimensions 與 deterministic `chunk N`；
+不虛構 OCR region、line 或 screenshot 座標。
 
 Memory 只能以 `Used saved memory` 等明確標記呈現，不能填入 enterprise document
 citation 欄位。

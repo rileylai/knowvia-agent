@@ -2,9 +2,11 @@ import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } fr
 
 import {
   askQuestion,
+  indexImage,
   indexPDF,
   indexURL,
   listKnowledgeSources,
+  type ImageIndexResponse,
   type KnowledgeSource,
   type PDFIndexResponse,
   type QAResponse,
@@ -13,7 +15,17 @@ import {
 type Surface = "knowledge" | "chat" | "memory";
 type RequestState = "idle" | "loading" | "success" | "error";
 type InventoryState = "loading" | "success" | "empty" | "error";
-type SourceType = "pdf" | "url";
+type SourceType = "pdf" | "image" | "url";
+
+const IMAGE_MIME_TYPES = new Set([
+  "image/bmp",
+  "image/gif",
+  "image/jpeg",
+  "image/png",
+  "image/tiff",
+  "image/webp",
+]);
+const IMAGE_FILE_EXTENSIONS = [".bmp", ".gif", ".jpeg", ".jpg", ".png", ".tif", ".tiff", ".webp"];
 
 const surfaces: Array<{ id: Surface; label: string; index: string }> = [
   { id: "knowledge", label: "Knowledge", index: "01" },
@@ -21,10 +33,26 @@ const surfaces: Array<{ id: Surface; label: string; index: string }> = [
   { id: "memory", label: "Memory", index: "03" },
 ];
 
+const fileNameCollator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+});
+
+function naturalOrderFiles(files: File[]): File[] {
+  return files
+    .map((file, index) => ({ file, index }))
+    .sort((left, right) => {
+      const comparison = fileNameCollator.compare(left.file.name, right.file.name);
+      return comparison || left.index - right.index;
+    })
+    .map(({ file }) => file);
+}
+
 function KnowledgeSurface() {
   const [requestState, setRequestState] = useState<RequestState>("idle");
-  const [indexResult, setIndexResult] = useState<PDFIndexResponse | null>(null);
+  const [indexResult, setIndexResult] = useState<PDFIndexResponse | ImageIndexResponse | null>(null);
   const [activeSourceType, setActiveSourceType] = useState<SourceType>("pdf");
+  const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sources, setSources] = useState<KnowledgeSource[]>([]);
@@ -54,28 +82,100 @@ function KnowledgeSurface() {
     void refreshInventory();
   }, []);
 
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file || isSubmitting.current) {
+  const submitImageFiles = async (files: File[]) => {
+    if (files.length === 0 || isSubmitting.current) {
       return;
     }
-
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      setIndexResult(null);
-      setError("Choose a PDF file.");
-      setRequestState("error");
-      return;
-    }
-
     isSubmitting.current = true;
-    setActiveSourceType("pdf");
+    setActiveSourceType("image");
+    setSelectedImageFiles(files);
     setRequestState("loading");
     setIndexResult(null);
     setError(null);
 
     try {
-      const result = await indexPDF(file);
+      const result = await indexImage(files);
+      setIndexResult(result);
+      setRequestState("success");
+      void refreshInventory();
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "An unexpected error occurred.",
+      );
+      setRequestState("error");
+    } finally {
+      isSubmitting.current = false;
+    }
+  };
+
+  const moveSelectedImage = (index: number, offset: -1 | 1) => {
+    setSelectedImageFiles((currentFiles) => {
+      const targetIndex = index + offset;
+      if (targetIndex < 0 || targetIndex >= currentFiles.length) {
+        return currentFiles;
+      }
+      const nextFiles = [...currentFiles];
+      [nextFiles[index], nextFiles[targetIndex]] = [nextFiles[targetIndex], nextFiles[index]];
+      return nextFiles;
+    });
+  };
+
+  const handleSelectedImageSubmit = async () => {
+    await submitImageFiles(selectedImageFiles);
+  };
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (files.length === 0 || isSubmitting.current) {
+      return;
+    }
+
+    const isPDF = files.length === 1 && (() => {
+      const file = files[0];
+      const normalizedFileName = file.name.toLowerCase();
+      return file.type === "application/pdf" || normalizedFileName.endsWith(".pdf");
+    })();
+    const areImages = files.every((file) => {
+      const normalizedFileName = file.name.toLowerCase();
+      return IMAGE_MIME_TYPES.has(file.type) || IMAGE_FILE_EXTENSIONS.some(
+        (extension) => normalizedFileName.endsWith(extension),
+      );
+    });
+    if (files.length > 1 && !areImages) {
+      setIndexResult(null);
+      setSelectedImageFiles([]);
+      setError("Select only image files when uploading multiple sources.");
+      setRequestState("error");
+      return;
+    }
+    if (!isPDF && !areImages) {
+      setIndexResult(null);
+      setSelectedImageFiles([]);
+      setError("Choose a PDF or image file.");
+      setRequestState("error");
+      return;
+    }
+
+    const sourceType: SourceType = areImages ? "image" : "pdf";
+    const orderedFiles = areImages ? naturalOrderFiles(files) : files;
+    setActiveSourceType(sourceType);
+    setSelectedImageFiles(sourceType === "image" ? orderedFiles : []);
+    setRequestState(sourceType === "image" && orderedFiles.length > 1 ? "idle" : "loading");
+    setIndexResult(null);
+    setError(null);
+
+    if (sourceType === "image" && orderedFiles.length > 1) {
+      return;
+    }
+
+    isSubmitting.current = true;
+    try {
+      const result = sourceType === "image"
+        ? await indexImage(orderedFiles)
+        : await indexPDF(orderedFiles[0]);
       setIndexResult(result);
       setRequestState("success");
       void refreshInventory();
@@ -100,6 +200,7 @@ function KnowledgeSurface() {
 
     isSubmitting.current = true;
     setActiveSourceType("url");
+    setSelectedImageFiles([]);
     setRequestState("loading");
     setIndexResult(null);
     setError(null);
@@ -122,32 +223,41 @@ function KnowledgeSurface() {
   };
 
   const isLoading = requestState === "loading";
+  const imageResults =
+    indexResult?.source_type === "image" && "image_results" in indexResult
+      ? indexResult.image_results
+      : [];
+  const isImageBatch = imageResults.length > 1;
 
   return (
     <section className="surface surface--quiet" aria-labelledby="knowledge-heading">
       <div className="section-kicker">Source desk / current capability</div>
       <h1 id="knowledge-heading">Knowledge</h1>
       <p className="surface-intro">
-        The current retrieval baseline is grounded in indexed PDF and URL knowledge.
+        The current retrieval baseline is grounded in indexed PDF, image, and URL knowledge.
       </p>
 
       <div className="capability-card">
         <div className="capability-status">
           <span className="status-light" aria-hidden="true" />
-          PDF knowledge baseline with URL ingestion
+          PDF and image knowledge baseline with URL ingestion
         </div>
         <p>
-          Upload a PDF or add a URL to validate, parse, chunk, embed, and make its
+          Upload a PDF or image, or add a URL, to validate, parse, chunk, embed, and make its
           evidence available to grounded Chat answers.
+        </p>
+        <p className="source-format-note">
+          Accepted files · PDF · PNG · JPG · WEBP · GIF · BMP · TIFF
         </p>
         <div className="source-controls" aria-label="Source ingestion controls">
           <input
             ref={fileInputRef}
-            id="pdf-file"
+            id="source-file"
             className="visually-hidden"
             type="file"
-            accept="application/pdf,.pdf"
-            aria-label="PDF file"
+            multiple
+            accept="application/pdf,.pdf,image/bmp,image/gif,image/jpeg,image/png,image/tiff,image/webp"
+            aria-label="PDF or image file"
             onChange={handleFileChange}
             disabled={isLoading}
           />
@@ -175,6 +285,52 @@ function KnowledgeSurface() {
         </div>
 
         <div className="source-result" aria-live="polite">
+          {selectedImageFiles.length > 0 && (
+            <div className="source-selection" aria-label="Selected image files">
+              <strong>
+                {selectedImageFiles.length} {selectedImageFiles.length === 1 ? "image" : "images"} selected
+              </strong>
+              <ol className="source-selection-list">
+                {selectedImageFiles.map((file, index) => (
+                  <li key={`${file.name}-${index}`}>
+                    <span className="source-selection-sequence">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <strong>{file.name}</strong>
+                    {selectedImageFiles.length > 1 && (
+                      <span className="source-selection-actions">
+                        <button
+                          type="button"
+                          aria-label={`Move ${file.name} up`}
+                          onClick={() => moveSelectedImage(index, -1)}
+                          disabled={isLoading || index === 0}
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`Move ${file.name} down`}
+                          onClick={() => moveSelectedImage(index, 1)}
+                          disabled={isLoading || index === selectedImageFiles.length - 1}
+                        >
+                          ↓
+                        </button>
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+              {selectedImageFiles.length > 1 && requestState !== "loading" && (
+                <button
+                  type="button"
+                  className="source-selection-submit"
+                  onClick={() => void handleSelectedImageSubmit()}
+                >
+                  Index selected images
+                </button>
+              )}
+            </div>
+          )}
           {isLoading && (
             <div className="loading-state" role="status">
               <span className="loading-orbit" aria-hidden="true" />
@@ -182,12 +338,18 @@ function KnowledgeSurface() {
                 <strong>
                   {activeSourceType === "url"
                     ? "Fetching and indexing URL"
-                    : "Uploading and indexing"}
+                    : activeSourceType === "image"
+                      ? selectedImageFiles.length > 1
+                        ? `Processing ${selectedImageFiles.length} images`
+                        : "Processing image"
+                      : "Uploading and indexing"}
                 </strong>
                 <p>
                   {activeSourceType === "url"
                     ? "Validating the URL and preparing searchable evidence."
-                    : "Validating the PDF and preparing searchable evidence."}
+                    : activeSourceType === "image"
+                      ? "Running OCR for each image and preparing searchable evidence."
+                      : "Validating the PDF and preparing searchable evidence."}
                 </p>
               </div>
             </div>
@@ -198,7 +360,11 @@ function KnowledgeSurface() {
               <span aria-hidden="true">!</span>
               <div>
                 <strong>
-                  {activeSourceType === "url" ? "URL ingestion failed" : "Upload failed"}
+                  {activeSourceType === "url"
+                    ? "URL ingestion failed"
+                    : activeSourceType === "image"
+                      ? "Image ingestion failed"
+                      : "Upload failed"}
                 </strong>
                 <p>{error}</p>
               </div>
@@ -209,30 +375,68 @@ function KnowledgeSurface() {
             <div className="source-success" role="status">
               <div>
                 <strong>
-                  {indexResult.status === "already_indexed"
+                  {indexResult.status === "already_indexed" && !isImageBatch
                     ? "Already indexed"
                     : indexResult.source_type === "url"
                       ? "URL indexed"
-                      : "PDF indexed"}
+                      : indexResult.source_type === "image"
+                        ? isImageBatch
+                          ? indexResult.status === "partial_failed"
+                            ? "Image batch completed with errors"
+                            : "Image batch processed"
+                          : "Image indexed"
+                        : "PDF indexed"}
                 </strong>
-                {indexResult.status === "already_indexed" && (
+                {indexResult.status === "already_indexed" && !isImageBatch && (
                   <p>
-                    This {indexResult.source_type === "url" ? "URL" : "PDF"} is
+                    This {
+                      indexResult.source_type === "url"
+                        ? "URL"
+                        : indexResult.source_type === "image"
+                          ? "image"
+                          : "PDF"
+                    } is
                     already indexed.
                   </p>
                 )}
                 <p>{indexResult.source_display_name}</p>
-                {indexResult.source_type === "url" && indexResult.final_url && (
+                {indexResult.source_type === "url" &&
+                  "final_url" in indexResult &&
+                  indexResult.final_url && (
                   <p>{indexResult.final_url}</p>
                 )}
               </div>
               <div className="source-success-meta">
                 <span>source kind · {indexResult.source_type}</span>
                 <span>status · {indexResult.index_status ?? indexResult.status}</span>
-                <span>
-                  {indexResult.indexed_chunk_count} chunks · {indexResult.embedded_chunk_count} embedded
-                </span>
+                {isImageBatch ? (
+                  <span>
+                    {imageResults.length} images · {indexResult.indexed_chunk_count} chunks · {indexResult.embedded_chunk_count} embedded
+                  </span>
+                ) : (
+                  <span>
+                    {indexResult.indexed_chunk_count} chunks · {indexResult.embedded_chunk_count} embedded
+                  </span>
+                )}
               </div>
+              {isImageBatch && (
+                <ul className="image-batch-results" aria-label="Image processing results">
+                  {imageResults.map((item) => (
+                    <li key={`${item.original_filename}-${item.workflow_run_id ?? item.file_name}`}>
+                      <strong>{item.original_filename}</strong>
+                      <span>
+                        {item.status === "already_indexed"
+                          ? "already indexed"
+                          : item.status === "failed"
+                            ? "error"
+                            : "indexed"}
+                      </span>
+                      {item.source_display_name && <span>{item.source_display_name}</span>}
+                      {item.message && <span>{item.message}</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
         </div>
@@ -247,7 +451,7 @@ function KnowledgeSurface() {
               <span className="loading-orbit" aria-hidden="true" />
               <div>
                 <strong>Loading indexed sources</strong>
-                <p>Checking the current PDF source inventory.</p>
+                <p>Checking the current source inventory.</p>
               </div>
             </div>
           )}
@@ -272,9 +476,13 @@ function KnowledgeSurface() {
                 <li key={source.id} className="source-inventory-item">
                   <div>
                     <strong>{source.display_name}</strong>
+                    {source.source_preview && (
+                      <p className="source-inventory-preview">{source.source_preview}</p>
+                    )}
                     <div className="source-inventory-meta">
                       <span>{source.source_kind}</span>
                       <span>{source.status}</span>
+                      {source.image_count && <span>{source.image_count} images</span>}
                       <span>{source.chunk_count} chunks</span>
                       {source.source_url && <span>{source.source_url}</span>}
                       {source.updated_at && <span>updated · {source.updated_at}</span>}
@@ -313,6 +521,7 @@ function CitationList({ response }: { response: QAResponse }) {
                 <span>{citation.source_kind ?? "notion"}</span>
                 <span>{(citation.score * 100).toFixed(1)}% match</span>
                 {citation.locator && <span>{citation.locator}</span>}
+                {citation.original_filename && <span>{citation.original_filename}</span>}
                 {citation.source_url && (
                   <a href={citation.source_url} target="_blank" rel="noreferrer">
                     {citation.source_url}

@@ -101,6 +101,9 @@ async def run_qa(
                 source_display_name=citation.source_display_name,
                 locator=citation.locator,
                 source_url=citation.source_url,
+                image_index=citation.image_index,
+                sequence_index=citation.sequence_index,
+                original_filename=citation.original_filename,
             )
             for citation in result.citations
         ],

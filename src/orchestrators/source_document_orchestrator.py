@@ -9,7 +9,7 @@ from typing import Optional
 from src.db.unit_of_work import UnitOfWorkFactory
 from src.services import WorkflowRunAuditUpdateError, WorkflowRunService
 
-SUPPORTED_SOURCE_TYPES = {"pdf", "url", "youtube", "screenshot", "chat_text"}
+SUPPORTED_SOURCE_TYPES = {"pdf", "image", "url", "youtube", "screenshot", "chat_text"}
 
 
 @dataclass
@@ -67,7 +67,7 @@ class SourceDocumentOrchestrator:
                 error_code="INVALID_ARGUMENT",
                 message=(
                     "source_type must be one of: "
-                    "pdf, url, youtube, screenshot, chat_text"
+                    "pdf, image, url, youtube, screenshot, chat_text"
                 ),
                 http_status_code=HTTPStatus.BAD_REQUEST,
             )

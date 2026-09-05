@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 class SourceDocumentCreateRequest(BaseModel):
     source_type: str = Field(
         min_length=1,
-        description="Source type: pdf, url, youtube, screenshot, or chat_text.",
+        description="Source type: pdf, image, url, youtube, screenshot, or chat_text.",
     )
     source_display_name: str = Field(
         min_length=1,
@@ -35,9 +35,49 @@ class SourceDocumentCreateResponse(BaseModel):
     final_url: Optional[str] = None
 
 
+class ImageOCRItemResponse(BaseModel):
+    sequence_index: int
+    file_name: str
+    original_filename: str
+    workflow_run_id: Optional[int] = None
+    status: str
+    source_document_id: Optional[int] = None
+    source_type: str = "image"
+    source_display_name: Optional[str] = None
+    content_hash: Optional[str] = None
+    file_hash: Optional[str] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    index_status: Optional[str] = None
+    indexed_chunk_count: int = 0
+    embedded_chunk_count: int = 0
+    error_code: Optional[str] = None
+    message: Optional[str] = None
+    failure_reason: Optional[str] = None
+
+
+class ImageOCRBatchResponse(BaseModel):
+    workflow_run_id: Optional[int] = None
+    workflow_run_ids: list[int] = Field(default_factory=list)
+    status: str
+    source_document_id: Optional[int] = None
+    source_type: str = "image"
+    source_display_name: str
+    source_preview: Optional[str] = None
+    image_count: int = 0
+    content_hash: Optional[str] = None
+    index_status: Optional[str] = None
+    indexed_chunk_count: int = 0
+    embedded_chunk_count: int = 0
+    image_results: list[ImageOCRItemResponse] = Field(default_factory=list)
+
+
 class KnowledgeSourceResponse(BaseModel):
     id: int
     display_name: str
+    original_filename: Optional[str] = None
+    source_preview: Optional[str] = None
+    image_count: Optional[int] = None
     source_kind: str
     status: str
     chunk_count: int

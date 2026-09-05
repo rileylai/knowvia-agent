@@ -23,8 +23,8 @@ cloud sync。這些是 Future Work。
 `knowvia` database 提供 PostgreSQL + pgvector，host port 維持 5433。舊
 `learnloop-postgres` 與原有 bind-mounted data 不屬於 active Compose project。
 
-Compose 仍保留 Redis service 給 legacy queue。現有 API 的 Notion index、PDF 與 URL
-validate/parse/index、source persistence 與 QA 都是 synchronous path；Image/OCR、
+Compose 仍保留 Redis service 給 legacy queue。現有 API 的 Notion index、PDF、URL 與
+Image/OCR validate/parse/index、source persistence 與 QA 都是 synchronous path；
 YouTube 與 chat text 尚未完成 generic chunk/index pipeline。本地 positive QA baseline
 使用 `mock_data/` 中的 PDF，不需要 Notion discovery 或 page selection。
 

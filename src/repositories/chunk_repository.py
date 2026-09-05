@@ -184,7 +184,7 @@ class ChunkRepository:
 
         ordered_chunks = sorted(chunks, key=lambda item: item.chunk_index)
         for chunk in ordered_chunks:
-            if chunk.source_kind not in {"pdf", "notion", "url"}:
+            if chunk.source_kind not in {"pdf", "notion", "url", "image"}:
                 raise ChunkRepositoryError(
                     f"Unsupported source_kind for source document: {chunk.source_kind}"
                 )
@@ -453,7 +453,7 @@ class ChunkRepository:
         return [
             source_kind
             for source_kind in normalized_source_kinds
-            if source_kind in {"notion", "pdf", "url"}
+            if source_kind in {"notion", "pdf", "url", "image"}
         ]
 
     def _apply_eligibility_filter(self, query):
@@ -469,6 +469,11 @@ class ChunkRepository:
                 and_(
                     KnowledgeChunk.source_kind == "url",
                     SourceDocument.source_type == "url",
+                    SourceDocument.status == "indexed",
+                ),
+                and_(
+                    KnowledgeChunk.source_kind == "image",
+                    SourceDocument.source_type == "image",
                     SourceDocument.status == "indexed",
                 ),
             ),
@@ -546,7 +551,7 @@ class ChunkRepository:
 
     def _normalize_source_kinds(self, source_kinds: Optional[List[str]]) -> List[str]:
         if source_kinds is None:
-            return ["notion", "pdf", "url"]
+            return ["notion", "pdf", "url", "image"]
         normalized = []
         seen = set()
         for source_kind in source_kinds:

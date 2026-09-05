@@ -46,6 +46,7 @@ class TextChunkDraft:
     chunk_text: str
     locator: str
     citation_meta: Dict[str, Any]
+    page_number: Optional[int] = None
 
 
 @dataclass
@@ -97,6 +98,7 @@ def chunk_text_document(
     source_kind: str,
     source_display_name: str,
     pages: Optional[List[str]] = None,
+    page_labels: Optional[List[str]] = None,
     max_chunk_chars: int = 1200,
 ) -> List[TextChunkDraft]:
     """Build bounded, deterministic chunks for any normalized text source."""
@@ -108,22 +110,35 @@ def chunk_text_document(
         raise ValueError("source_display_name must not be empty")
 
     page_values = list(pages or [])
+    page_label_values = list(page_labels or [])
+    if page_label_values and len(page_label_values) != len(page_values):
+        raise ValueError("page_labels must match pages length")
     chunks: List[TextChunkDraft] = []
     if page_values:
         for page_number, page_text in enumerate(page_values, start=1):
             normalized_page = _normalize_text(page_text)
-            for piece in _split_bounded_text(normalized_page, max_chunk_chars):
+            page_label = page_label_values[page_number - 1] if page_label_values else None
+            for local_chunk_index, piece in enumerate(
+                _split_bounded_text(normalized_page, max_chunk_chars),
+                start=1,
+            ):
+                locator = (
+                    f"{page_label} · chunk {local_chunk_index}"
+                    if page_label
+                    else f"page {page_number}"
+                )
                 chunks.append(
                     TextChunkDraft(
                         source_kind=source_kind.strip().lower(),
                         chunk_index=len(chunks),
                         chunk_text=piece,
-                        locator=f"page {page_number}",
+                        locator=locator,
                         citation_meta={
                             "source_kind": source_kind.strip().lower(),
                             "source_display_name": source_display_name.strip(),
-                            "locator": f"page {page_number}",
+                            "locator": locator,
                         },
+                        page_number=page_number,
                     )
                 )
     else:

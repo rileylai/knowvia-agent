@@ -11,10 +11,11 @@ parser 與 RAG foundation。這些程式碼是現況，不代表目標產品已�
 
 | 範圍 | 狀態 |
 | --- | --- |
-| Notion read、page listing、single-page/full/incremental indexing | 已存在；目前 RAG 仍以 Notion chunks 為主 |
-| PDF、Image/OCR、URL、YouTube、chat text ingestion | 已存在 parser 與 SourceDocument persistence |
-| pgvector retrieval、lexical fallback、backend-owned citations | 已存在，但 retrieval 仍是 Notion-only |
-| Generic multi-source Knowledge Layer | Planned |
+| Notion read、page listing、single-page/full/incremental indexing | 已存在 |
+| PDF、URL、Image/OCR ingestion | 已接入 generic chunk、embedding、retrieval 與 citation；Image 尚待 frontend manual verification |
+| YouTube、chat text ingestion | 已存在 parser 與 SourceDocument persistence，尚未接 generic indexing |
+| pgvector retrieval、lexical fallback、backend-owned citations | 已存在；支援 Notion、PDF、URL 與 Image |
+| Generic multi-source Knowledge Layer | 進行中；目前 roadmap 為 `2.3 manual_verification` |
 | Conversation sessions、short-term context、LongTermMemory | Planned |
 | 單一 bounded Knowledge Agent、MCP tools、tool chaining | Planned |
 | SSE streaming 與 Web UI | Planned |
@@ -68,9 +69,9 @@ MCP 都是 capability、service 或 adapter，不是另一個 Agent。
 
 ## 限制
 
-目前 source ingestion 尚未接到 generic chunk 與 retrieval pipeline。現有
-QA 主要使用 Notion-derived `KnowledgeChunk`。Conversation session、long-term
-memory、MCP execution loop、SSE 與 frontend 尚未在 runtime 實作。
+YouTube 與 chat text source ingestion 尚未接到 generic chunk 與 retrieval pipeline；
+PDF、URL 與 Image/OCR 已接入。Conversation session、long-term memory、MCP execution
+loop 與 SSE 尚未在 runtime 實作。
 
 Docling 是候選 parser，會以 3 至 5 份代表性文件做 time-boxed 評估；parser
 completeness benchmark 不會阻塞 Agent MVP。

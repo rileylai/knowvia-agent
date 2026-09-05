@@ -68,7 +68,7 @@ describe("Knowvia frontend harness", () => {
 
     await user.click(screen.getByRole("button", { name: "Knowledge" }));
     expect(screen.getByRole("heading", { name: "Knowledge" })).toBeVisible();
-    expect(screen.getByText(/PDF knowledge baseline/i)).toBeVisible();
+    expect(screen.getByText(/PDF and image knowledge baseline/i)).toBeVisible();
     expect(screen.getByRole("button", { name: "Upload source" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Add URL" })).toBeDisabled();
     expect(screen.getByText("No indexed sources yet.")).toBeVisible();
@@ -95,6 +95,36 @@ describe("Knowvia frontend harness", () => {
     expect(screen.getByText("indexed")).toBeVisible();
     expect(screen.getByText("40 chunks")).toBeVisible();
     expect(screen.getByText(/updated · 2026-09-05T09:30:00Z/)).toBeVisible();
+  });
+
+  it("renders grouped image display name and bounded OCR preview without dumping filenames", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse([
+          {
+            id: 52,
+            display_name: "Screenshots · Context Engineering 具體例子",
+            source_preview: "壓縮、LLM-Summary、Observation Masking...",
+            image_count: 4,
+            source_kind: "image",
+            status: "indexed",
+            chunk_count: 1,
+          },
+        ]),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+
+    expect(await screen.findByText("Screenshots · Context Engineering 具體例子")).toBeVisible();
+    expect(screen.getByText("壓縮、LLM-Summary、Observation Masking...")).toBeVisible();
+    expect(screen.queryByText("Snipaste_2026-09-05_13-42-38.png")).not.toBeInTheDocument();
+    expect(screen.getByText("image")).toBeVisible();
+    expect(screen.getByText("4 images")).toBeVisible();
+    expect(screen.getByText("1 chunks")).toBeVisible();
   });
 
   it("shows inventory loading state", async () => {
@@ -283,7 +313,7 @@ describe("Knowvia frontend harness", () => {
     const file = new File(["%PDF-1.7 fixture"], "agent-notes.pdf", {
       type: "application/pdf",
     });
-    await user.upload(screen.getByLabelText("PDF file"), file);
+    await user.upload(screen.getByLabelText("PDF or image file"), file);
 
     expect(screen.getByText("Uploading and indexing")).toBeVisible();
     expect(screen.getByRole("button", { name: "Upload source" })).toBeDisabled();
@@ -316,6 +346,281 @@ describe("Knowvia frontend harness", () => {
     expect(screen.getByText("2 chunks · 2 embedded")).toBeVisible();
   });
 
+  it("uploads an image, shows OCR processing, then renders image index metadata", async () => {
+    const deferred = deferredResponse();
+    const fetchMock = vi.fn((input: RequestInfo | URL, _init?: RequestInit) =>
+      input === "/api/knowledge/sources"
+        ? Promise.resolve(jsonResponse([]))
+        : deferred.promise,
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+    const file = new File(["synthetic image bytes"], "architecture.png", {
+      type: "image/png",
+    });
+    await user.upload(screen.getByLabelText("PDF or image file"), file);
+
+    expect(screen.getByText("Processing image")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Upload source" })).toBeDisabled();
+    const imageCalls = fetchMock.mock.calls.filter(
+      ([input]) => input === "/api/ingest/image-ocr",
+    );
+    expect(imageCalls).toHaveLength(1);
+    expect(imageCalls[0][1]?.method).toBe("POST");
+    expect(imageCalls[0][1]?.body).toBeInstanceOf(FormData);
+
+    deferred.resolve(
+      jsonResponse({
+        workflow_run_id: 28,
+        status: "succeeded",
+        source_document_id: 11,
+        source_type: "image",
+        source_display_name: "Screenshot · Architecture",
+        content_hash: "safe-image-hash",
+        index_status: "indexed",
+        indexed_chunk_count: 1,
+        embedded_chunk_count: 1,
+        image_count: 1,
+        image_results: [
+          {
+            sequence_index: 1,
+            file_name: "architecture.png",
+            original_filename: "architecture.png",
+            status: "succeeded",
+            source_type: "image",
+            source_display_name: "Screenshot · Architecture",
+            indexed_chunk_count: 1,
+            embedded_chunk_count: 1,
+          },
+        ],
+      }),
+    );
+
+    expect(await screen.findByText("Image indexed")).toBeVisible();
+    expect(screen.getByText("Screenshot · Architecture")).toBeVisible();
+    expect(screen.getByText("1 chunks · 1 embedded")).toBeVisible();
+  });
+
+  it("uploads multiple images in one multipart request and renders a batch summary", async () => {
+    const deferred = deferredResponse();
+    const fetchMock = vi.fn((input: RequestInfo | URL, _init?: RequestInit) =>
+      input === "/api/knowledge/sources"
+        ? Promise.resolve(jsonResponse([]))
+        : deferred.promise,
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+    const input = screen.getByLabelText("PDF or image file");
+    const files = [
+      new File(["slide 10"], "slide-10.png", { type: "image/png" }),
+      new File(["slide 2"], "slide-2.jpg", { type: "image/jpeg" }),
+      new File(["slide 1"], "slide-1.png", { type: "image/png" }),
+    ];
+    await user.upload(input, files);
+
+    expect(screen.getByText("3 images selected")).toBeVisible();
+    expect(screen.getAllByText("01").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("slide-1.png")).toBeVisible();
+    expect(screen.getByText("slide-2.jpg")).toBeVisible();
+    expect(screen.getByText("slide-10.png")).toBeVisible();
+    expect(screen.queryByText("Processing 3 images")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Index selected images" })).toBeEnabled();
+    expect(fetchMock.mock.calls.filter(([request]) => request === "/api/ingest/image-ocr")).toHaveLength(0);
+
+    await user.click(screen.getByRole("button", { name: "Move slide-1.png down" }));
+    expect(screen.getByRole("button", { name: "Move slide-2.jpg up" })).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Index selected images" }));
+
+    expect(screen.getByText("Processing 3 images")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Index selected images" })).not.toBeInTheDocument();
+
+    const imageCalls = fetchMock.mock.calls.filter(
+      ([request]) => request === "/api/ingest/image-ocr",
+    );
+    expect(imageCalls).toHaveLength(1);
+    const formData = imageCalls[0][1]?.body as FormData;
+    expect(formData.getAll("images").map((entry) => (entry as File).name)).toEqual([
+      "slide-2.jpg",
+      "slide-1.png",
+      "slide-10.png",
+    ]);
+
+    deferred.resolve(
+      jsonResponse({
+        workflow_run_id: 30,
+        workflow_run_ids: [30],
+        status: "succeeded",
+        source_document_id: 12,
+        source_type: "image",
+        source_display_name: "Screenshots · Context Engineering 具體例子",
+        source_preview: "壓縮、LLM-Summary、Observation Masking...",
+        image_count: 3,
+        content_hash: "ordered-batch-hash",
+        index_status: "indexed",
+        indexed_chunk_count: 3,
+        embedded_chunk_count: 3,
+        image_results: [
+          {
+            sequence_index: 1,
+            file_name: "slide-2.jpg",
+            original_filename: "slide-2.jpg",
+            workflow_run_id: 30,
+            status: "succeeded",
+            source_document_id: 12,
+            source_type: "image",
+            source_display_name: "Screenshots · Context Engineering 具體例子",
+            index_status: "indexed",
+            indexed_chunk_count: 1,
+            embedded_chunk_count: 1,
+          },
+          {
+            sequence_index: 2,
+            file_name: "slide-1.png",
+            original_filename: "slide-1.png",
+            workflow_run_id: 30,
+            status: "already_indexed",
+            source_document_id: 12,
+            source_type: "image",
+            source_display_name: "Screenshots · Context Engineering 具體例子",
+            index_status: "indexed",
+            indexed_chunk_count: 1,
+            embedded_chunk_count: 1,
+          },
+          {
+            sequence_index: 3,
+            file_name: "slide-10.png",
+            original_filename: "slide-10.png",
+            workflow_run_id: 30,
+            status: "already_indexed",
+            source_document_id: 12,
+            source_type: "image",
+            source_display_name: "Screenshots · Context Engineering 具體例子",
+            index_status: "indexed",
+            indexed_chunk_count: 1,
+            embedded_chunk_count: 1,
+          },
+        ],
+      }),
+    );
+
+    expect(await screen.findByText("Image batch processed")).toBeVisible();
+    expect(screen.getByText("3 images · 3 chunks · 3 embedded")).toBeVisible();
+    expect(screen.getAllByText("Screenshots · Context Engineering 具體例子").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("slide-1.png").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("slide-2.jpg").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("already indexed").length).toBeGreaterThan(1);
+  });
+
+  it("shows an exact duplicate image and prevents a second request while processing", async () => {
+    const deferred = deferredResponse();
+    const fetchMock = vi.fn((input: RequestInfo | URL, _init?: RequestInit) =>
+      input === "/api/knowledge/sources"
+        ? Promise.resolve(jsonResponse([]))
+        : deferred.promise,
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+    const input = screen.getByLabelText("PDF or image file");
+    const file = new File(["synthetic image bytes"], "architecture.png", {
+      type: "image/png",
+    });
+    await user.upload(input, file);
+    const imageFiles = {
+      0: file,
+      length: 1,
+      item: (index: number) => (index === 0 ? file : null),
+    } as unknown as FileList;
+    fireEvent.change(input, { target: { files: imageFiles } });
+
+    expect(
+      fetchMock.mock.calls.filter(([request]) => request === "/api/ingest/image-ocr"),
+    ).toHaveLength(1);
+    expect(screen.getByText("Processing image")).toBeVisible();
+
+    deferred.resolve(
+      jsonResponse({
+        workflow_run_id: 29,
+        status: "already_indexed",
+        source_document_id: 11,
+        source_type: "image",
+        source_display_name: "architecture.png",
+        content_hash: "safe-image-hash",
+        index_status: "indexed",
+        indexed_chunk_count: 1,
+        embedded_chunk_count: 1,
+      }),
+    );
+
+    expect(await screen.findByText("Already indexed")).toBeVisible();
+    expect(screen.getByText("This image is already indexed.")).toBeVisible();
+  });
+
+  it("shows a visible image ingestion error", async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL) =>
+      input === "/api/knowledge/sources"
+        ? Promise.resolve(jsonResponse([]))
+        : Promise.resolve(
+            jsonResponse(
+              { detail: { message: "No extractable text found in images" } },
+              422,
+            ),
+          ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Knowledge" }));
+    await user.upload(
+      screen.getByLabelText("PDF or image file"),
+      new File(["corrupted"], "corrupted.png", { type: "image/png" }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Image ingestion failed",
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "No extractable text found in images",
+    );
+  });
+
+  it("renders backend image citation metadata in Chat", async () => {
+    const imageQAResponse = {
+      ...successPayload,
+      citations: [
+        {
+          source_kind: "image",
+        source_display_name: "Screenshots · Context Engineering 具體例子",
+        locator: "Image 3 · chunk 1",
+        original_filename: "Snipaste_2026-09-05_13-42-20.png",
+        image_index: 3,
+        score: 0.876,
+        },
+      ],
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(jsonResponse(imageQAResponse)),
+    );
+    render(<App />);
+
+    await submitQuestion("What does the architecture image say?");
+
+    expect(await screen.findByText("Screenshots · Context Engineering 具體例子")).toBeVisible();
+    expect(screen.getByText("image")).toBeVisible();
+    expect(screen.getByText("Image 3 · chunk 1")).toBeVisible();
+    expect(screen.getByText("Snipaste_2026-09-05_13-42-20.png")).toBeVisible();
+  });
+
   it("shows an exact duplicate upload as already indexed", async () => {
     const fetchMock = vi.fn((...args: Parameters<typeof fetch>) => {
       const [input, init] = args;
@@ -343,7 +648,7 @@ describe("Knowvia frontend harness", () => {
 
     await user.click(screen.getByRole("button", { name: "Knowledge" }));
     await user.upload(
-      screen.getByLabelText("PDF file"),
+      screen.getByLabelText("PDF or image file"),
       new File(["%PDF-1.7 fixture"], "renamed.pdf", { type: "application/pdf" }),
     );
 
@@ -384,7 +689,7 @@ describe("Knowvia frontend harness", () => {
     await user.click(screen.getByRole("button", { name: "Knowledge" }));
     expect(await screen.findByText("No indexed sources yet.")).toBeVisible();
     await user.upload(
-      screen.getByLabelText("PDF file"),
+      screen.getByLabelText("PDF or image file"),
       new File(["%PDF-1.7 fixture"], indexedSource.display_name, {
         type: "application/pdf",
       }),
@@ -407,10 +712,10 @@ describe("Knowvia frontend harness", () => {
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: "Knowledge" }));
-    const input = screen.getByLabelText("PDF file");
+    const input = screen.getByLabelText("PDF or image file");
     const file = new File(["not a pdf"], "notes.txt", { type: "text/plain" });
     fireEvent.change(input, { target: { files: [file] } });
-    expect(screen.getByRole("alert")).toHaveTextContent("Choose a PDF file");
+    expect(screen.getByRole("alert")).toHaveTextContent("Choose a PDF or image file");
     expect(
       fetchMock.mock.calls.filter(([input]) => input === "/api/ingest/document"),
     ).toHaveLength(0);

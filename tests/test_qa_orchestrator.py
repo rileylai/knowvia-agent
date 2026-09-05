@@ -256,6 +256,70 @@ def test_qa_orchestrator_builds_pdf_citations_from_retrieved_metadata() -> None:
     assert result.citations[0].score == pytest.approx(0.845123)
 
 
+def test_qa_orchestrator_builds_image_citations_from_backend_metadata() -> None:
+    session_factory = _build_session_factory()
+    session = session_factory()
+    retriever = _FakeRetriever(
+        result=RetrievalResult(
+            chunks=[
+                RetrievedChunk(
+                    chunk_id=12,
+                    chunk_index=0,
+                    chunk_text="Image evidence about bounded execution.",
+                    notion_path="",
+                    notion_page_id=None,
+                    source_kind="image",
+                    score=0.812345,
+                    source_document_id=8,
+                    source_display_name="architecture.png",
+                    locator="Image 3 · chunk 1",
+                    citation_metadata=json.dumps(
+                        {
+                            "image_index": 3,
+                            "sequence_index": 3,
+                            "original_filename": "Snipaste_2026-09-05_13-42-20.png",
+                        }
+                    ),
+                )
+            ],
+            retrieval_mode=RETRIEVAL_MODE_LEXICAL_FALLBACK,
+            retrieval_fallback_reason=None,
+        )
+    )
+    provider_router = ProviderRouter()
+    provider_router.register_provider(_FakeProvider())
+    orchestrator = _build_orchestrator(
+        session=session,
+        session_factory=session_factory,
+        retriever=retriever,
+        embedding_client=None,
+        provider_router=provider_router,
+    )
+
+    result = asyncio.run(
+        orchestrator.answer_question(
+            query="What does the image say about execution?",
+            top_k=5,
+            page_ids=None,
+            section_paths=None,
+            source_kinds=["image"],
+            provider_name="openai",
+            model="gpt-4o-mini",
+            request_workflow_id="wf-qa-image-citation",
+        )
+    )
+
+    assert result.insufficient_info is False
+    assert len(result.citations) == 1
+    assert result.citations[0].source_kind == "image"
+    assert result.citations[0].source_display_name == "architecture.png"
+    assert result.citations[0].locator == "Image 3 · chunk 1"
+    assert result.citations[0].image_index == 3
+    assert result.citations[0].sequence_index == 3
+    assert result.citations[0].original_filename == "Snipaste_2026-09-05_13-42-20.png"
+    assert result.citations[0].score == pytest.approx(0.812345)
+
+
 @pytest.mark.parametrize(
     "provider_answer",
     [
