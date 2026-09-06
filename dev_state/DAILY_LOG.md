@@ -1266,3 +1266,49 @@ broad 判斷也會把它當作 direct recall。
 
 本輪只更新 roadmap 與 daily log。沒有修改 runtime、tests、migration、dependencies 或 frontend，
 也沒有 commit、push、merge、stash、reset 或 clean。
+
+## 2026-09-06 5.0.2 Native MCP Protocol Integration
+
+### Focused discovery
+
+- 既有 `src/mcp` 只是 `AgentToolRegistry` 與 `AgentToolAdapter` 的 in-process alias，沒有 native MCP SDK、server、transport 或 protocol entrypoint。
+- `search_knowledge`、`search_memory`、`save_memory` 已在 `src/agent/tools.py` 定義 schema、owner boundary、citation / saved-memory authority 與 explicit-save policy。
+- Internal Agent 直接使用同一個 `AgentToolRegistry`，沒有改成 MCP self-call。
+- Single-user auth contract 的 authoritative owner 是 backend 固定的 `local`；本輪沒有擴張 OAuth、RBAC 或 multi-tenant identity。
+
+### Implementation
+
+- 加入 official Python MCP SDK v1 line，使用 low-level `Server` 與單一 stdio transport。
+- 新增 `NativeMCPServer`，只從既有 registry 宣告三個 allowlisted tools，並將 native `tools/call` mapping 回既有 `ToolResult`。
+- MCP server 建立 server-side `ToolContext`。MCP arguments 不接受 `owner_id`、`user_id`、`tenant_id` 或 explicit-save authorization；沒有 trusted explicit-save metadata 時，`save_memory` fail closed。
+- Native result 保留 bounded structured evidence、backend citations 與 saved-memory authority；錯誤只回傳 bounded error code / message，不回傳 stack trace 或 provider detail。
+- 新增 `python -m src.mcp.server` local stdio entrypoint；production builder 重用既有 `ProductionChunkRetriever`、`MemoryService` 與 tool registry。
+
+### Automated evidence
+
+- Native MCP protocol integration：`10 passed`，涵蓋 initialization、allowlist discovery、schema、knowledge、memory、authorized / unauthorized save、owner override、malformed arguments、unknown tool、timeout 與 safe tool error mapping。
+- Focused Agent / tool / memory / conversation / QA regression：`90 passed`。
+- Backend full suite：`793 passed, 5 skipped`。
+- Subprocess stdio probe：`initialize` 與 `tools/list` 成功，只發現 `save_memory`、`search_knowledge`、`search_memory`；authorized save 與 production unauthorized save 均經 native `ClientSession → stdio → tools/call` 驗證。
+
+### Manual verification
+
+- Native MCP `initialize` 成功。
+- `tools/list` 只公開 `search_knowledge`、`search_memory`、`save_memory`。
+- `search_knowledge` 與 `search_memory` 可透過 native `tools/call` 正常執行。
+- Production stdio direct `save_memory` 在沒有 trusted explicit-save context 時回傳 `permission_denied`。
+- Client 無法透過 `owner_id`、`explicit_save=true` 或其他 arguments 自行取得 owner / persistence permission。
+- Authorized save 已由 automated native subprocess MCP path 驗證；保存內容來自 trusted context。
+- Internal Agent 仍使用既有 `AgentToolRegistry`，沒有改成 self-MCP call；既有 Knowledge、Memory、Agent behavior 沒有 regression。
+- Browser 沒有新增 MCP UI。
+
+### Roadmap state
+
+- `5.0.2=done`。
+- `5.0.3=planned`。
+- `5.0.4=planned`。
+- `6.0=planned`。
+
+### Scope confirmation
+
+本輪未開始 5.0.3、5.0.4 或 6.0；未加入 remote MCP、SSE、OAuth、RBAC、multi-tenant auth、new Agent tools、memory ranking 或 conversation transform changes。

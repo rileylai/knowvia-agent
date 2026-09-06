@@ -21,7 +21,8 @@ flowchart LR
     API --> ORCH["Application Orchestrators"]
     ORCH --> INGEST["Knowledge Ingestion"]
     ORCH --> AGENT["Bounded Knowledge Agent"]
-    AGENT --> MCP["MCP-compatible Tool Layer"]
+    AGENT --> TOOLS["Allowed Tool Adapters"]
+    MCP_CLIENT["MCP Client"] --> MCP["Native MCP Protocol Server"]
     AGENT --> CONTEXT["Context Assembly"]
     INGEST --> KNOWLEDGE["Knowledge Layer"]
     CONTEXT --> RETRIEVAL["Retrieval Service"]
@@ -31,7 +32,7 @@ flowchart LR
     KNOWLEDGE --> PG
     ORCH --> PROVIDER["Provider Router"]
     PROVIDER --> LLM["LLM / Embedding Adapters"]
-    MCP --> TOOLS["Allowed Tool Adapters"]
+    MCP --> TOOLS
     API --> SSE["SSE"]
     SSE --> UI
 ```
@@ -51,7 +52,7 @@ flowchart LR
 | Context Assembly | `MODIFY` | 在 synchronous QA 中組合 bounded conversation context 與 knowledge evidence |
 | Memory Service | `NEW` | explicit save、owner scope、semantic retrieval |
 | Bounded Knowledge Agent | `IMPLEMENTED` | 單一 Agent 的有限 tool loop 與 answer generation |
-| MCP Tool Layer | `IMPLEMENTED` | in-process standardized adapter；不擁有 business logic |
+| MCP Tool Layer | `IMPLEMENTED` | native stdio protocol adapter；重用 allowlisted tool registry，不擁有 business logic |
 | Provider Layer | `EXISTING` / `MODIFY` | Provider Router、LLM 與 embedding adapters |
 | PostgreSQL + pgvector | `EXISTING` | durable records、sessions、messages、chunks、vectors、future memory |
 | SSE | `NEW` | browser streaming transport |
@@ -108,18 +109,22 @@ write permission、memory policy、citation 與 termination。LLM 不得自行�
 
 ## MCP boundary
 
-MCP adapter 只負責 protocol mapping：
+Native MCP server 只負責 protocol mapping。Local runtime 使用 official Python MCP
+SDK 的 stdio transport，對外完成 `initialize`、`tools/list` 與 `tools/call`。Internal
+Agent 不經 MCP network self-call，直接使用同一個 `AgentToolRegistry`。
 
 ```text
-MCP search_knowledge
-  -> Retrieval Service
-  -> Chunk Repository
-  -> pgvector
+MCP Client
+  -> Native MCP stdio server
+  -> AgentToolRegistry
+  -> Existing tool adapter
+  -> Retrieval Service / Memory Service
 ```
 
-Tool adapter 不直接讀 raw PostgreSQL 或 Redis，也不放置 business rules。`save_memory`
-仍須交給 Memory Service 做 explicit-save policy、owner check、schema validation
-與 persistence。
+MCP server 不直接讀 raw PostgreSQL 或 Redis，也不放置 business rules。Knowledge
+retrieval、memory relevance、owner filtering、citation authority 與 `save_memory`
+explicit-save policy 都由既有 tool adapter、Retrieval Service 或 Memory Service
+負責。MCP arguments 不能提供 authoritative `owner_id` 或 save authorization。
 
 ## Context assembly
 
@@ -157,5 +162,5 @@ SSE 是 transport，不改變 Agent 的 permission、tool 或 persistence policy
 | pgvector | knowledge 與 memory semantic retrieval | 必要 |
 | Notion | knowledge source | read/sync only |
 | OpenAI 或其他 provider | LLM、embedding | 經 Provider Router |
-| MCP server/adapter | allowed tool protocol boundary | In-process adapter implemented; remote server out of scope |
+| MCP server/adapter | allowed tool protocol boundary | Native stdio server implemented；remote server、SSE 與 multi-user auth out of scope |
 | Redis/RQ | inherited Telegram queue | Legacy，不是 MVP core |
