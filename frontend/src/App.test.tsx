@@ -45,8 +45,87 @@ const indexedSource = {
   updated_at: "2026-09-05T09:30:00Z",
 };
 
+const legacyConversation = {
+  id: 1,
+  title: "New conversation",
+  status: "active",
+  created_at: "2026-09-05T09:30:00Z",
+  updated_at: "2026-09-05T09:30:00Z",
+  messages: [],
+};
+
+function withConversationAPI(legacyFetch: typeof fetch) {
+  const conversationMessages: Array<Record<string, unknown>> = [];
+  return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const path = typeof input === "string"
+      ? input
+      : input instanceof URL
+        ? input.pathname
+        : input.url;
+    const method = (init?.method ?? "GET").toUpperCase();
+
+    if (path === "/api/conversations" && method === "GET") {
+      return jsonResponse([legacyConversation]);
+    }
+    if (path === "/api/conversations" && method === "POST") {
+      return jsonResponse(legacyConversation, 201);
+    }
+    if (path === "/api/conversations/1" && method === "GET") {
+      return jsonResponse(legacyConversation);
+    }
+    if (path === "/api/conversations/1/messages" && method === "POST") {
+      const response = await legacyFetch("/api/qa", init);
+      if (!response.ok) {
+        return response;
+      }
+      const payload = (await response.json()) as Record<string, unknown>;
+      const requestBody = JSON.parse(String(init?.body ?? "{}")) as { query?: string };
+      const query = requestBody.query?.trim() ?? "";
+      const timestamp = "2026-09-05T09:31:00Z";
+      conversationMessages.push({
+        id: 100 + conversationMessages.length + 1,
+        session_id: 1,
+        role: "user",
+        content: query,
+        sequence_number: conversationMessages.length + 1,
+        created_at: timestamp,
+        citations: [],
+      });
+      conversationMessages.push({
+        id: 100 + conversationMessages.length + 1,
+        session_id: 1,
+        role: "assistant",
+        content: typeof payload.answer === "string" ? payload.answer : "",
+        sequence_number: conversationMessages.length + 1,
+        created_at: timestamp,
+        citations: payload.insufficient_info === true || !Array.isArray(payload.citations)
+          ? []
+          : payload.citations,
+      });
+      return jsonResponse({
+        ...payload,
+        session_id: 1,
+        title: query.slice(0, 48) || "New conversation",
+        updated_at: timestamp,
+        messages: conversationMessages,
+      });
+    }
+
+    return legacyFetch(input, init);
+  });
+}
+
+function stubLegacyFetch(fetchMock: typeof fetch) {
+  vi.stubGlobal("fetch", withConversationAPI(fetchMock));
+}
+
+async function waitForChatReady() {
+  await screen.findByText("Ask about your indexed knowledge.");
+}
+
 async function submitQuestion(question = "How does attention work?") {
   const user = userEvent.setup();
+  await waitForChatReady();
   await user.type(screen.getByLabelText("Question"), question);
   await user.click(screen.getByRole("button", { name: "Ask Knowvia" }));
   return user;
@@ -58,7 +137,7 @@ describe("Knowvia frontend harness", () => {
   });
 
   it("shows all three surfaces and marks Memory as a future capability", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse([])));
+    stubLegacyFetch(vi.fn().mockResolvedValue(jsonResponse([])));
     const user = userEvent.setup();
     render(<App />);
 
@@ -81,10 +160,7 @@ describe("Knowvia frontend harness", () => {
   });
 
   it("renders the indexed PDF source inventory", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(jsonResponse([indexedSource])),
-    );
+    stubLegacyFetch(vi.fn().mockResolvedValue(jsonResponse([indexedSource])));
     const user = userEvent.setup();
     render(<App />);
 
@@ -98,10 +174,8 @@ describe("Knowvia frontend harness", () => {
   });
 
   it("renders grouped image display name and bounded OCR preview without dumping filenames", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        jsonResponse([
+    stubLegacyFetch(vi.fn().mockResolvedValue(
+      jsonResponse([
           {
             id: 52,
             display_name: "Screenshots · Context Engineering 具體例子",
@@ -111,9 +185,8 @@ describe("Knowvia frontend harness", () => {
             status: "indexed",
             chunk_count: 1,
           },
-        ]),
-      ),
-    );
+      ]),
+    ));
     const user = userEvent.setup();
     render(<App />);
 
@@ -129,7 +202,7 @@ describe("Knowvia frontend harness", () => {
 
   it("shows inventory loading state", async () => {
     const deferred = deferredResponse();
-    vi.stubGlobal("fetch", vi.fn(() => deferred.promise));
+    stubLegacyFetch(vi.fn(() => deferred.promise));
     const user = userEvent.setup();
     render(<App />);
 
@@ -140,10 +213,7 @@ describe("Knowvia frontend harness", () => {
   });
 
   it("shows a visible inventory error", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockRejectedValue(new TypeError("Failed to fetch")),
-    );
+    stubLegacyFetch(vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
     const user = userEvent.setup();
     render(<App />);
 
@@ -157,7 +227,7 @@ describe("Knowvia frontend harness", () => {
   it("shows loading, prevents duplicate submission, then renders the answer", async () => {
     const deferred = deferredResponse();
     const fetchMock = vi.fn((..._args: Parameters<typeof fetch>) => deferred.promise);
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     render(<App />);
 
     await submitQuestion();
@@ -192,9 +262,10 @@ describe("Knowvia frontend harness", () => {
         headers: { "Content-Type": "application/json" },
       }),
     );
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
+    await waitForChatReady();
 
     await user.type(screen.getByLabelText("Question"), "What is Beam Search?");
     await user.keyboard("{Enter}");
@@ -207,9 +278,10 @@ describe("Knowvia frontend harness", () => {
 
   it("does not submit when Shift+Enter is pressed", async () => {
     const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
+    await waitForChatReady();
 
     await user.type(screen.getByLabelText("Question"), "First line");
     await user.keyboard("{Shift>}{Enter}{/Shift}");
@@ -218,9 +290,10 @@ describe("Knowvia frontend harness", () => {
   });
 
   it("preserves the newline inserted by Shift+Enter", async () => {
-    vi.stubGlobal("fetch", vi.fn());
+    stubLegacyFetch(vi.fn());
     const user = userEvent.setup();
     render(<App />);
+    await waitForChatReady();
     const question = screen.getByLabelText("Question");
 
     await user.type(question, "First line");
@@ -232,9 +305,10 @@ describe("Knowvia frontend harness", () => {
 
   it("does not submit Enter while an IME composition is active", async () => {
     const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
+    await waitForChatReady();
     const question = screen.getByLabelText("Question");
 
     await user.type(question, "知識");
@@ -248,9 +322,10 @@ describe("Knowvia frontend harness", () => {
   it("does not submit Enter again while a request is loading", async () => {
     const deferred = deferredResponse();
     const fetchMock = vi.fn(() => deferred.promise);
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
+    await waitForChatReady();
     const question = screen.getByLabelText("Question");
 
     await user.type(question, "What is Beam Search?");
@@ -269,9 +344,10 @@ describe("Knowvia frontend harness", () => {
 
   it("does not submit an empty or whitespace-only question with Enter", async () => {
     const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
+    await waitForChatReady();
 
     await user.type(screen.getByLabelText("Question"), "   ");
     await user.keyboard("{Enter}");
@@ -280,20 +356,19 @@ describe("Knowvia frontend harness", () => {
   });
 
   it("renders citations only from backend response metadata", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(successPayload), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }),
-      ),
-    );
+    stubLegacyFetch(vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(successPayload), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    ));
     render(<App />);
 
-    await submitQuestion("Summarize the attention note.");
+    const user = await submitQuestion("Summarize the attention note.");
 
-    expect(await screen.findByText("Knowledge/NLP/Week5/Attention")).toBeVisible();
+    expect(await screen.findByText("Sources · 1")).toBeVisible();
+    await user.click(screen.getByText("Sources · 1"));
+    expect(screen.getByText("Knowledge/NLP/Week5/Attention")).toBeVisible();
     expect(screen.getByText("91.3% match")).toBeVisible();
     expect(screen.getByText("page-nlp-week5")).toBeVisible();
   });
@@ -305,7 +380,7 @@ describe("Knowvia frontend harness", () => {
         ? Promise.resolve(jsonResponse([]))
         : deferred.promise,
     );
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
 
@@ -353,7 +428,7 @@ describe("Knowvia frontend harness", () => {
         ? Promise.resolve(jsonResponse([]))
         : deferred.promise,
     );
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
 
@@ -411,7 +486,7 @@ describe("Knowvia frontend harness", () => {
         ? Promise.resolve(jsonResponse([]))
         : deferred.promise,
     );
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
 
@@ -524,7 +599,7 @@ describe("Knowvia frontend harness", () => {
         ? Promise.resolve(jsonResponse([]))
         : deferred.promise,
     );
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
 
@@ -575,7 +650,7 @@ describe("Knowvia frontend harness", () => {
             ),
           ),
     );
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
 
@@ -607,15 +682,14 @@ describe("Knowvia frontend harness", () => {
         },
       ],
     };
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(jsonResponse(imageQAResponse)),
-    );
+    stubLegacyFetch(vi.fn().mockResolvedValue(jsonResponse(imageQAResponse)));
     render(<App />);
 
-    await submitQuestion("What does the architecture image say?");
+    const user = await submitQuestion("What does the architecture image say?");
 
-    expect(await screen.findByText("Screenshots · Context Engineering 具體例子")).toBeVisible();
+    expect(await screen.findByText("Sources · 1")).toBeVisible();
+    await user.click(screen.getByText("Sources · 1"));
+    expect(screen.getByText("Screenshots · Context Engineering 具體例子")).toBeVisible();
     expect(screen.getByText("image")).toBeVisible();
     expect(screen.getByText("Image 3 · chunk 1")).toBeVisible();
     expect(screen.getByText("Snipaste_2026-09-05_13-42-20.png")).toBeVisible();
@@ -642,7 +716,7 @@ describe("Knowvia frontend harness", () => {
         }),
       );
     });
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
 
@@ -682,7 +756,7 @@ describe("Knowvia frontend harness", () => {
         }),
       );
     });
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
 
@@ -707,7 +781,7 @@ describe("Knowvia frontend harness", () => {
         ? Promise.resolve(jsonResponse([]))
         : deferred.promise,
     );
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
 
@@ -761,7 +835,7 @@ describe("Knowvia frontend harness", () => {
         ? Promise.resolve(jsonResponse([]))
         : deferred.promise,
     );
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
 
@@ -809,7 +883,7 @@ describe("Knowvia frontend harness", () => {
         ? Promise.resolve(jsonResponse([]))
         : deferred.promise,
     );
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
 
@@ -854,7 +928,7 @@ describe("Knowvia frontend harness", () => {
             ),
           ),
     );
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
 
@@ -882,42 +956,38 @@ describe("Knowvia frontend harness", () => {
         },
       ],
     };
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(JSON.stringify(pdfResponse), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }),
-      ),
-    );
+    stubLegacyFetch(vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(pdfResponse), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    ));
     render(<App />);
 
-    await submitQuestion("What is in the PDF?");
+    const user = await submitQuestion("What is in the PDF?");
 
-    expect(await screen.findByText("agent-notes.pdf")).toBeVisible();
+    expect(await screen.findByText("Sources · 1")).toBeVisible();
+    await user.click(screen.getByText("Sources · 1"));
+    expect(screen.getByText("agent-notes.pdf")).toBeVisible();
     expect(screen.getByText("page 3")).toBeVisible();
     expect(screen.getByText("84.5% match")).toBeVisible();
   });
 
   it("preserves the backend insufficient_info result as a distinct state", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            ...successPayload,
-            answer: "I do not have enough information in production notes to answer safely.",
-            insufficient_info: true,
-            retrieved_chunk_count: 0,
-            citations: [],
-            provider: null,
-            model: null,
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
+    stubLegacyFetch(vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          ...successPayload,
+          answer: "I do not have enough information in production notes to answer safely.",
+          insufficient_info: true,
+          retrieved_chunk_count: 0,
+          citations: [],
+          provider: null,
+          model: null,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
       ),
-    );
+    ));
     render(<App />);
 
     await submitQuestion("What is the lunar office policy?");
@@ -929,9 +999,10 @@ describe("Knowvia frontend harness", () => {
       ),
     ).toBeVisible();
     expect(screen.queryByRole("heading", { name: "Citations" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Sources ·/)).not.toBeInTheDocument();
   });
 
-  it("clears the previous answer and citations before rendering insufficient info", async () => {
+  it("keeps same-session history while rendering insufficient info", async () => {
     const secondResponse = deferredResponse();
     const fetchMock = vi
       .fn()
@@ -942,21 +1013,23 @@ describe("Knowvia frontend harness", () => {
         }),
       )
       .mockImplementationOnce(() => secondResponse.promise);
-    vi.stubGlobal("fetch", fetchMock);
+    stubLegacyFetch(fetchMock);
     const user = userEvent.setup();
     render(<App />);
+    await waitForChatReady();
 
     await user.type(screen.getByLabelText("Question"), "What is attention?");
     await user.click(screen.getByRole("button", { name: "Ask Knowvia" }));
     expect(await screen.findByText(successPayload.answer)).toBeVisible();
+    await user.click(screen.getByText("Sources · 1"));
     expect(screen.getByText("Knowledge/NLP/Week5/Attention")).toBeVisible();
 
     await user.clear(screen.getByLabelText("Question"));
     await user.type(screen.getByLabelText("Question"), "hi");
     await user.keyboard("{Enter}");
 
-    expect(screen.queryByText(successPayload.answer)).not.toBeInTheDocument();
-    expect(screen.queryByText("Knowledge/NLP/Week5/Attention")).not.toBeInTheDocument();
+    expect(screen.getByText(successPayload.answer)).toBeVisible();
+    expect(screen.getByText("Knowledge/NLP/Week5/Attention")).toBeVisible();
 
     secondResponse.resolve(
       new Response(
@@ -971,7 +1044,8 @@ describe("Knowvia frontend harness", () => {
     );
 
     expect(await screen.findByText("Insufficient info")).toBeVisible();
-    expect(screen.queryByRole("heading", { name: "Citations" })).not.toBeInTheDocument();
+    expect(screen.getByText("Knowledge/NLP/Week5/Attention")).toBeVisible();
+    expect(screen.getAllByText("Sources · 1")).toHaveLength(1);
   });
 
   it.each([
@@ -992,7 +1066,7 @@ describe("Knowvia frontend harness", () => {
       message: "Provider is unavailable",
     },
   ])("shows a visible error and exits loading after $name", async ({ fetchResult, message }) => {
-    vi.stubGlobal("fetch", vi.fn(fetchResult));
+    stubLegacyFetch(vi.fn(fetchResult));
     render(<App />);
 
     await submitQuestion();

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from src.app.dependencies import (
     get_cost_tracker,
+    get_current_owner_id,
     get_embedding_client,
     get_prompt_template_loader,
     get_provider_router,
@@ -53,6 +54,7 @@ async def run_qa(
     provider_router: ProviderRouter = Depends(get_provider_router),
     cost_tracker: CostTracker = Depends(get_cost_tracker),
     prompt_template_loader: PromptTemplateLoader = Depends(get_prompt_template_loader),
+    owner_id: str = Depends(get_current_owner_id),
 ) -> QAResponse:
     orchestrator = _build_qa_orchestrator(
         db_session=db_session,
@@ -74,6 +76,7 @@ async def run_qa(
             provider_name=payload.provider_name,
             model=payload.model,
             request_workflow_id=request_workflow_id,
+            owner_scope=owner_id,
         )
     except QAOrchestratorError as exc:
         raise HTTPException(

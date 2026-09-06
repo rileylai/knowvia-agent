@@ -105,6 +105,13 @@ TELEGRAM_*_TIMEOUT_SECONDS
 7. 對沒有足夠 evidence 的問題回傳 `insufficient_info`，並驗證 invalid source 顯示
    error。
 
+3.0 Conversation Sessions 的 browser flow 另外確認：首次進入 Chat 先顯示
+conversation list loading；list 成功且有 session 時載入最新或 URL 指定的 session；
+list 為空時才建立第一個 `New conversation`。送出第一則問題後 title 使用 user message
+前 48 chars，follow-up 仍在同一 session 內。按 `New Chat` 後應取得新的 backend
+`session_id`，舊 session messages 不會帶入；切換失敗時保留原本內容。Reload 後使用 URL
+中的 `session_id` 還原同一 session。
+
 如果 SSE 已完成，UI 可顯示 search、source count、memory search、generation、
 answer delta、citations 與 done。不得顯示 private model chain-of-thought。
 

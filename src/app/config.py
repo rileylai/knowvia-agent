@@ -89,6 +89,8 @@ class Settings(BaseModel):
     max_workflow_cost_usd: Optional[float] = None
     max_daily_cost_usd: Optional[float] = None
     workflow_stale_after_seconds: int = 3600
+    conversation_context_message_limit: int = 6
+    conversation_context_token_budget: int = 2048
     telegram_job_timeout_seconds: int = 180
     telegram_review_job_timeout_seconds: int = 10800
     telegram_indexing_job_timeout_seconds: int = 10800
@@ -184,6 +186,14 @@ class Settings(BaseModel):
             workflow_stale_after_seconds=_read_optional_positive_int_env(
                 "WORKFLOW_STALE_AFTER_SECONDS",
                 default=3600,
+            ),
+            conversation_context_message_limit=_read_optional_positive_int_env(
+                "CONVERSATION_CONTEXT_MESSAGE_LIMIT",
+                default=6,
+            ),
+            conversation_context_token_budget=_read_optional_positive_int_env(
+                "CONVERSATION_CONTEXT_TOKEN_BUDGET",
+                default=2048,
             ),
             telegram_job_timeout_seconds=_read_optional_positive_int_env(
                 "TELEGRAM_JOB_TIMEOUT_SECONDS",

@@ -12,6 +12,11 @@ from src.repositories.chunk_repository import (
     RetrievalChunkCandidate,
     SemanticChunkMatch,
 )
+from src.repositories.conversation_repository import (
+    ConversationMessageSnapshot,
+    ConversationRepository,
+    ConversationSessionSnapshot,
+)
 from src.repositories.notion_block_repository import NotionBlockRepository, NotionBlockSnapshot
 from src.repositories.notion_page_repository import (
     NotionPageRepository,
@@ -40,6 +45,9 @@ def __getattr__(name: str):
 __all__ = [
     "ChangeRequestRepository",
     "ApiIdempotencyRepository",
+    "ConversationMessageSnapshot",
+    "ConversationRepository",
+    "ConversationSessionSnapshot",
     "ChunkBlockMappingError",
     "ChunkRepository",
     "ChunkRepositoryError",

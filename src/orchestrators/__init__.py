@@ -42,6 +42,11 @@ from src.orchestrators.qa_orchestrator import (
     QAResult,
     QACitationResult,
 )
+from src.orchestrators.conversation_orchestrator import (
+    ConversationOrchestrator,
+    ConversationOrchestratorError,
+    ConversationTurnResult,
+)
 from src.orchestrators.source_document_orchestrator import (
     SourceDocumentCreateResult,
     SourceDocumentOrchestrator,
@@ -200,6 +205,9 @@ __all__ = [
     "QAOrchestrator",
     "QAOrchestratorError",
     "QAResult",
+    "ConversationOrchestrator",
+    "ConversationOrchestratorError",
+    "ConversationTurnResult",
     "SourceDocumentCreateResult",
     "SourceDocumentOrchestrator",
     "SourceDocumentWorkflowError",

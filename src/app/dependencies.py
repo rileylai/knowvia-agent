@@ -20,6 +20,9 @@ from src.db.session import (
     get_db_session_factory,
 )
 from src.db.unit_of_work import SqlAlchemyUnitOfWork
+
+
+DEFAULT_OWNER_ID = "local"
 from src.providers import (
     EmbeddingClient,
     OpenAIClient,
@@ -62,6 +65,12 @@ def get_business_unit_of_work_factory(
     session_factory: SessionFactory = Depends(get_db_session_factory),
 ) -> UnitOfWorkFactory:
     return lambda: SqlAlchemyUnitOfWork(session_factory)
+
+
+def get_current_owner_id() -> str:
+    """Return the owner represented by the current single-user auth contract."""
+
+    return DEFAULT_OWNER_ID
 
 
 def get_readiness_service() -> ReadinessService:

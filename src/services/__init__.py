@@ -38,6 +38,7 @@ from src.services.prompt_template_loader import (
     PROMPT_ID_SCREENSHOT_SUMMARY_REPAIR,
     PROMPT_ID_QA_ANSWER,
     PROMPT_ID_SCREENSHOT_TITLE_REPAIR,
+    PROMPT_ID_CONVERSATION_RECALL,
     PROMPT_ID_SUPPLEMENT_PROPOSAL,
     PromptTemplateBundle,
     PromptTemplateLoader,
@@ -94,6 +95,16 @@ from src.services.api_idempotency import (
     ApiIdempotencyConflictError,
     ApiIdempotencyService,
     ApiIdempotencyStoreError,
+)
+from src.services.conversation_context import (
+    DEFAULT_CONVERSATION_MESSAGE_LIMIT,
+    DEFAULT_CONVERSATION_TOKEN_BUDGET,
+    DEFAULT_CONVERSATION_TITLE,
+    ConversationContext,
+    ConversationContextMessage,
+    assemble_conversation_context,
+    build_conversation_title,
+    estimate_conversation_tokens,
 )
 from src.services.upload_limits import (
     IMAGE_MIME_TYPES,
@@ -224,6 +235,7 @@ __all__ = [
     "EmbeddingTokenPricing",
     "LLMTokenPricing",
     "PROMPT_ID_QA_ANSWER",
+    "PROMPT_ID_CONVERSATION_RECALL",
     "PROMPT_ID_SCREENSHOT_BODY_REPAIR",
     "PROMPT_ID_SCREENSHOT_SUMMARY_REPAIR",
     "PROMPT_ID_SCREENSHOT_TITLE_REPAIR",
@@ -339,4 +351,12 @@ __all__ = [
     "upload_error_http_status",
     "SYNTHETIC_NOTION_PAGE_IDS",
     "is_known_synthetic_notion_page_id",
+    "DEFAULT_CONVERSATION_MESSAGE_LIMIT",
+    "DEFAULT_CONVERSATION_TOKEN_BUDGET",
+    "DEFAULT_CONVERSATION_TITLE",
+    "ConversationContext",
+    "ConversationContextMessage",
+    "assemble_conversation_context",
+    "build_conversation_title",
+    "estimate_conversation_tokens",
 ]

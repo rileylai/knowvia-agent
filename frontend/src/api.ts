@@ -22,6 +22,35 @@ export type QAResponse = {
   model: string | null;
 };
 
+export type ConversationSessionSummary = {
+  id: number;
+  title: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ConversationMessage = {
+  id: number;
+  session_id: number;
+  role: "user" | "assistant" | string;
+  content: string;
+  sequence_number: number;
+  created_at: string;
+  citations: QACitation[];
+};
+
+export type ConversationSession = ConversationSessionSummary & {
+  messages: ConversationMessage[];
+};
+
+export type ConversationTurn = QAResponse & {
+  session_id: number;
+  title: string;
+  updated_at: string;
+  messages: ConversationMessage[];
+};
+
 export type PDFIndexResponse = {
   workflow_run_id: number;
   status: string;
@@ -108,6 +137,57 @@ function errorMessage(payload: unknown, status: number): string {
   return `Knowvia returned an error (${status}).`;
 }
 
+function normalizeCitations(value: unknown): QACitation[] {
+  return Array.isArray(value) ? (value as QACitation[]) : [];
+}
+
+function normalizeConversationMessages(
+  value: unknown,
+  fallbackCitations: QACitation[] = [],
+): ConversationMessage[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const messages = value.filter(
+    (message): message is Record<string, unknown> =>
+      typeof message === "object" && message !== null,
+  );
+  const lastAssistantIndex = messages.reduce(
+    (lastIndex, message, index) =>
+      message.role === "assistant" ? index : lastIndex,
+    -1,
+  );
+
+  return messages.map((message, index) => {
+    const hasMessageCitations = Object.prototype.hasOwnProperty.call(message, "citations");
+    const citations = hasMessageCitations
+      ? normalizeCitations(message.citations)
+      : index === lastAssistantIndex
+        ? fallbackCitations
+        : [];
+    return { ...message, citations } as ConversationMessage;
+  });
+}
+
+function normalizeConversationSession(value: unknown): ConversationSession {
+  const session = value as ConversationSession;
+  return {
+    ...session,
+    messages: normalizeConversationMessages(session.messages),
+  };
+}
+
+function normalizeConversationTurn(value: unknown): ConversationTurn {
+  const turn = value as ConversationTurn;
+  const citations = normalizeCitations(turn.citations);
+  return {
+    ...turn,
+    citations,
+    messages: normalizeConversationMessages(turn.messages, citations),
+  };
+}
+
 export async function askQuestion(
   query: string,
   request: typeof fetch = fetch,
@@ -139,6 +219,92 @@ export async function askQuestion(
   }
 
   return payload as QAResponse;
+}
+
+async function readJSONResponse(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    throw new Error(
+      response.ok
+        ? "Knowvia returned an unreadable response."
+        : `Knowvia returned an error (${response.status}).`,
+    );
+  }
+}
+
+export async function createConversation(
+  request: typeof fetch = fetch,
+): Promise<ConversationSession> {
+  let response: Response;
+  try {
+    response = await request("/api/conversations", { method: "POST" });
+  } catch {
+    throw new Error("Unable to reach the Knowvia backend.");
+  }
+  const payload = await readJSONResponse(response);
+  if (!response.ok) {
+    throw new Error(errorMessage(payload, response.status));
+  }
+  return normalizeConversationSession(payload);
+}
+
+export async function listConversations(
+  request: typeof fetch = fetch,
+): Promise<ConversationSessionSummary[]> {
+  let response: Response;
+  try {
+    response = await request("/api/conversations");
+  } catch {
+    throw new Error("Unable to reach the Knowvia backend.");
+  }
+  const payload = await readJSONResponse(response);
+  if (!response.ok) {
+    throw new Error(errorMessage(payload, response.status));
+  }
+  if (!Array.isArray(payload)) {
+    throw new Error("Knowvia returned an invalid conversation list.");
+  }
+  return payload as ConversationSessionSummary[];
+}
+
+export async function getConversation(
+  sessionId: number,
+  request: typeof fetch = fetch,
+): Promise<ConversationSession> {
+  let response: Response;
+  try {
+    response = await request(`/api/conversations/${sessionId}`);
+  } catch {
+    throw new Error("Unable to reach the Knowvia backend.");
+  }
+  const payload = await readJSONResponse(response);
+  if (!response.ok) {
+    throw new Error(errorMessage(payload, response.status));
+  }
+  return normalizeConversationSession(payload);
+}
+
+export async function sendConversationMessage(
+  sessionId: number,
+  query: string,
+  request: typeof fetch = fetch,
+): Promise<ConversationTurn> {
+  let response: Response;
+  try {
+    response = await request(`/api/conversations/${sessionId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+  } catch {
+    throw new Error("Unable to reach the Knowvia backend.");
+  }
+  const payload = await readJSONResponse(response);
+  if (!response.ok) {
+    throw new Error(errorMessage(payload, response.status));
+  }
+  return normalizeConversationTurn(payload);
 }
 
 export async function indexPDF(

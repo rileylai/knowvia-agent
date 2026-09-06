@@ -97,9 +97,18 @@ Backend 在每一步檢查 timeout、argument、permission、context budget 與 
 
 ### Current
 
-目前已有 synchronous `/api/qa`，使用共用 retriever、source eligibility filter 與
-Provider Router；Notion、已完整 indexed 的 PDF、Image 與 URL 都可成為 evidence。
-Conversation session、bounded Agent loop 與 SSE 尚未實作。
+目前已有 synchronous `/api/qa`，以及以 `ConversationSession`、`ConversationMessage`
+為 authority 的 conversation endpoints。首次進入 `/chat` 時，frontend 先讀取 session
+list；URL 有合法 `session_id` 時載入該 session，沒有 URL 時載入 `updated_at` 最新的
+session，只有成功確認 list 為空時才建立第一個 session。Active identity 使用
+`/chat?session_id={session_id}`。
+
+送出 message 時，backend 先保存 user message，再以同一 session 最近 6 則 history
+與 token budget 組成 bounded context；current question 仍作為主要 retrieval query。
+QA success 才保存 assistant message。Provider 失敗時不保存 fake assistant message。
+Frontend session switch 先完成 backend load，成功後才替換 active identity 與 messages；
+失敗時保留原本 session、messages 與 URL。Conversation session、bounded Agent loop
+與 SSE 尚未實作。
 
 ## Memory search
 
@@ -139,6 +148,11 @@ New Chat
 
 不同 session 不共享 short-term context。跨 session 可使用的只有通過 policy
 保存的 LongTermMemory。
+
+Frontend 的 session list 依 `updated_at DESC` 顯示，active session 只使用 visual
+highlight。Desktop 使用 persistent left sidebar；mobile 使用可由 menu button 開啟的
+overlay drawer。Invalid 或無權存取的 URL session 不會保留，frontend 會顯示 generic
+error，並 fallback 到合法 session 或在合法 list 為空時建立第一個 session。
 
 ## Citation 與 insufficient info
 

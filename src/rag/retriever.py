@@ -56,6 +56,7 @@ class ProductionChunkRetriever:
         section_paths: Optional[List[str]] = None,
         source_kinds: Optional[List[str]] = None,
         query_embedding: Optional[List[float]] = None,
+        owner_scope: str = "local",
     ) -> List[RetrievedChunk]:
         return self.retrieve_with_metadata(
             query_text=query_text,
@@ -64,6 +65,7 @@ class ProductionChunkRetriever:
             section_paths=section_paths,
             source_kinds=source_kinds,
             query_embedding=query_embedding,
+            owner_scope=owner_scope,
         ).chunks
 
     def retrieve_with_metadata(
@@ -76,6 +78,7 @@ class ProductionChunkRetriever:
         source_kinds: Optional[List[str]] = None,
         query_embedding: Optional[List[float]] = None,
         allow_legacy_embedding_scoring: bool = True,
+        owner_scope: str = "local",
     ) -> RetrievalResult:
         if top_k <= 0:
             raise ValueError("top_k must be positive")
@@ -100,6 +103,7 @@ class ProductionChunkRetriever:
                     page_ids=page_ids,
                     section_paths=section_paths,
                     source_kinds=source_kinds,
+                    owner_scope=owner_scope,
                 )
             except ChunkVectorQueryError:
                 return self._build_lexical_result(
@@ -107,6 +111,7 @@ class ProductionChunkRetriever:
                         page_ids=page_ids,
                         section_paths=section_paths,
                         source_kinds=source_kinds,
+                        owner_scope=owner_scope,
                     ),
                     query_tokens=query_tokens,
                     normalized_query_text=normalized_query_text,
@@ -129,6 +134,7 @@ class ProductionChunkRetriever:
             page_ids=page_ids,
             section_paths=section_paths,
             source_kinds=source_kinds,
+            owner_scope=owner_scope,
         )
 
         retrieval_fallback_reason = None

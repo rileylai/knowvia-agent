@@ -158,6 +158,14 @@ created_at
 第一版 context assembler 取最近 6 則 messages，再套用 token budget。完整歷史
 可以保存，但不代表每次都送進 provider。
 
+目前 3.0 backend 已提供 `POST /api/conversations`、`GET /api/conversations`、
+`GET /api/conversations/{session_id}` 與
+`POST /api/conversations/{session_id}/messages`。Message request 使用 current
+question 做主要 Knowledge retrieval query；同一 session 的 bounded history 只供
+follow-up interpretation。Repository 以 `owner_id` 過濾 session 與 message，無權限或
+不存在的 session 以相同的 unavailable error fail closed。QA 仍是 synchronous
+request/response；provider 失敗時可保留 user message，但不寫入 fake assistant message。
+
 ## `LongTermMemory`
 
 用途：保存使用者明確要求跨 session 保留的內容。

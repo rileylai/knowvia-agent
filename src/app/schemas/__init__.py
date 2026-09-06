@@ -8,7 +8,25 @@ from src.app.schemas.notion_index import (
     NotionIndexStatusResponse,
 )
 from src.app.schemas.ops import ReadinessCheck, ReadinessResponse
+from src.app.schemas.conversations import (
+    ConversationMessageRequest,
+    ConversationMessageResponse,
+    ConversationSessionResponse,
+    ConversationSessionSummaryResponse,
+    ConversationTurnResponse,
+)
 from src.app.schemas.qa import QACitation, QARequest, QAResponse
+
+__all__ = [
+    "ConversationMessageRequest",
+    "ConversationMessageResponse",
+    "ConversationSessionResponse",
+    "ConversationSessionSummaryResponse",
+    "ConversationTurnResponse",
+    "QACitation",
+    "QARequest",
+    "QAResponse",
+]
 from src.app.schemas.source_ingest import (
     ChatTextIngestionRequest,
     ImageOCRBatchResponse,

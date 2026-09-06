@@ -241,6 +241,7 @@ class ChunkRepository:
         page_ids: Optional[List[str]] = None,
         section_paths: Optional[List[str]] = None,
         source_kinds: Optional[List[str]] = None,
+        owner_scope: str = "local",
     ) -> List[RetrievalChunkCandidate]:
         normalized_page_ids = self._normalize_text_list(page_ids)
         normalized_section_paths = [
@@ -271,7 +272,10 @@ class ChunkRepository:
             .outerjoin(NotionBlock, KnowledgeChunk.notion_block_id == NotionBlock.id)
             .outerjoin(NotionPage, NotionBlock.notion_page_id == NotionPage.id)
             .outerjoin(SourceDocument, KnowledgeChunk.source_document_id == SourceDocument.id)
-            .filter(KnowledgeChunk.source_kind.in_(effective_source_kinds))
+            .filter(
+                KnowledgeChunk.source_kind.in_(effective_source_kinds),
+                KnowledgeChunk.owner_scope == owner_scope,
+            )
         )
         query = self._apply_eligibility_filter(query)
         query = self._exclude_known_synthetic_pages(query)
@@ -317,6 +321,7 @@ class ChunkRepository:
         page_ids: Optional[List[str]] = None,
         section_paths: Optional[List[str]] = None,
         source_kinds: Optional[List[str]] = None,
+        owner_scope: str = "local",
     ) -> List[SemanticChunkMatch]:
         if top_k <= 0:
             raise ValueError("top_k must be positive")
@@ -373,6 +378,7 @@ class ChunkRepository:
             .filter(
                 KnowledgeChunk.source_kind.in_(effective_source_kinds),
                 KnowledgeChunk.embedding.is_not(None),
+                KnowledgeChunk.owner_scope == owner_scope,
             )
         )
         query = self._apply_eligibility_filter(query)

@@ -114,8 +114,10 @@ class _FakeVectorRepository:
         page_ids: Optional[List[str]] = None,
         section_paths: Optional[List[str]] = None,
         source_kinds: Optional[List[str]] = None,
+        owner_scope: str = "local",
     ) -> List[SemanticChunkMatch]:
         _ = query_embedding
+        _ = owner_scope
         if self._raise_vector_error:
             raise ChunkVectorQueryError("synthetic pgvector failure")
 
@@ -153,7 +155,9 @@ class _FakeVectorRepository:
         page_ids: Optional[List[str]] = None,
         section_paths: Optional[List[str]] = None,
         source_kinds: Optional[List[str]] = None,
+        owner_scope: str = "local",
     ) -> List[RetrievalChunkCandidate]:
+        _ = owner_scope
         rows = self._filter_chunks(
             page_ids=page_ids,
             section_paths=section_paths,

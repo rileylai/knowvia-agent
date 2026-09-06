@@ -1,14 +1,22 @@
 import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
 import {
-  askQuestion,
+  createConversation,
+  getConversation,
   indexImage,
   indexPDF,
   indexURL,
+  listConversations,
   listKnowledgeSources,
+  sendConversationMessage,
+  type ConversationMessage,
+  type ConversationSession,
+  type ConversationSessionSummary,
+  type ConversationTurn,
   type ImageIndexResponse,
   type KnowledgeSource,
   type PDFIndexResponse,
+  type QACitation,
   type QAResponse,
 } from "./api";
 
@@ -498,19 +506,16 @@ function KnowledgeSurface() {
   );
 }
 
-function CitationList({ response }: { response: QAResponse }) {
-  if (response.citations.length === 0) {
+function CitationList({ citations }: { citations: QACitation[] }) {
+  if (citations.length === 0) {
     return null;
   }
 
   return (
-    <section className="citations" aria-labelledby="citations-heading">
-      <div className="answer-label-row">
-        <h2 id="citations-heading">Citations</h2>
-        <span>{response.citations.length.toString().padStart(2, "0")}</span>
-      </div>
+    <details className="citations">
+      <summary className="citation-summary">Sources · {citations.length}</summary>
       <ol>
-        {response.citations.map((citation, index) => (
+        {citations.map((citation, index) => (
           <li
             key={`${citation.source_kind ?? "notion"}-${citation.source_display_name ?? citation.notion_path ?? index}-${citation.locator ?? citation.page_id ?? index}`}
           >
@@ -533,7 +538,159 @@ function CitationList({ response }: { response: QAResponse }) {
           </li>
         ))}
       </ol>
-    </section>
+    </details>
+  );
+}
+
+type ConversationListState = "loading" | "ready" | "error";
+
+function conversationSummary(session: ConversationSession): ConversationSessionSummary {
+  return {
+    id: session.id,
+    title: session.title,
+    status: session.status,
+    created_at: session.created_at,
+    updated_at: session.updated_at,
+  };
+}
+
+function readURLSessionId(): { present: boolean; id: number | null } {
+  const value = new URLSearchParams(window.location.search).get("session_id");
+  if (value === null) {
+    return { present: false, id: null };
+  }
+  const id = Number(value);
+  return {
+    present: true,
+    id: Number.isSafeInteger(id) && id > 0 ? id : null,
+  };
+}
+
+function replaceURLSessionId(sessionId: number) {
+  const url = new URL(window.location.href);
+  url.pathname = "/chat";
+  url.searchParams.set("session_id", String(sessionId));
+  window.history.replaceState({}, "", `${url.pathname}?${url.searchParams.toString()}`);
+}
+
+function ConversationSidebar({
+  sessions,
+  state,
+  error,
+  activeSessionId,
+  disabled,
+  mobileOpen,
+  onNewChat,
+  onRetry,
+  onSelect,
+  onClose,
+}: {
+  sessions: ConversationSessionSummary[];
+  state: ConversationListState;
+  error: string | null;
+  activeSessionId: number | null;
+  disabled: boolean;
+  mobileOpen: boolean;
+  onNewChat: () => void;
+  onRetry: () => void;
+  onSelect: (sessionId: number) => void;
+  onClose: () => void;
+}) {
+  return (
+    <>
+      <aside
+        className={mobileOpen ? "conversation-panel conversation-panel--open" : "conversation-panel"}
+        aria-label="Conversation sessions"
+      >
+        <div className="conversation-panel-header">
+          <div>
+            <div className="conversation-panel-kicker">Short-term context</div>
+            <h2>Conversations</h2>
+          </div>
+          <button
+            type="button"
+            className="conversation-close"
+            aria-label="Close conversations"
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </div>
+        <button
+          type="button"
+          className="new-chat-button"
+          onClick={onNewChat}
+          disabled={disabled}
+        >
+          <span>New Chat</span>
+          <span aria-hidden="true">+</span>
+        </button>
+        <div className="conversation-list" aria-live="polite">
+          {state === "loading" && (
+            <div className="conversation-skeleton" role="status">
+              <span />
+              <span />
+              <span />
+              <strong>Loading conversations</strong>
+            </div>
+          )}
+          {state === "error" && error && (
+            <div className="conversation-inline-error" role="alert">
+              <strong>Conversations unavailable</strong>
+              <p>{error}</p>
+              <button type="button" onClick={onRetry} disabled={disabled && state !== "error"}>
+                Retry
+              </button>
+            </div>
+          )}
+          {state === "ready" && sessions.length === 0 && (
+            <p className="conversation-empty">No conversations yet.</p>
+          )}
+          {state === "ready" && sessions.length > 0 && (
+            <ol className="conversation-list-items">
+              {sessions.map((session) => (
+                <li key={session.id}>
+                  <button
+                    type="button"
+                    className={activeSessionId === session.id ? "conversation-item conversation-item--active" : "conversation-item"}
+                    onClick={() => onSelect(session.id)}
+                    disabled={disabled || activeSessionId === session.id}
+                    aria-current={activeSessionId === session.id ? "true" : undefined}
+                  >
+                    <strong>{session.title}</strong>
+                    <span>updated · {session.updated_at}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      </aside>
+      {mobileOpen && (
+        <button
+          type="button"
+          className="drawer-backdrop"
+          aria-label="Close conversations"
+          onClick={onClose}
+        />
+      )}
+    </>
+  );
+}
+
+function ConversationMessages({ messages }: { messages: ConversationMessage[] }) {
+  return (
+    <ol className="conversation-messages" aria-label="Conversation messages">
+      {messages.map((message) => (
+        <li key={message.id} className={`conversation-message conversation-message--${message.role}`}>
+          <span className="conversation-message-role">{message.role === "user" ? "You" : "Knowvia"}</span>
+          <p>{message.content}</p>
+          {message.role === "assistant" && (
+            <CitationList citations={message.citations ?? []} />
+          )}
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -542,13 +699,139 @@ function ChatSurface() {
   const [requestState, setRequestState] = useState<RequestState>("idle");
   const [response, setResponse] = useState<QAResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<ConversationSessionSummary[]>([]);
+  const [conversationListState, setConversationListState] = useState<ConversationListState>("loading");
+  const [conversationListError, setConversationListError] = useState<string | null>(null);
+  const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
+  const [activeSessionTitle, setActiveSessionTitle] = useState("New conversation");
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [creatingSession, setCreatingSession] = useState(false);
+  const [createRetryAvailable, setCreateRetryAvailable] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const isComposing = useRef(false);
   const isSubmitting = useRef(false);
+
+  const showError = (caughtError: unknown, fallback: string) =>
+    caughtError instanceof Error ? caughtError.message : fallback;
+
+  const loadConversations = async () => {
+    setConversationListState("loading");
+    setConversationListError(null);
+    setSessionLoading(true);
+    setError(null);
+    setCreateRetryAvailable(false);
+    const requestedSession = readURLSessionId();
+
+    try {
+      const listed = await listConversations();
+      setSessions(listed);
+      let target = !requestedSession.present
+        ? listed[0]
+        : requestedSession.id === null
+          ? undefined
+          : listed.find((session) => session.id === requestedSession.id);
+
+      if (requestedSession.present && !target) {
+        setError("Conversation is unavailable.");
+        if (listed.length > 0) {
+          target = listed[0];
+        }
+      }
+
+      if (!target) {
+        const created = await createConversation();
+        const summary = conversationSummary(created);
+        setSessions([summary]);
+        setActiveSessionId(created.id);
+        setActiveSessionTitle(created.title);
+        setMessages(created.messages);
+        setConversationListState("ready");
+        setSessionLoading(false);
+        replaceURLSessionId(created.id);
+        return;
+      }
+
+      const loaded = await getConversation(target.id);
+      setActiveSessionId(loaded.id);
+      setActiveSessionTitle(loaded.title);
+      setMessages(loaded.messages);
+      setConversationListState("ready");
+      setSessionLoading(false);
+      replaceURLSessionId(loaded.id);
+    } catch (caughtError) {
+      const message = showError(caughtError, "Unable to load conversations.");
+      setConversationListError(message);
+      setConversationListState("error");
+      setSessionLoading(true);
+      setError(message);
+    }
+  };
+
+  useEffect(() => {
+    void loadConversations();
+  }, []);
+
+  const handleNewChat = async () => {
+    if (creatingSession || sessionLoading || isSubmitting.current) {
+      return;
+    }
+    setCreatingSession(true);
+    setError(null);
+    setCreateRetryAvailable(false);
+    try {
+      const created = await createConversation();
+      const summary = conversationSummary(created);
+      setSessions((current) => [summary, ...current.filter((session) => session.id !== created.id)]);
+      setActiveSessionId(created.id);
+      setActiveSessionTitle(created.title);
+      setMessages(created.messages);
+      setResponse(null);
+      setRequestState("idle");
+      setQuestion("");
+      setSessionLoading(false);
+      replaceURLSessionId(created.id);
+      setMobileDrawerOpen(false);
+    } catch (caughtError) {
+      setError(showError(caughtError, "Unable to create a new conversation."));
+      setCreateRetryAvailable(true);
+    } finally {
+      setCreatingSession(false);
+    }
+  };
+
+  const handleSessionSelect = async (sessionId: number) => {
+    if (
+      sessionId === activeSessionId ||
+      sessionLoading ||
+      creatingSession ||
+      isSubmitting.current
+    ) {
+      return;
+    }
+    setSessionLoading(true);
+    setError(null);
+    setCreateRetryAvailable(false);
+    setResponse(null);
+    setRequestState("idle");
+    try {
+      const loaded = await getConversation(sessionId);
+      setActiveSessionId(loaded.id);
+      setActiveSessionTitle(loaded.title);
+      setMessages(loaded.messages);
+      setSessionLoading(false);
+      replaceURLSessionId(loaded.id);
+      setMobileDrawerOpen(false);
+    } catch (caughtError) {
+      setSessionLoading(false);
+      setError(showError(caughtError, "Conversation is unavailable."));
+    }
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const query = question.trim();
-    if (!query || isSubmitting.current) {
+    if (!query || !activeSessionId || sessionLoading || creatingSession || isSubmitting.current) {
       return;
     }
 
@@ -556,10 +839,25 @@ function ChatSurface() {
     setRequestState("loading");
     setResponse(null);
     setError(null);
+    setCreateRetryAvailable(false);
 
     try {
-      const result = await askQuestion(query);
+      const result: ConversationTurn = await sendConversationMessage(activeSessionId, query);
       setResponse(result);
+      setMessages(result.messages);
+      setActiveSessionTitle(result.title);
+      setSessions((current) => {
+        const existing = current.find((session) => session.id === result.session_id);
+        const updated: ConversationSessionSummary = {
+          id: result.session_id,
+          title: result.title,
+          status: existing?.status ?? "active",
+          created_at: existing?.created_at ?? result.updated_at,
+          updated_at: result.updated_at,
+        };
+        return [updated, ...current.filter((session) => session.id !== result.session_id)];
+      });
+      setQuestion("");
       setRequestState("success");
     } catch (caughtError) {
       setError(
@@ -588,89 +886,143 @@ function ChatSurface() {
   };
 
   const isLoading = requestState === "loading";
+  const controlsDisabled = isLoading || sessionLoading || creatingSession || conversationListState === "loading";
 
   return (
-    <section className="surface surface--chat" aria-labelledby="chat-heading">
-      <header className="chat-header">
-        <div>
-          <div className="section-kicker">Knowledge-grounded QA / single turn</div>
-          <h1 id="chat-heading">Ask what your notes know.</h1>
+    <div className="chat-layout">
+      <ConversationSidebar
+        sessions={sessions}
+        state={conversationListState}
+        error={conversationListError}
+        activeSessionId={activeSessionId}
+        disabled={controlsDisabled}
+        mobileOpen={mobileDrawerOpen}
+        onNewChat={() => void handleNewChat()}
+        onRetry={() => void loadConversations()}
+        onSelect={(sessionId) => void handleSessionSelect(sessionId)}
+        onClose={() => setMobileDrawerOpen(false)}
+      />
+      <section className="surface surface--chat" aria-labelledby="chat-heading">
+        <header className="chat-header">
+          <div>
+            <div className="section-kicker">Knowledge-grounded QA / conversation session</div>
+            <h1 id="chat-heading">Ask what your notes know.</h1>
+            <p className="current-session-label">Current conversation · {activeSessionTitle}</p>
+          </div>
+          <div className="chat-header-actions">
+            <button
+              type="button"
+              className="chat-menu-button"
+              aria-label="Open conversations"
+              onClick={() => setMobileDrawerOpen(true)}
+              disabled={controlsDisabled}
+            >
+              Conversations
+            </button>
+            <div className="runtime-badge"><span aria-hidden="true" />Baseline live</div>
+          </div>
+        </header>
+
+        <form className="ask-form" onSubmit={handleSubmit}>
+          <label htmlFor="question">Question</label>
+          <textarea
+            id="question"
+            name="question"
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            onKeyDown={handleQuestionKeyDown}
+            onCompositionStart={() => {
+              isComposing.current = true;
+            }}
+            onCompositionEnd={() => {
+              isComposing.current = false;
+            }}
+            placeholder="Ask about evidence already indexed in Knowledge…"
+            rows={4}
+            disabled={controlsDisabled}
+          />
+          <div className="form-footer">
+            <p>Same-session context · Recent history bounded · Grounded evidence</p>
+            <button type="submit" disabled={controlsDisabled || !question.trim()}>
+              <span>Ask Knowvia</span>
+              <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </form>
+
+        <div className="result-region" aria-live="polite">
+          {sessionLoading && (
+            <div className="loading-state" role="status">
+              <span className="loading-orbit" aria-hidden="true" />
+              <div>
+                <strong>Loading conversation</strong>
+                <p>Restoring backend session history.</p>
+              </div>
+            </div>
+          )}
+
+          {!sessionLoading && error && requestState !== "error" && (
+            <div className="error-state" role="alert">
+              <span aria-hidden="true">!</span>
+              <div>
+                <strong>Conversation unavailable</strong>
+                <p>{error}</p>
+                {createRetryAvailable && (
+                  <button type="button" onClick={() => void handleNewChat()}>
+                    Retry
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {!sessionLoading && activeSessionId && messages.length === 0 && requestState === "idle" && (
+            <div className="idle-state">
+              <span className="idle-mark" aria-hidden="true">K</span>
+              <p>Ask about your indexed knowledge.</p>
+            </div>
+          )}
+
+          {!sessionLoading && messages.length > 0 && (
+            <ConversationMessages messages={messages} />
+          )}
+
+          {isLoading && (
+            <div className="loading-state" role="status">
+              <span className="loading-orbit" aria-hidden="true" />
+              <div>
+                <strong>Searching knowledge</strong>
+                <p>Checking indexed evidence before answering.</p>
+              </div>
+            </div>
+          )}
+
+          {requestState === "error" && error && (
+            <div className="error-state" role="alert">
+              <span aria-hidden="true">!</span>
+              <div>
+                <strong>Request failed</strong>
+                <p>{error}</p>
+              </div>
+            </div>
+          )}
+
+          {requestState === "success" && response && (
+            <article className={response.insufficient_info ? "answer answer--insufficient" : "answer"}>
+              <div className="answer-label-row">
+                <h2>{response.insufficient_info ? "Insufficient info" : "Answer"}</h2>
+                <span>Run {response.workflow_run_id}</span>
+              </div>
+              {response.insufficient_info && (
+                <p className="insufficient-note">
+                  The backend did not find enough enterprise evidence to answer safely.
+                </p>
+              )}
+            </article>
+          )}
         </div>
-        <div className="runtime-badge"><span aria-hidden="true" />Baseline live</div>
-      </header>
-
-      <form className="ask-form" onSubmit={handleSubmit}>
-        <label htmlFor="question">Question</label>
-        <textarea
-          id="question"
-          name="question"
-          value={question}
-          onChange={(event) => setQuestion(event.target.value)}
-          onKeyDown={handleQuestionKeyDown}
-          onCompositionStart={() => {
-            isComposing.current = true;
-          }}
-          onCompositionEnd={() => {
-            isComposing.current = false;
-          }}
-          placeholder="Ask about evidence already indexed in Knowledge…"
-          rows={4}
-          disabled={isLoading}
-        />
-        <div className="form-footer">
-          <p>One question · One grounded response · No conversation memory</p>
-          <button type="submit" disabled={isLoading || !question.trim()}>
-            <span>Ask Knowvia</span>
-            <span aria-hidden="true">↗</span>
-          </button>
-        </div>
-      </form>
-
-      <div className="result-region" aria-live="polite">
-        {requestState === "idle" && (
-          <div className="idle-state">
-            <span className="idle-mark" aria-hidden="true">K</span>
-            <p>Your answer will appear here with backend-provided evidence.</p>
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="loading-state" role="status">
-            <span className="loading-orbit" aria-hidden="true" />
-            <div>
-              <strong>Searching knowledge</strong>
-              <p>Checking indexed evidence before answering.</p>
-            </div>
-          </div>
-        )}
-
-        {requestState === "error" && error && (
-          <div className="error-state" role="alert">
-            <span aria-hidden="true">!</span>
-            <div>
-              <strong>Request failed</strong>
-              <p>{error}</p>
-            </div>
-          </div>
-        )}
-
-        {requestState === "success" && response && (
-          <article className={response.insufficient_info ? "answer answer--insufficient" : "answer"}>
-            <div className="answer-label-row">
-              <h2>{response.insufficient_info ? "Insufficient info" : "Answer"}</h2>
-              <span>Run {response.workflow_run_id}</span>
-            </div>
-            <p className="answer-copy">{response.answer}</p>
-            {response.insufficient_info && (
-              <p className="insufficient-note">
-                The backend did not find enough enterprise evidence to answer safely.
-              </p>
-            )}
-            {!response.insufficient_info && <CitationList response={response} />}
-          </article>
-        )}
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }
 

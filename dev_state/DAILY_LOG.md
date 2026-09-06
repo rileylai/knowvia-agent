@@ -569,3 +569,227 @@ Frontend manual verification 已完成並判定 PASS：
 
 - `2.3.1` 與 `2.3.2` 已完成 frontend manual verification，狀態為 `done`。
 - `2.3` parent 狀態為 `done`；`2.4` 維持 `planned`，不開始 runtime implementation。
+
+## 2026-09-05 Conversation Sessions 3.0
+
+### Scope
+
+- 實作 `ConversationSession` 與 `ConversationMessage` durable persistence、owner
+  isolation、deterministic title、recent context limit 與 token budget。
+- 將 synchronous QA 接到 session message flow；不開始 Persistent Memory、MCP、bounded
+  Agent loop 或 SSE。
+- Frontend 加入 New Chat、conversation list、URL `session_id` identity、same-session
+  follow-up、desktop sidebar 與 mobile drawer。
+
+### Implementation
+
+- 新增 Alembic migration `f1a2b3c4d5e6_add_conversation_sessions.py`，建立 sessions、messages、
+  sequence uniqueness 與 cascade foreign key。
+- Backend 新增 conversation repository、orchestrator、schemas 與四個 conversation API
+  endpoint。Session list 依 `updated_at DESC`，owner filter 由 backend 強制。
+- 第一則 user message 使用 deterministic 前 48 chars 作 title；空 session 顯示
+  `New conversation`。QA retrieval 仍只使用 current question，history 只作 bounded
+  follow-up context。
+- Provider failure 會保留已保存的 user message，不建立 fake assistant message；
+  `insufficient_info` 仍保持 zero citations。
+- Frontend 首次進入先 GET list；只有成功確認 list 為空才 bootstrap session。Invalid URL
+  session 會 generic error、fallback 到合法 session，且不保留 invalid identity。Session
+  switch 先 load，失敗時保留原 active session、messages 與 URL。
+
+### Automated Evidence
+
+- Conversation context、API、owner isolation、provider failure 與 insufficient-info tests：
+  `10 passed` focused。
+- Backend full suite：`675 passed, 5 skipped`。
+- Frontend session tests 與既有 App suite：`37 passed`；production build：PASS。
+- Alembic head：`f1a2b3c4d5e6`；migration 與 conversation focused tests：`10 passed`。
+
+### Manual Verification
+
+Browser manual verification completed on 2026-09-06; final results are recorded in the
+completion entry below.
+
+### Known Limitations
+
+- Current owner identity 使用 single-user auth contract 的 backend owner boundary，尚未
+  擴充多使用者登入 provider。
+- Chat 仍是 synchronous request/response；streaming lifecycle、Agent tool loop 與
+  persistent memory 留在後續 roadmap slices。
+
+### Next
+
+- 完成 browser manual acceptance：首次載入、URL restore、follow-up、New Chat、session
+  switch failure、mobile drawer 與 refresh。
+- Manual acceptance 完成前維持 roadmap `3.0=manual_verification`；`4.0 Persistent
+  Memory` 維持 `planned`。
+
+## 2026-09-05 Same-session Conversational Recall 3.0.1
+
+### Scope
+
+- 依 browser manual verification 的 blocking repro，新增 `3.0.1 Same-session
+  Conversational Recall`。
+- `3.0` 維持 `manual_verification`；不開始 `4.0 Persistent Memory`、MCP、Agent
+  loop、SSE 或 semantic history retrieval。
+
+### Diagnosis
+
+- `ConversationSession` 與 `ConversationMessage` persistence、owner scope、recent
+  history load 已確認正常。
+- 原本所有 conversation request 都進入 enterprise QA；沒有 Knowledge evidence 時，
+  `QAOrchestrator` 在 provider 前直接回傳 `insufficient_info`。
+- 原本的 `qa_answer_v3` 只允許 production-note context，沒有 conversational-only
+  authority path。
+
+### Implementation
+
+- 新增 bounded deterministic `classify_conversation_recall`，只處理 previous user
+  utterance、previous assistant answer、previous choice/recommendation，以及 previous
+  recommendation reasoning。
+- Recall request 使用獨立 `conversation_recall_v1` prompt，history 以同一 session 的
+  last-6 與既有 token budget 為界；不執行 Knowledge retrieval，不產生 citations。
+- New Chat 沒有 earlier user message 時回傳 deterministic no-history response，不讀取
+  其他 session。
+- Enterprise request 保留原本 Knowledge retrieval、backend-owned citations 與
+  `insufficient_info=true`、`citations=[]` contract。Assistant history 不會進入
+  Knowledge evidence。
+
+### Automated Evidence
+
+- Focused conversation、context、prompt safety 與 recall tests：`40 passed`。
+- Backend full suite：`690 passed, 5 skipped`。
+- Frontend tests：`37 passed`。
+- Frontend production build：PASS。
+- `git diff --check`：PASS。
+
+### Manual Verification
+
+Browser core verification completed; the bounded paraphrase limitation remains documented
+below.
+
+### Known Limitations
+
+- Recall mode 只支援明確、bounded 的 conversational reference 類型，不建立 general
+  intent framework、semantic history search 或 generic query rewrite。
+- 部分 paraphrase 仍可能 fallback 到 enterprise QA，例如 `hi I'm Nicole` 後詢問
+  `what is my name`。Broader intent selection deferred 到後續 bounded Agent runtime。
+- 同時需要新的 enterprise claim 與複雜 pronoun/reference resolution 的 follow-up，若
+  目前 retrieval 無法安全處理，仍會保留 `insufficient_info`。
+- Conversation recall 使用 provider 時，provider 只收到 bounded same-session history；
+  response 的 citations 固定為空。
+
+### Next
+
+- 依下方 browser guide 重新驗證 `3.0` 與 `3.0.1` 的 session、recall、authority
+  boundary 與 failure behavior。
+- Manual acceptance 完成前，`3.0=manual_verification`、`3.0.1=manual_verification`；
+  `4.0 Persistent Memory` 維持 `planned`。
+
+## 2026-09-05 Conversation Citation Follow-up 3.0.2
+
+### Manual Verification
+
+- `3.0.1` browser core verification：PASS。
+- Same-session previous answer recall：PASS。
+- Previous recommendation reasoning：PASS。
+- Conversation recall 不產生 enterprise citations：PASS。
+- New Chat/session isolation：PASS。
+
+### Scope
+
+- 新增 `3.0.2 Per-message Citation Persistence & Disclosure`。
+- Browser 發現 grounded answer 的 citation 只停留在目前 request response；送出下一題
+  後，舊 assistant answer 的 citation disclosure 消失。
+
+### Focused Discovery
+
+- `POST /api/conversations/{session_id}/messages` 的 top-level response 目前包含
+  backend-owned `citations`。
+- `ConversationMessage.metadata_json` 已存在於 3.0 migration，但目前 append、snapshot
+  與 API response 都沒有保存或回傳 citation metadata。
+- `GET /api/conversations/{session_id}` 的 message contract 目前只有 content、role、
+  sequence 與 timestamps，frontend 因此只能 restore assistant content。
+- Frontend 的 `response` state 只代表最後一次 request；`CitationList` 也只 render
+  這個 state，下一次送出時會清除。
+
+### Known Limitation
+
+- 3.0.1 bounded recall classifier 對部分 paraphrase 仍有限制。Broader intent selection
+  deferred 到後續 bounded Agent runtime，本 follow-up 不擴張 classifier。
+
+### Status
+
+- `3.0=manual_verification`。
+- `3.0.1=done`，browser core verification 已通過。
+- `3.0.2=manual_verification`，automated implementation 已完成，等待 browser
+  manual verification。
+- 不開始 `4.0 Persistent Memory`、global citation manager、Agent runtime 或 SSE。
+
+## 2026-09-05 Conversation Citation Persistence Implementation 3.0.2
+
+### Implementation
+
+- 新增 typed、versioned `ConversationCitation` metadata contract，沿用
+  `conversation_messages.metadata_json`。
+- citation metadata 只保存 backend QA result 的 bounded display provenance；最多 20 筆，並
+  限制 source name、locator、URL、Notion path 與 filename 長度。
+- assistant content 與 citation metadata 在同一次 message append 中寫入。Provider failure
+  仍只保留 user message，不建立 assistant message。
+- GET session 與 POST message response 的每則 `ConversationMessage` 現在固定回傳
+  `citations: []` 或該 message 的 citations。null、legacy、malformed 與 unsupported
+  metadata version 都 safe fallback 為空 list。
+- frontend 改由每則 assistant message render collapsed `Sources · N` disclosure；展開與
+  折疊狀態只存在 frontend，不建立 global citation panel。
+- conversation recall 與 `insufficient_info` message 不顯示 Sources disclosure。
+- ConversationMessage citation metadata 沒有進入 context assembly，不會成為 Knowledge
+  evidence authority。
+
+### Automated Evidence
+
+- Focused citation persistence、bounded metadata、legacy fallback、message attachment 與
+  authority boundary tests：`6 passed`。
+- Backend full suite：`696 passed, 5 skipped`。
+- Frontend tests：`39 passed`。
+- Frontend production build：PASS。
+- `git diff --check`：PASS。
+
+### Manual Verification
+
+Browser manual verification completed on 2026-09-06; final results are recorded in the
+completion entry below.
+
+### Status
+
+- `3.0=manual_verification`。
+- `3.0.1=done`，browser core verification 已通過；paraphrase classifier limitation 維持
+  Known Limitation，broader intent selection deferred 到後續 bounded Agent runtime。
+- `3.0.2=manual_verification`，automated implementation 完成，等待 browser verification。
+- 不開始 `4.0 Persistent Memory`、global citation manager、Agent runtime 或 SSE。
+
+## 2026-09-06 Conversation Roadmap Completion Verification
+
+### Browser Manual Verification
+
+- Grounded assistant message 顯示自己的 `Sources · N`，預設 collapsed，且可獨立
+  expand / collapse。
+- 後續問題不會移除舊 assistant message 的 citations；多則 assistant messages 的
+  citation lists 各自附屬於正確 message。
+- Browser refresh 後，durable session restore 會恢復既有 assistant message citations；
+  切換其他 session 再切回後，citations 仍屬於原 conversation message。
+- Conversational recall 維持 `citations=[]`，不顯示 Sources；`insufficient_info` 也維持
+  `citations=[]`，不顯示 Sources。
+- Citation 仍由 backend metadata 提供，未從 answer text 重建；未發現 session isolation、
+  ordering、restore 或 grounding regression。
+
+### Final Status
+
+- `3.0=done`。
+- `3.0.1=done`。
+- `3.0.2=done`。
+- `4.0 Persistent Memory` 維持下一個正式 implementation slice，尚未開始。
+
+### Known Limitation
+
+- `3.0.1` bounded recall classifier 對部分 paraphrase 仍有限制，例如 `hi I'm Nicole` 後
+  詢問 `what is my name` 可能 fallback 到 enterprise QA / `insufficient_info`。Broader
+  intent selection deferred 到後續 bounded Agent runtime；本輪不擴張 classifier。

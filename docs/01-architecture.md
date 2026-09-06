@@ -47,13 +47,13 @@ flowchart LR
 | Notion sync | `EXISTING` | deterministic page listing、sync、chunk、embed、index |
 | Knowledge Layer | `MODIFY` | 統一 `KnowledgeSource`、`SourceDocument`、`KnowledgeChunk` |
 | Retrieval Service | `EXISTING` / `MODIFY` | 共用 Notion、PDF、Image、URL 的 pgvector 與 lexical fallback；套用 source eligibility |
-| Conversation State | `NEW` | session、message、short-term context budget |
-| Context Assembly | `NEW` | 組合 knowledge evidence、memory 與 conversation context |
+| Conversation State | `EXISTING` | durable session、message、owner isolation 與 short-term context budget |
+| Context Assembly | `MODIFY` | 在 synchronous QA 中組合 bounded conversation context 與 knowledge evidence |
 | Memory Service | `NEW` | explicit save、owner scope、semantic retrieval |
 | Bounded Knowledge Agent | `NEW` | 單一 Agent 的有限 tool loop 與 answer generation |
 | MCP Tool Layer | `NEW` | standardized adapter；不擁有 business logic |
 | Provider Layer | `EXISTING` / `MODIFY` | Provider Router、LLM 與 embedding adapters |
-| PostgreSQL + pgvector | `EXISTING` | durable records、chunks、vectors、future session/memory |
+| PostgreSQL + pgvector | `EXISTING` | durable records、sessions、messages、chunks、vectors、future memory |
 | SSE | `NEW` | browser streaming transport |
 | Redis/RQ | `LEGACY` | Telegram worker；不列入 Knowvia MVP core |
 
@@ -131,6 +131,11 @@ Context Assembly 分開處理三種資料：
 
 KnowledgeChunk 與 LongTermMemory 不能共用 retrieval corpus。
 
+3.0 的 current path 已由 backend 載入同一 session 的 bounded history，將最近 6 則
+messages 與 token budget 送入 synchronous QA；current user question 仍是主要 retrieval
+query。Session、message、title 與 `updated_at` 由 backend persistence 管理，尚未接入
+bounded Agent loop 或 SSE。
+
 ## Provider 與 persistence
 
 LLM 與 embedding 必須經 Provider Router / Provider interface。Database access
@@ -147,7 +152,7 @@ SSE 是 transport，不改變 Agent 的 permission、tool 或 persistence policy
 
 | 系統 | Active Knowvia 用途 | 備註 |
 | --- | --- | --- |
-| PostgreSQL | application state、KnowledgeChunk、vectors、planned sessions/memory | 必要 |
+| PostgreSQL | application state、sessions、messages、KnowledgeChunk、vectors、planned memory | 必要 |
 | pgvector | knowledge 與 memory semantic retrieval | 必要 |
 | Notion | knowledge source | read/sync only |
 | OpenAI 或其他 provider | LLM、embedding | 經 Provider Router |
