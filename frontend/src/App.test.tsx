@@ -101,6 +101,7 @@ function withConversationAPI(legacyFetch: typeof fetch) {
         citations: payload.insufficient_info === true || !Array.isArray(payload.citations)
           ? []
           : payload.citations,
+        used_saved_memory: payload.used_saved_memory === true,
       });
       return jsonResponse({
         ...payload,
@@ -136,8 +137,8 @@ describe("Knowvia frontend harness", () => {
     vi.unstubAllGlobals();
   });
 
-  it("shows all three surfaces and marks Memory as a future capability", async () => {
-    stubLegacyFetch(vi.fn().mockResolvedValue(jsonResponse([])));
+  it("shows all three surfaces and renders an empty Memory Inspector", async () => {
+    stubLegacyFetch(vi.fn(() => Promise.resolve(jsonResponse([]))));
     const user = userEvent.setup();
     render(<App />);
 
@@ -154,9 +155,115 @@ describe("Knowvia frontend harness", () => {
 
     await user.click(screen.getByRole("button", { name: "Memory" }));
     expect(screen.getByRole("heading", { name: "Memory" })).toBeVisible();
-    expect(
-      screen.getByText("Persistent memory will be available in a later phase."),
-    ).toBeVisible();
+    expect(await screen.findByText("No saved memory")).toBeVisible();
+  });
+
+  it("renders saved memory and removes it after a successful delete", async () => {
+    const memory = {
+      id: 7,
+      memory_type: "decision",
+      content: "Production uses pgvector.",
+      status: "active",
+      created_at: "2026-09-06T09:30:00Z",
+    };
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const path = typeof input === "string" ? input : input.toString();
+      if (path === "/api/memories" && (init?.method ?? "GET") === "GET") {
+        return Promise.resolve(jsonResponse([memory]));
+      }
+      if (path === "/api/memories/7" && init?.method === "DELETE") {
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+      return Promise.resolve(jsonResponse([]));
+    });
+    stubLegacyFetch(fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Memory" }));
+    expect(await screen.findByText(memory.content)).toBeVisible();
+    expect(screen.getByText("decision")).toBeVisible();
+    expect(screen.getByText(memory.created_at)).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+    expect(await screen.findByText("No saved memory")).toBeVisible();
+    expect(fetchMock).toHaveBeenCalledWith("/api/memories/7", { method: "DELETE" });
+  });
+
+  it("shows the Memory Inspector loading state", async () => {
+    const deferred = deferredResponse();
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const path = typeof input === "string" ? input : input.toString();
+      return path === "/api/memories" ? deferred.promise : Promise.resolve(jsonResponse([]));
+    });
+    stubLegacyFetch(fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Memory" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Loading saved memory");
+    deferred.resolve(jsonResponse([]));
+  });
+
+  it("keeps a memory visible and shows a delete error", async () => {
+    const memory = {
+      id: 8,
+      memory_type: "preference",
+      content: "Prefer concise answers.",
+      status: "active",
+      created_at: "2026-09-06T09:31:00Z",
+    };
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const path = typeof input === "string" ? input : input.toString();
+      if (path === "/api/memories" && (init?.method ?? "GET") === "GET") {
+        return Promise.resolve(jsonResponse([memory]));
+      }
+      if (path === "/api/memories/8" && init?.method === "DELETE") {
+        return Promise.resolve(jsonResponse({ detail: { message: "Memory delete failed" } }, 500));
+      }
+      return Promise.resolve(jsonResponse([]));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Memory" }));
+    await user.click(await screen.findByRole("button", { name: "Delete" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Memory delete failed");
+    expect(screen.getByText(memory.content)).toBeVisible();
+  });
+
+  it("shows saved-memory disclosure without adding a document citation", async () => {
+    const response = {
+      ...successPayload,
+      answer: "Production uses pgvector.",
+      citations: [],
+      used_saved_memory: true,
+    };
+    stubLegacyFetch(vi.fn().mockResolvedValue(jsonResponse(response)));
+    render(<App />);
+
+    await submitQuestion("我們 production 最後決定用什麼？");
+
+    expect(await screen.findByText("Used saved memory")).toBeVisible();
+    expect(screen.queryByText(/Sources ·/)).not.toBeInTheDocument();
+  });
+
+  it("shows explicit save confirmation states in Chat", async () => {
+    const savedResponse = { ...successPayload, answer: "Memory saved", citations: [], memory_status: "saved" };
+    stubLegacyFetch(vi.fn().mockResolvedValue(jsonResponse(savedResponse)));
+    render(<App />);
+    await submitQuestion("記住，我們 production 使用 pgvector。");
+    expect(await screen.findByRole("status")).toHaveTextContent("Memory saved");
+
+    const duplicateResponse = { ...successPayload, answer: "Already saved", citations: [], memory_status: "already_saved" };
+    vi.stubGlobal("fetch", withConversationAPI(vi.fn().mockResolvedValue(jsonResponse(duplicateResponse))));
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "New Chat" }));
+    await waitForChatReady();
+    await user.type(screen.getByLabelText("Question"), "記住，我們 production 使用 pgvector。");
+    await user.click(screen.getByRole("button", { name: "Ask Knowvia" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Already saved");
   });
 
   it("renders the indexed PDF source inventory", async () => {
@@ -1046,6 +1153,150 @@ describe("Knowvia frontend harness", () => {
     expect(await screen.findByText("Insufficient info")).toBeVisible();
     expect(screen.getByText("Knowledge/NLP/Week5/Attention")).toBeVisible();
     expect(screen.getAllByText("Sources · 1")).toHaveLength(1);
+  });
+
+  it("keeps unsent drafts independent when switching between sessions", async () => {
+    const sessionA = {
+      id: 1,
+      title: "Session A",
+      status: "active",
+      created_at: "2026-09-05T09:30:00Z",
+      updated_at: "2026-09-05T09:30:00Z",
+      messages: [],
+    };
+    const sessionB = {
+      ...sessionA,
+      id: 2,
+      title: "Session B",
+      updated_at: "2026-09-05T09:31:00Z",
+    };
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.pathname
+          : input.url;
+      if (path === "/api/conversations" && (init?.method ?? "GET") === "GET") {
+        return jsonResponse([
+          {
+            id: sessionA.id,
+            title: sessionA.title,
+            status: sessionA.status,
+            created_at: sessionA.created_at,
+            updated_at: sessionA.updated_at,
+          },
+          {
+            id: sessionB.id,
+            title: sessionB.title,
+            status: sessionB.status,
+            created_at: sessionB.created_at,
+            updated_at: sessionB.updated_at,
+          },
+        ]);
+      }
+      if (path === "/api/conversations/1" && (init?.method ?? "GET") === "GET") {
+        return jsonResponse(sessionA);
+      }
+      if (path === "/api/conversations/2" && (init?.method ?? "GET") === "GET") {
+        return jsonResponse(sessionB);
+      }
+      return jsonResponse([]);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    window.history.replaceState({}, "", "/chat");
+    const user = userEvent.setup();
+    render(<App />);
+
+    await waitForChatReady();
+    await user.type(screen.getByLabelText("Question"), "AAA");
+    await user.click(screen.getByRole("button", { name: /Session B/ }));
+    await waitFor(() => {
+      expect(screen.getByLabelText("Question")).toHaveValue("");
+    });
+    await user.type(screen.getByLabelText("Question"), "BBB");
+
+    await user.click(screen.getByRole("button", { name: /Session A/ }));
+    await waitFor(() => {
+      expect(screen.getByLabelText("Question")).toHaveValue("AAA");
+    });
+    await user.click(screen.getByRole("button", { name: /Session B/ }));
+    await waitFor(() => {
+      expect(screen.getByLabelText("Question")).toHaveValue("BBB");
+    });
+  });
+
+  it("does not leak a failed request draft into another session", async () => {
+    const sessionA = {
+      id: 1,
+      title: "Session A",
+      status: "active",
+      created_at: "2026-09-05T09:30:00Z",
+      updated_at: "2026-09-05T09:30:00Z",
+      messages: [],
+    };
+    const sessionB = {
+      ...sessionA,
+      id: 2,
+      title: "Session B",
+      updated_at: "2026-09-05T09:31:00Z",
+    };
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.pathname
+          : input.url;
+      const method = (init?.method ?? "GET").toUpperCase();
+      if (path === "/api/conversations" && method === "GET") {
+        return jsonResponse([
+          {
+            id: sessionA.id,
+            title: sessionA.title,
+            status: sessionA.status,
+            created_at: sessionA.created_at,
+            updated_at: sessionA.updated_at,
+          },
+          {
+            id: sessionB.id,
+            title: sessionB.title,
+            status: sessionB.status,
+            created_at: sessionB.created_at,
+            updated_at: sessionB.updated_at,
+          },
+        ]);
+      }
+      if (path === "/api/conversations/1" && method === "GET") {
+        return jsonResponse(sessionA);
+      }
+      if (path === "/api/conversations/2" && method === "GET") {
+        return jsonResponse(sessionB);
+      }
+      if (path === "/api/conversations/1/messages" && method === "POST") {
+        return jsonResponse(
+          { detail: { message: "Provider is unavailable" } },
+          503,
+        );
+      }
+      return jsonResponse([]);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    window.history.replaceState({}, "", "/chat");
+    const user = userEvent.setup();
+    render(<App />);
+
+    await waitForChatReady();
+    await user.type(screen.getByLabelText("Question"), "failed input");
+    await user.click(screen.getByRole("button", { name: "Ask Knowvia" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Provider is unavailable");
+
+    await user.click(screen.getByRole("button", { name: /Session B/ }));
+    await waitFor(() => {
+      expect(screen.getByLabelText("Question")).toHaveValue("");
+    });
+    await user.click(screen.getByRole("button", { name: /Session A/ }));
+    await waitFor(() => {
+      expect(screen.getByLabelText("Question")).toHaveValue("failed input");
+    });
   });
 
   it.each([

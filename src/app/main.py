@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 
 from src.app.api import (
     conversations_router,
+    memories_router,
     notion_index_router,
     ops_router,
     qa_router,
@@ -30,6 +31,7 @@ app.include_router(notion_index_router, dependencies=protected_api_dependency)
 app.include_router(ops_router)
 app.include_router(qa_router, dependencies=protected_api_dependency)
 app.include_router(conversations_router, dependencies=protected_api_dependency)
+app.include_router(memories_router, dependencies=protected_api_dependency)
 app.include_router(source_ingest_router, dependencies=protected_api_dependency)
 app.middleware("http")(api_idempotency_middleware)
 

@@ -6,6 +6,8 @@ import {
   indexImage,
   indexPDF,
   indexURL,
+  listMemories,
+  deleteMemory,
   listConversations,
   listKnowledgeSources,
   sendConversationMessage,
@@ -15,6 +17,7 @@ import {
   type ConversationTurn,
   type ImageIndexResponse,
   type KnowledgeSource,
+  type SavedMemory,
   type PDFIndexResponse,
   type QACitation,
   type QAResponse,
@@ -686,7 +689,12 @@ function ConversationMessages({ messages }: { messages: ConversationMessage[] })
           <span className="conversation-message-role">{message.role === "user" ? "You" : "Knowvia"}</span>
           <p>{message.content}</p>
           {message.role === "assistant" && (
-            <CitationList citations={message.citations ?? []} />
+            <>
+              {message.used_saved_memory && (
+                <div className="saved-memory-indicator">Used saved memory</div>
+              )}
+              <CitationList citations={message.citations ?? []} />
+            </>
           )}
         </li>
       ))}
@@ -695,7 +703,7 @@ function ConversationMessages({ messages }: { messages: ConversationMessage[] })
 }
 
 function ChatSurface() {
-  const [question, setQuestion] = useState("");
+  const [draftsBySessionId, setDraftsBySessionId] = useState<Record<number, string>>({});
   const [requestState, setRequestState] = useState<RequestState>("idle");
   const [response, setResponse] = useState<QAResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -711,6 +719,17 @@ function ChatSurface() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const isComposing = useRef(false);
   const isSubmitting = useRef(false);
+
+  const question = activeSessionId === null ? "" : draftsBySessionId[activeSessionId] ?? "";
+  const setQuestion = (value: string) => {
+    if (activeSessionId === null) {
+      return;
+    }
+    setDraftsBySessionId((current) => ({
+      ...current,
+      [activeSessionId]: value,
+    }));
+  };
 
   const showError = (caughtError: unknown, fallback: string) =>
     caughtError instanceof Error ? caughtError.message : fallback;
@@ -788,7 +807,7 @@ function ChatSurface() {
       setMessages(created.messages);
       setResponse(null);
       setRequestState("idle");
-      setQuestion("");
+      setDraftsBySessionId((current) => ({ ...current, [created.id]: "" }));
       setSessionLoading(false);
       replaceURLSessionId(created.id);
       setMobileDrawerOpen(false);
@@ -857,7 +876,7 @@ function ChatSurface() {
         };
         return [updated, ...current.filter((session) => session.id !== result.session_id)];
       });
-      setQuestion("");
+      setDraftsBySessionId((current) => ({ ...current, [result.session_id]: "" }));
       setRequestState("success");
     } catch (caughtError) {
       setError(
@@ -1013,6 +1032,11 @@ function ChatSurface() {
                 <h2>{response.insufficient_info ? "Insufficient info" : "Answer"}</h2>
                 <span>Run {response.workflow_run_id}</span>
               </div>
+              {response.memory_status && (
+                <p className="memory-operation-status" role="status">
+                  {response.memory_status === "saved" ? "Memory saved" : "Already saved"}
+                </p>
+              )}
               {response.insufficient_info && (
                 <p className="insufficient-note">
                   The backend did not find enough enterprise evidence to answer safely.
@@ -1027,16 +1051,87 @@ function ChatSurface() {
 }
 
 function MemorySurface() {
+  const [state, setState] = useState<"loading" | "success" | "empty" | "error">("loading");
+  const [memories, setMemories] = useState<SavedMemory[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const refresh = async () => {
+    setState("loading");
+    setError(null);
+    try {
+      const result = await listMemories();
+      setMemories(result);
+      setState(result.length > 0 ? "success" : "empty");
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to load saved memory.");
+      setState("error");
+    }
+  };
+
+  useEffect(() => {
+    void refresh();
+  }, []);
+
+  const handleDelete = async (memoryId: number) => {
+    if (deletingId !== null) {
+      return;
+    }
+    setDeletingId(memoryId);
+    setError(null);
+    try {
+      await deleteMemory(memoryId);
+      setMemories((current) => current.filter((memory) => memory.id !== memoryId));
+      setState((current) => (memories.length <= 1 ? "empty" : current));
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to delete saved memory.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <section className="surface surface--quiet" aria-labelledby="memory-heading">
-      <div className="section-kicker">Reserved surface / phase 4.0</div>
+      <div className="section-kicker">Persistent context / phase 4.0</div>
       <h1 id="memory-heading">Memory</h1>
-      <div className="memory-placeholder">
-        <span aria-hidden="true">04</span>
-        <div>
-          <p>Persistent memory will be available in a later phase.</p>
-          <small>No records are saved, searched, or simulated in this interface.</small>
-        </div>
+      <div className="memory-inspector" aria-live="polite">
+        {state === "loading" && <div className="loading-state" role="status"><strong>Loading saved memory</strong></div>}
+        {state === "error" && (
+          <div className="error-state" role="alert">
+            <div>
+              <strong>Memory unavailable</strong>
+              <p>{error}</p>
+              <button type="button" onClick={() => void refresh()}>Retry</button>
+            </div>
+          </div>
+        )}
+        {state === "empty" && (
+          <div className="memory-empty">
+            <strong>No saved memory</strong>
+            <p>Explicitly saved decisions, preferences, and project context will appear here.</p>
+          </div>
+        )}
+        {state === "success" && (
+          <ol className="memory-list">
+            {memories.map((memory) => (
+              <li key={memory.id} className="memory-item">
+                <p>{memory.content}</p>
+                <div className="memory-meta">
+                  <span>{memory.memory_type}</span>
+                  <time dateTime={memory.created_at}>{memory.created_at}</time>
+                  <button
+                    type="button"
+                    onClick={() => void handleDelete(memory.id)}
+                    disabled={deletingId !== null}
+                  >
+                    {deletingId === memory.id ? "Deleting…" : "Delete"}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+        {error && state !== "error" && <p className="memory-inline-error" role="alert">{error}</p>}
       </div>
     </section>
   );
@@ -1074,7 +1169,7 @@ export default function App() {
 
         <div className="sidebar-foot">
           <span>Thin harness</span>
-          <span>Phase 1.0</span>
+          <span>Phase 4.0</span>
         </div>
       </aside>
 

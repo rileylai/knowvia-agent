@@ -11,6 +11,7 @@ from src.app.dependencies import (
     get_embedding_client,
     get_prompt_template_loader,
     get_provider_router,
+    get_memory_service,
 )
 from src.app.schemas import QACitation, QARequest, QAResponse
 from src.db.session import SessionFactory, get_db_session, get_db_session_factory
@@ -19,6 +20,7 @@ from src.providers import EmbeddingClient, ProviderRouter
 from src.rag import ProductionChunkRetriever
 from src.repositories import ChunkRepository
 from src.services import CostTracker, PromptTemplateLoader, WorkflowRunService
+from src.services import MemoryService
 
 router = APIRouter()
 
@@ -31,6 +33,7 @@ def _build_qa_orchestrator(
     provider_router: ProviderRouter,
     cost_tracker: CostTracker,
     prompt_template_loader: PromptTemplateLoader,
+    memory_service: Optional[MemoryService] = None,
 ) -> QAOrchestrator:
     return QAOrchestrator(
         retriever=ProductionChunkRetriever(
@@ -41,6 +44,7 @@ def _build_qa_orchestrator(
         cost_tracker=cost_tracker,
         prompt_template_loader=prompt_template_loader,
         workflow_run_service=WorkflowRunService(db_session_factory),
+        memory_service=memory_service,
     )
 
 
@@ -55,6 +59,7 @@ async def run_qa(
     cost_tracker: CostTracker = Depends(get_cost_tracker),
     prompt_template_loader: PromptTemplateLoader = Depends(get_prompt_template_loader),
     owner_id: str = Depends(get_current_owner_id),
+    memory_service: MemoryService = Depends(get_memory_service),
 ) -> QAResponse:
     orchestrator = _build_qa_orchestrator(
         db_session=db_session,
@@ -63,6 +68,7 @@ async def run_qa(
         provider_router=provider_router,
         cost_tracker=cost_tracker,
         prompt_template_loader=prompt_template_loader,
+        memory_service=memory_service,
     )
     request_workflow_id = str(getattr(request.state, "workflow_id", ""))
 
@@ -114,4 +120,6 @@ async def run_qa(
         model=result.model,
         token_input=result.token_input,
         token_output=result.token_output,
+        memory_status=result.memory_status,
+        used_saved_memory=result.used_saved_memory,
     )

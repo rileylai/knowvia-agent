@@ -793,3 +793,476 @@ completion entry below.
 - `3.0.1` bounded recall classifier 對部分 paraphrase 仍有限制，例如 `hi I'm Nicole` 後
   詢問 `what is my name` 可能 fallback 到 enterprise QA / `insufficient_info`。Broader
   intent selection deferred 到後續 bounded Agent runtime；本輪不擴張 classifier。
+
+## 2026-09-06 Persistent Memory 4.0 Implementation
+
+### Implementation
+
+- 建立獨立的 `LongTermMemory` table、Alembic migration、repository 與 `MemoryService`。
+- explicit save 只接受 deterministic wording；普通陳述不會建立 memory。Memory type 限定為
+  `decision`、`preference`、`project_context`，無法判定時使用 `project_context`。
+- embedding、owner filter、active filter、pgvector semantic search、exact duplicate guard
+  與 hard delete 都由 backend 控制。
+- Conversation flow 支援 `Memory saved`、`Already saved`，並可在新 session 以 saved
+  memory 回答；saved memory 不進 enterprise citations。
+- Memory Inspector 支援 loading、empty、list、delete loading、delete error 與 durable
+  refresh。
+
+### Automated Evidence
+
+- Memory service、API 與 owner isolation tests：`11 passed`。
+- Backend full regression：`707 passed, 5 skipped`。
+- Frontend tests：`44 passed`。
+- Frontend production build：PASS。
+- `git diff --check`：待 final verification 執行。
+
+### Manual Verification
+
+Browser manual verification PASS is recorded in the final completion entry below.
+
+### Status
+
+- `4.0=manual_verification`。
+- `5.0=planned`，本輪不開始 MCP 或 bounded Agent Runtime。
+
+## 2026-09-06 Persistent Memory 4.0.1 Direct Saved-Memory Recall Coverage
+
+### Diagnosis and Implementation
+
+- Root cause：原本的 `is_memory_recall_query` 只檢查記憶、偏好、決定等 marker，漏掉
+  `我的名字是？`、`What is my name?` 與 `What did we decide about production?`。
+- 只加入 bounded deterministic direct question patterns；沒有建立 general intent classifier，
+  也沒有使用 LLM routing 或搜尋所有 Knowledge 與 Memory。
+- explicit saved memory 經過 New Chat 後，matching query 會進入 owner-scoped semantic
+  `LongTermMemory` retrieval，回答標記 `used_saved_memory=true`，且 enterprise citations 維持空陣列。
+- non-memory enterprise query 維持既有 Knowledge QA fallback。
+
+### Automated Evidence
+
+- 先以六個實際 API seam cases 驗證 red；修正後六個中英文 cross-session recall cases：`6 passed`。
+- Backend focused memory conversation tests：`8 passed`。
+- Backend full regression：`713 passed, 5 skipped`。
+- Frontend tests：`44 passed`；production build：PASS。
+- `compileall`、Alembic head check 與 `git diff --check`：PASS。
+
+### Manual Verification
+
+Browser manual verification PASS is recorded in the final completion entry below.
+
+### Status
+
+- `4.0=manual_verification`。
+- `4.0.1=manual_verification`。
+- `5.0=planned`，本輪不開始 MCP、Agent loop 或 tool calling。
+
+## 2026-09-06 Persistent Memory 4.0.1 Browser Blocker Follow-up
+
+### Diagnosis and Fix
+
+- 先確認原本 port 8000 的 process 已停止，再從目前 Knowvia workspace 重新啟動 backend。新 process 的
+  cwd 是 `/Users/rileylai/Desktop/code/project/knowvia-agent`，`/health` 與 `/ready` 均通過。
+- Exact classifier probe 顯示 `我的職業？` 與 `What is my occupation?` 原先未命中；問題不是
+  LongTermMemory persistence 或 owner scope。
+- Conversation route 會先 `strip()` query，再把同一 normalized value 傳入 QA。Classifier 命中後，
+  `MemoryService.search_memories` 確實使用 request owner scope；實際資料庫 search 找到名字與職業兩筆 memory。
+- Production-like failure 是 memory search 已找到兩筆結果，但 enterprise retrieval 同時回傳 chunks，後續
+  LLM 仍可能回 `insufficient_info`。現在 memory-recall intent 有結果時直接回 saved memory，不進 enterprise
+  retrieval 或 LLM；一般 enterprise query 仍只走既有 Knowledge QA。
+- Recall routing 改為 bounded structural question shapes，例如中文 `我的...？`、`你記得我的...？`，以及
+  English `what is my...`、`what do I...`、`what did we decide...`。不再列舉 name、occupation 等 field。
+
+### Automated and Process Evidence
+
+- Classifier regression：`15 passed`；conversation memory regression：`12 passed`。
+- Backend full regression：`724 passed, 5 skipped`。
+- Frontend tests：`44 passed`；production build：PASS。
+- Process HTTP probe：occupation 三個 query、name 三個 query 都回 `used_saved_memory=true`、
+  `citations=[]` 且 answer match；`What database does production use?` 維持 `used_saved_memory=false`。
+- `compileall`、Alembic head check 與 `git diff --check`：PASS。
+
+### Manual Verification
+
+Browser manual verification PASS is recorded in the final completion entry below.
+
+### Status
+
+- `4.0=manual_verification`。
+- `4.0.1=manual_verification`。
+- `5.0=planned`，本輪不開始 MCP、Agent loop 或 tool calling。
+
+## 2026-09-06 Persistent Memory 4.0.2 Saved-Memory Relevance Selection
+
+### Diagnosis and Implementation
+
+- Root cause：LongTermMemory semantic search 原本回傳 top-k raw matches；direct recall 沒有
+  relevance gate，也沒有在 singular query 只選 best match，因此 `What is my name?` 會帶出職業
+  memory，無 interest memory 時也可能帶出 unrelated memories。
+- 先確認 repository 的 score semantics：Postgres `pgvector` 使用 cosine distance，repository 轉成
+  normalized cosine similarity `[0, 1]`；SQLite fallback 使用相同範圍的 cosine similarity。較高分代表
+ 相關性較高。
+- 依 live score evidence：direct matching 約 `0.46`、目前 unrelated cross-field 約 `0.35`、broad
+  query 約 `0.25`，採 bounded deterministic floors：direct `0.40`、broad `0.20`。這不是 LLM
+  reranker、importance/temporal ranking 或 semantic dedup。
+- Direct/singular recall 通過 gate 後只取排序第一筆 best memory；broad recall 通過較寬 gate 後保留既有
+  request `top_k` bounded multiple memories。無 sufficiently relevant match 時回傳空結果，維持
+  `used_saved_memory=false`，不輸出 unrelated saved-memory content。
+
+### Automated and Process Evidence
+
+- 先新增 failing tests，再完成 minimal Memory Service selection：service `16 passed`、conversation
+  `13 passed`。
+- Backend full regression：`726 passed, 5 skipped`。
+- Frontend tests：`44 passed`；production build：PASS。
+- `compileall`、Alembic head check 與 `git diff --check`：PASS。
+- 最新 backend process 已重新啟動；`/health` 與 `/ready` 均回 HTTP 200。Process HTTP probe：
+  name 只回 name、occupation 只回 occupation、interest 無 memory hit 且
+  `used_saved_memory=false`、broad 回 bounded name + occupation；四者 `citations=[]`。
+
+### Manual Verification
+
+Browser manual verification PASS is recorded in the final completion entry below.
+
+### Status
+
+- `4.0=manual_verification`。
+- `4.0.1=manual_verification`。
+- `4.0.2=manual_verification`。
+- `5.0=planned`，本輪不開始 MCP、Agent loop 或 tool calling。
+
+## 2026-09-06 Persistent Memory 4.0.x Completion
+
+### Browser Manual Verification
+
+Browser manual verification PASS：
+
+- Explicit save 顯示 `Memory saved`；exact duplicate 顯示 `Already saved`。
+- Memory Inspector 在 refresh、New Chat 與 session restore 後仍保留資料，確認 durable persistence。
+- Session A explicit save 後，New Chat 的 matching query 可完成 cross-session recall。
+- Direct/singular recall 只使用 best relevant saved memory，不帶出其他 memory。
+- 沒有 sufficiently relevant memory 時，不使用或輸出 unrelated saved memory。
+- Broad recall 可 bounded 使用 multiple saved memories。
+- `Used saved memory` 獨立顯示，未混入 enterprise Sources 或 enterprise citations。
+- Memory Inspector hard delete 後，future session 不再 recall 該 memory。
+- Knowledge QA、enterprise citations 與 `insufficient_info` 行為沒有 regression。
+
+### Final Status
+
+- `4.0=done`。
+- `4.0.1=done`。
+- `4.0.2=done`。
+- `5.0=planned`，不在本輪開始 MCP、Agent loop 或 tool calling。
+
+## 2026-09-06 MCP and Bounded Agent Runtime 5.0 Implementation
+
+### Focused Discovery
+
+- 現行 `ConversationOrchestrator` 保留 3.0 same-session context 與 conversational recall；4.x
+  explicit save 與 direct saved-memory recall 是 deterministic backend routing。
+- 現行 `QAOrchestrator` 保留 Knowledge retrieval、backend citation projection、
+  `insufficient_info` 與 workflow audit；既有 `ToolRegistry` 只服務 ingestion/Notion tools，
+  沒有直接擴大成 Agent registry。
+- `ProviderRouter` 原本只支援 text completion；本輪補上 bounded provider tool-call contract，
+  並保留不支援 tool calling 的 provider fallback。
+
+### Implementation
+
+- 新增 `src/agent/` bounded per-run state、typed termination reason、三個 allowlisted tools、
+  schema validation、owner scope、timeout、context budget 與 max 3 tool calls。
+- 新增 in-process `MCPToolAdapter` boundary。`search_knowledge` 呼叫既有 retriever，
+  `search_memory` 與 `save_memory` 呼叫既有 `MemoryService`；adapter 不直接 query database。
+- OpenAI provider 支援 structured tool calls。Tool result 進入下一 iteration 前會 bounded，
+  只保留 safe text、typed structured content 與 backend citation metadata。
+- Explicit save policy、memory authority、owner scope、citation authority 與
+  `insufficient_info` invariant 維持 backend-owned；raw tool call、arguments、trace 與
+  chain-of-thought 不寫入 conversation persistence。
+- Tool-capable conversation path 會保存 final assistant message 與 backend citations；既有
+  direct QA 與非 tool-capable provider regression path 保持不變。
+
+### Automated Evidence
+
+- Agent/provider focused tests：`16 passed`。
+- Tool-capable conversation integration：`1 passed`。
+- Backend full regression：`738 passed, 5 skipped`。
+- Frontend tests：`44 passed`；production build：PASS。
+- `compileall`：PASS。
+- `git diff --check`：PASS。
+
+### Manual Verification
+
+This entry predates the final 5.0 completion sync recorded at the end of this log.
+
+### Status
+
+- `5.0=manual_verification`。
+- `6.0=planned`，本輪不開始 SSE Streaming and UX Hardening。
+
+## 2026-09-06 Agent Browser Verification Fixes 5.0.1
+
+### Scope
+
+本輪只處理 5.0 browser verification 的三個 blocker：explicit save failure、session draft
+leakage/retry duplicate、same-session conversational transform failure。不開始 6.0，也不進行
+MCP protocol migration。
+
+### Root Cause and Fix
+
+- Explicit save failure 發生在 `save_memory` adapter 的 explicit-intent boundary。Provider 將
+  memory content 轉成 paraphrase 後，adapter 以 provider content 做 exact match，導致
+  `permission_denied`，Agent 沒有進入 `MemoryService`。現在 backend 保留 explicit-save
+  permission 與 memory type validation，並以 backend parsed explicit intent 作為 content/type
+  persistence authority。普通陳述仍拒絕 `save_memory`。
+- Draft leakage 來自 Chat 只有單一 `question` state。現在使用 `draftsBySessionId`，只存在
+  frontend memory，切換 session 時讀寫各自的 draft；沒有 draft table 或 schema change。
+- Retry duplicate 的 ownership 已確認：第一次 failed request 在 provider failure 前已保存 user
+  message，frontend 沒有 optimistic user bubble。第二次相同 query 原本會再 append 一筆 user
+  message。現在只在最新 message 是相同 pending user message 且沒有 assistant result 時 reuse，
+  不建立大型 idempotency framework。
+- Transform failure 來自 tool-capable Agent 的 blank-evidence guard 把 direct answer 視為
+  `insufficient_info`。現在只對固定 bounded transform shapes 啟用 conversation-only Agent
+  path，禁止 tools、enterprise citations 與跨 session context；沒有同 session assistant
+  answer 時直接回應無可重述內容。
+
+### Automated Evidence
+
+- 先新增 red tests，再完成 minimal fix。
+- Public conversation API regression：explicit save success、non-explicit rejection、save
+  failure no fake success、retry reuse、Chinese transform、English rephrase、New Chat isolation。
+- Backend full regression：`745 passed, 5 skipped`。
+- Frontend tests：`46 passed`。
+- Frontend production build：PASS。
+- `compileall`、`git diff --check`：PASS。
+
+### Manual Verification
+
+This entry predates the final 5.0.1 completion sync recorded at the end of this log.
+
+### Status
+
+- `5.0=manual_verification`。
+- `5.0.1=manual_verification`。
+- `6.0=planned`，本輪未開始 SSE Streaming、MCP protocol migration 或其他 6.0 work。
+
+## 2026-09-06 Agent Memory Recall and Transform Follow-up
+
+### Browser findings
+
+- Tool-capable memory recall 缺少明確 routing contract。Provider 可直接回
+  `INSUFFICIENT_INFO`，沒有選擇 `search_memory`。
+- `search_memory` 接受 provider 的 `top_k`，但 Agent adapter 沒有明確保存 4.0.2 的
+  direct/broad retrieval bounds。
+- Broad wording `你有記住我什麼資訊？` 沒有進入既有 broad recall semantics。
+- Conversational transform prompt 禁止新增 enterprise facts，但沒有明確允許重述 previous
+  assistant answer 內已有的內容。Production provider 可因此回 `INSUFFICIENT_INFO`。
+
+### Implementation
+
+- Agent prompt 現在要求 saved personal context 使用 `search_memory`，並把完整 recall request
+  作為 query。Direct recall 要求一筆；broad recall 最多三筆。
+- `MemorySearchTool` 在 adapter boundary 套用 direct `effective_top_k=1` 與 broad
+  `effective_top_k<=3`。`MemoryService` 的 ranking、relevance floors、temporal ordering、
+  reranker 與 dedup 未修改。
+- ToolResult 給下一次 provider iteration 的 bounded metadata 包含 retrieval mode、requested
+  與 effective `top_k`、hit count、best similarity。Memory context 與 Knowledge evidence 使用不同
+  authority；memory citations 固定為空。
+- Transform prompt 明確允許翻譯、重述、摘要或簡化 previous assistant answer 內已有的內容，
+  但禁止新增 claim、呼叫 tools 或建立 citations。New Chat 沒有 previous assistant answer 時不會
+  取得其他 session context。
+
+### Automated evidence
+
+- Public conversation orchestration 與 Agent/Memory focused regression：`63 passed`。
+- Backend full regression：`751 passed, 5 skipped`。
+- Frontend tests：`46 passed`。測試仍輸出既有 React list key warning，未造成失敗。
+- Frontend production build：PASS。
+- `compileall`：PASS。
+- `git diff --check`：PASS。
+
+### Manual verification
+
+這些 browser findings 後續被判定為 non-blocking follow-up，並移至 5.0.3 與 5.0.4；completion
+結論記錄於本 log 尾端。
+
+### Status
+
+- `5.0=manual_verification`。
+- `5.0.1=manual_verification`。
+- `6.0=planned`，本輪未開始 Native MCP integration 或其他 6.0 work。
+
+## 2026-09-06 Broad Saved-Preference Recall Follow-up
+
+### Failure boundary
+
+Public conversation red test 在 provider iteration 1 重現問題。`search_memory` schema 無法表達
+saved-memory category，Agent prompt 也沒有說明 category filter。Provider 因此回
+`INSUFFICIENT_INFO`，沒有執行 memory tool。Preference category query 即使進入 tool，既有
+broad 判斷也會把它當作 direct recall。
+
+### Implementation
+
+- `search_memory` 新增 optional allowlisted `memory_type` argument。Preference query 可傳
+  `memory_type=preference`。
+- `MemoryService` 與 `MemoryRepository` 沿用現有 schema，在 owner、active scope 內先套用
+  optional type filter，再執行既有 vector ranking。Data model 沒有變更。
+- Preference category query 使用 compact token semantics 判斷 plural/broad intent，不建立
+  phrase-by-phrase regex list。Direct recall 仍取一筆；broad recall 最多三筆。
+- ToolResult 的 bounded metadata 包含 retrieval mode、memory type、effective `top_k`、hit count
+  與 best similarity。Saved memory 不建立 enterprise citations。
+
+### Automated evidence
+
+- 五個中英文 preference category shapes 與 broad top-three public API tests：`6 passed`。
+- Public conversation、Agent 與 Memory focused regression：`70 passed`。
+- Backend full regression：`758 passed, 5 skipped`。
+- Frontend tests：`46 passed`。測試仍輸出既有 React list key warning，未造成失敗。
+- Frontend production build、`compileall` 與 `git diff --check`：PASS。
+
+### Manual verification
+
+這項 browser finding 後續被列為 5.0.3 的 non-blocking follow-up；completion 結論記錄於本 log 尾端。
+
+### Status
+
+- `5.0=manual_verification`。
+- `5.0.1=manual_verification`。
+- `6.0=planned`，本輪未開始 Native MCP integration 或其他 6.0 work。
+
+## 2026-09-06 Live Provider Memory and Transform Parity Follow-up
+
+### Live boundary evidence
+
+- Browser Case B 對應兩次 agent workflow。兩次都是 `tool_calls_used=1`、
+  `used_saved_memory=false`、`retrieved_chunk_count=0`、`citation_count=0`，最後為
+  `insufficient_info`。舊 workflow metadata 沒有 tool name 與 retrieval metrics，無法在事後
+  區分錯選 tool 與 memory no-hit。
+- Browser Case C 對應 `tool_calls_used=0`、`used_saved_memory=false`、
+  `citation_count=0` 與 `insufficient_info`。Request 已進 Agent runtime，但既有 transform
+  classifier 沒辨識「用英文說你剛才的回答」。
+- Workflow metadata 現在保存 available tool count、provider termination type、memory fallback
+  flag、conversation authority flag，以及 memory mode、type、effective top-k、hit count 與 best
+  similarity。Metadata 不含 conversation content、memory content、provider response 或 reasoning。
+
+### Implementation
+
+- Clear saved-memory recall 若在 provider iteration 1 收到 `INSUFFICIENT_INFO` 且沒有 tool call，
+  backend 會 deterministic 呼叫 `search_memory`。Fallback 沿用 owner scope、type filter、
+  relevance gate 與 direct/broad bounds，不搜尋 Knowledge。
+- Preference category fallback 傳入 `memory_type=preference`。Broad recall 最多三筆；
+  `project_context` 不會進入 preference ToolResult。
+- Conversational transform 改用 previous-answer reference 與 translate/rephrase/summarize/simplify
+  behavior 的 bounded 組合判定。Same-session assistant context 存在時使用 conversation authority；
+  New Chat 沒有 previous assistant answer 時仍 fail closed。
+- Final grounding guard 分開檢查 Knowledge evidence、saved-memory evidence 與 same-session
+  conversation authority。Conversation transform 不建立 enterprise citation。
+
+### Automated evidence
+
+- Production-like Agent/Memory/Conversation focused regression：`80 passed`。
+- Backend full suite 曾通過 `766 passed, 5 skipped`；加入兩個 broad-memory coverage 後，完整
+  suite 的既有 concurrent idempotency test 連續兩次失敗，其餘 `767 passed, 5 skipped`。排除該
+  test 的 suite 為 `767 passed, 5 skipped, 1 deselected`，該 test 單獨重跑為 `1 passed`。本輪未
+  修改 idempotency architecture。
+- Frontend tests：`46 passed`。測試仍輸出既有 React list key warning，未造成失敗。
+- Frontend production build與 `compileall`：PASS。
+
+### Manual verification
+
+這些 browser findings 後續被列為 5.0.3 與 5.0.4 的 non-blocking follow-ups；completion 結論記錄
+於本 log 尾端。
+
+### Status
+
+- `5.0=manual_verification`。
+- `5.0.1=manual_verification`。
+- `6.0=planned`，本輪未開始 Native MCP integration 或其他 6.0 work。
+
+## 2026-09-06 Final Response Language Resolution
+
+### Scope
+
+- 新增單一 `response_language` resolver，只讀 current user message。
+- Explicit language instruction 優先；其餘依 English、Chinese plus English、Traditional Chinese
+  script signal、Simplified Chinese script signal 判定。
+- Ambiguous shared Chinese characters 使用 Knowvia 的 Traditional Chinese default，不建立 language
+  detection framework。
+
+### Integration
+
+- Agent system prompt、Knowledge QA prompt、conversation recall/transform prompt 都收到同一個
+  `FINAL_RESPONSE_LANGUAGE` contract。
+- Insufficient-info、沒有 conversation context 與 save confirmation 的 backend fallback 依 current
+  user message 使用 English、繁體中文或簡體中文。
+- Tool selection、Memory retrieval、Knowledge retrieval、citations、`Used saved memory` 與 authority
+  boundary 沒有使用 response language，也沒有被改動。
+
+### Automated evidence
+
+- Response-language unit 與 public conversation/Agent/QA regression：`79 passed`。
+- Backend full suite：`779 passed, 5 skipped`。
+- 既有 frontend regression 保持 `46 passed`，production build PASS。
+
+### Status
+
+- `5.0=manual_verification`。
+- `5.0.1=manual_verification`。
+- `6.0=planned`，本輪未開始 Native MCP integration 或其他 6.0 work。
+
+## 2026-09-06 Broad All-Memory Recall and Implicit Transform Follow-up
+
+### Root causes
+
+- Generic `What do you know about me?` 沒有被保留為 backend memory intent，且 adapter 在缺少 backend intent metadata 時會採用 provider 傳入的 `memory_type=preference`，所以 `project_context` 被排除。
+- Action-only 的 `用中文說`、`In English`、`簡單一點` 沒有通過既有的 previous-answer reference 條件，因而落入一般 QA path，最後被 no-evidence guard 回覆 `insufficient_info`。
+
+### Implementation
+
+- Generic saved-memory query 現在會進入 Agent memory intent metadata。當 backend 已取得原始 query 時，Memory adapter 只接受 backend 判定的 category；generic broad query 保留 `memory_type=None`，provider 不能自行縮窄結果。
+- Broad category recall 維持 `preference` filter 與最多三筆結果。All-memory broad recall 維持跨允許 memory types 的 bounded selection，不改 ranking、relevance floor、temporal ranking、reranker 或 semantic dedup。
+- Conversation transform 改用 bounded action/reference 組合，支援 implicit language switch 與 simplify request。Same-session 只使用 immediately available assistant context，transform path 不提供 Knowledge/Memory tools，也不建立 enterprise citations；New Chat 沒有 previous assistant answer 時仍 fail closed。
+- Final grounding guard 繼續分開處理 Knowledge evidence、saved memory 與 same-session conversation authority；合法 transform answer 不會因 Knowledge context 為空而被覆寫。
+
+### Automated evidence
+
+- 新增 public conversation seam 的 generic all-memory narrowing test，以及 `用中文說`、`用中文說你剛才的回答`、`In English`、`簡單一點` 與 New Chat isolation tests：`6 passed`。
+- Memory、transform、Knowledge focused regression：`48 passed, 24 deselected`。
+- Backend full suite：`785 passed, 5 skipped`。
+- Frontend tests：`46 passed`。既有 React list key warning 仍輸出，但未造成失敗。
+- Frontend production build、`compileall` 與 `git diff --check`：PASS。
+- 未保留 `[DEBUG-...]` instrumentation。
+
+### Manual verification
+
+這些 browser findings 後續被列為 5.0.3 與 5.0.4 的 non-blocking follow-ups；completion 結論記錄
+於本 log 尾端。
+
+- `What do you know about me?` 包含 Riley 與 relevant preferences，顯示 `Used saved memory`，且沒有 enterprise Sources。
+- `What are my preferences?` 只返回 preference，不包含 Riley。
+- 同 session 依序送出 `What do you know about me?`、`用中文說`、`簡單一點`，確認繁體中文 transform 與簡化結果。
+- New Chat 送出 `用中文說`，確認不會取得前一 session 的 assistant answer。
+
+### Status
+
+- `5.0=manual_verification`。
+- `5.0.1=manual_verification`。
+- `6.0=planned`，本輪未開始 Native MCP integration 或其他 6.0 work。
+
+## 2026-09-06 5.0 and 5.0.1 Completion Documentation Sync
+
+### Browser manual verification conclusion
+
+- Core 5.0 goals are verified: bounded Knowledge/Memory/save tool flow、explicit save policy、persistence、grounding boundary、citation behavior 與 session isolation。
+- Core 5.0.1 browser acceptance is verified: explicit save、exact duplicate、Memory Inspector persistence、session-specific drafts、same-session English to Chinese transform 與 New Chat isolation。
+- Remaining browser observations are non-blocking follow-ups。Generic broad recall 的 single-memory 或 `insufficient_info` behavior 移至 5.0.3；`用中文說`、`你簡單說` 的 implicit transform behavior 移至 5.0.4。
+
+### Roadmap sync
+
+- `5.0=done`。
+- `5.0.1=done`。
+- `5.0.2=planned`，保留給 Native MCP Protocol Integration。
+- `5.0.3=planned`，Broad All-Memory Recall Hardening。
+- `5.0.4=planned`，Same-Session Conversational Transform Hardening。
+- `6.0=planned`。
+
+### Scope
+
+本輪只更新 roadmap 與 daily log。沒有修改 runtime、tests、migration、dependencies 或 frontend，
+也沒有 commit、push、merge、stash、reset 或 clean。

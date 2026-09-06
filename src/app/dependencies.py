@@ -20,6 +20,7 @@ from src.db.session import (
     get_db_session_factory,
 )
 from src.db.unit_of_work import SqlAlchemyUnitOfWork
+from src.services.memory import MemoryService
 
 
 DEFAULT_OWNER_ID = "local"
@@ -274,6 +275,16 @@ def get_embedding_client() -> Optional[EmbeddingClient]:
         return None
     return OpenAIEmbeddingClient(
         api_key=settings.openai_api_key,
+    )
+
+
+def get_memory_service(
+    unit_of_work_factory: UnitOfWorkFactory = Depends(get_business_unit_of_work_factory),
+    embedding_client: Optional[EmbeddingClient] = Depends(get_embedding_client),
+) -> MemoryService:
+    return MemoryService(
+        unit_of_work_factory=unit_of_work_factory,
+        embedding_client=embedding_client,
     )
 
 

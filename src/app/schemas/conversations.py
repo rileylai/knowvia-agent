@@ -16,6 +16,7 @@ class ConversationMessageResponse(BaseModel):
     sequence_number: int
     created_at: datetime
     citations: List[QACitation]
+    used_saved_memory: bool = False
 
 
 class ConversationSessionSummaryResponse(BaseModel):

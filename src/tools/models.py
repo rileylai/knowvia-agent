@@ -15,6 +15,7 @@ class ToolSpec(BaseModel):
 class ToolContext(BaseModel):
     workflow_id: str
     actor: str = "system"
+    owner_id: Optional[str] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -24,10 +25,13 @@ class ToolError(BaseModel):
 
 
 class ToolResult(BaseModel):
+    name: Optional[str] = None
     content: Optional[str] = None
+    safe_text: Optional[str] = None
     structured_content: Optional[Dict[str, Any]] = None
     is_error: bool = False
     error: Optional[ToolError] = None
+    error_code: Optional[str] = None
 
     @classmethod
     def success(
@@ -37,6 +41,7 @@ class ToolResult(BaseModel):
     ) -> "ToolResult":
         return cls(
             content=content,
+            safe_text=content,
             structured_content=structured_content,
             is_error=False,
             error=None,
@@ -52,7 +57,9 @@ class ToolResult(BaseModel):
     ) -> "ToolResult":
         return cls(
             content=content,
+            safe_text=content or message,
             structured_content=structured_content,
             is_error=True,
             error=ToolError(code=code, message=message),
+            error_code=code,
         )

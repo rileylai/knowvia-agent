@@ -5,6 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
+from src.agent import BoundedAgentRuntime, build_agent_tool_registry
 from src.app.api.routes.qa import _build_qa_orchestrator
 from src.app.config import get_settings
 from src.app.dependencies import (
@@ -12,6 +13,7 @@ from src.app.dependencies import (
     get_cost_tracker,
     get_current_owner_id,
     get_embedding_client,
+    get_memory_service,
     get_prompt_template_loader,
     get_provider_router,
 )
@@ -30,7 +32,10 @@ from src.orchestrators import (
     QAOrchestratorError,
 )
 from src.providers import EmbeddingClient, ProviderRouter
+from src.rag import ProductionChunkRetriever
+from src.repositories import ChunkRepository
 from src.services import CostTracker, PromptTemplateLoader
+from src.services import MemoryService, WorkflowRunService
 
 router = APIRouter()
 
@@ -44,8 +49,24 @@ def _build_conversation_orchestrator(
     provider_router: ProviderRouter,
     cost_tracker: CostTracker,
     prompt_template_loader: PromptTemplateLoader,
+    memory_service: Optional[MemoryService] = None,
 ) -> ConversationOrchestrator:
     settings = get_settings()
+    agent_runtime = BoundedAgentRuntime(
+        provider_router=provider_router,
+        tool_registry=build_agent_tool_registry(
+            retriever=ProductionChunkRetriever(
+                chunk_repository=ChunkRepository(db_session),
+            ),
+            embedding_client=embedding_client,
+            memory_service=memory_service,
+        ),
+        max_tool_calls=settings.agent_max_tool_calls,
+        max_iterations=settings.agent_max_iterations,
+        tool_timeout_seconds=settings.agent_tool_timeout_seconds,
+        context_char_budget=settings.agent_context_char_budget,
+        workflow_run_service=WorkflowRunService(db_session_factory),
+    ) if memory_service is not None else None
     return ConversationOrchestrator(
         unit_of_work_factory=unit_of_work_factory,
         qa_orchestrator=_build_qa_orchestrator(
@@ -55,9 +76,12 @@ def _build_conversation_orchestrator(
             provider_router=provider_router,
             cost_tracker=cost_tracker,
             prompt_template_loader=prompt_template_loader,
+            memory_service=memory_service,
         ),
         message_limit=settings.conversation_context_message_limit,
         token_budget=settings.conversation_context_token_budget,
+        memory_service=memory_service,
+        agent_runtime=agent_runtime,
     )
 
 
@@ -74,6 +98,7 @@ def _message_response(message) -> ConversationMessageResponse:
         sequence_number=message.sequence_number,
         created_at=message.created_at,
         citations=[citation.to_payload() for citation in message.citations],
+        used_saved_memory=message.used_saved_memory,
     )
 
 
@@ -176,6 +201,7 @@ async def send_conversation_message(
     provider_router: ProviderRouter = Depends(get_provider_router),
     cost_tracker: CostTracker = Depends(get_cost_tracker),
     prompt_template_loader: PromptTemplateLoader = Depends(get_prompt_template_loader),
+    memory_service: MemoryService = Depends(get_memory_service),
     owner_id: str = Depends(get_current_owner_id),
 ) -> ConversationTurnResponse:
     orchestrator = _build_conversation_orchestrator(
@@ -186,6 +212,7 @@ async def send_conversation_message(
         provider_router=provider_router,
         cost_tracker=cost_tracker,
         prompt_template_loader=prompt_template_loader,
+        memory_service=memory_service,
     )
     try:
         result = await orchestrator.send_message(
@@ -242,5 +269,7 @@ async def send_conversation_message(
         model=qa_result.model,
         token_input=qa_result.token_input,
         token_output=qa_result.token_output,
+        memory_status=qa_result.memory_status,
+        used_saved_memory=qa_result.used_saved_memory,
         messages=[_message_response(message) for message in result.session.messages],
     )

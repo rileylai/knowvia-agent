@@ -7,6 +7,7 @@ from src.providers import (
     LLMClientError,
     LLMMessage,
     LLMRequest,
+    LLMToolCall,
     OpenAIClient,
     ProviderRouter,
 )
@@ -97,6 +98,107 @@ def test_openai_client_supports_content_part_array_output() -> None:
     response = asyncio.run(client.generate(request))
 
     assert response.output_text == "line one\nline two"
+
+
+def test_openai_client_parses_bounded_tool_calls() -> None:
+    captured_payload: Dict[str, Any] = {}
+
+    def fake_transport(
+        url: str,
+        headers: Dict[str, str],
+        payload: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        _ = url, headers
+        captured_payload.update(payload)
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "role": "assistant",
+                        "content": None,
+                        "tool_calls": [
+                            {
+                                "id": "call-1",
+                                "type": "function",
+                                "function": {
+                                    "name": "search_memory",
+                                    "arguments": '{"query":"What did we decide?"}',
+                                },
+                            }
+                        ],
+                    },
+                    "finish_reason": "tool_calls",
+                }
+            ]
+        }
+
+    client = OpenAIClient(api_key="test-key", transport=fake_transport)
+    request = LLMRequest(
+        model="gpt-4o-mini",
+        messages=[LLMMessage(role="user", content="What did we decide?")],
+        tools=[
+            {
+                "type": "function",
+                "function": {"name": "search_memory", "parameters": {}},
+            }
+        ],
+    )
+
+    response = asyncio.run(client.generate(request))
+
+    assert captured_payload["tools"][0]["function"]["name"] == "search_memory"
+    assert response.output_text == ""
+    assert response.tool_calls[0].name == "search_memory"
+    assert response.tool_calls[0].arguments == {"query": "What did we decide?"}
+
+
+def test_openai_client_serializes_follow_up_tool_messages_for_api_wire_format() -> None:
+    captured_payload: Dict[str, Any] = {}
+
+    def fake_transport(
+        url: str,
+        headers: Dict[str, str],
+        payload: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        _ = url, headers
+        captured_payload.update(payload)
+        return {
+            "choices": [
+                {
+                    "message": {"role": "assistant", "content": "done"},
+                    "finish_reason": "stop",
+                }
+            ]
+        }
+
+    client = OpenAIClient(api_key="test-key", transport=fake_transport)
+    request = LLMRequest(
+        model="gpt-4o-mini",
+        messages=[
+            LLMMessage(
+                role="assistant",
+                tool_calls=[
+                    LLMToolCall(
+                        id="call-1",
+                        name="search_memory",
+                        arguments={"query": "決策"},
+                    )
+                ],
+            ),
+            LLMMessage(
+                role="tool",
+                name="search_memory",
+                tool_call_id="call-1",
+                content="[saved_memory]",
+            ),
+        ],
+    )
+
+    asyncio.run(client.generate(request))
+
+    wire_call = captured_payload["messages"][0]["tool_calls"][0]
+    assert wire_call["type"] == "function"
+    assert wire_call["function"]["arguments"] == '{"query":"決策"}'
 
 
 def test_openai_client_raises_error_for_invalid_transport_output() -> None:

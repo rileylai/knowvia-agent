@@ -216,6 +216,7 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 .conversation-message-role { display: block; margin-bottom: 8px; color: #7f867f; font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; }
 .conversation-message--user .conversation-message-role { color: #b9c1b9; }
 .conversation-message p { margin: 0; white-space: pre-wrap; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 20px; line-height: 1.38; }
+.saved-memory-indicator { display: inline-block; margin-top: 13px; padding: 6px 8px; color: #4c551e; background: rgba(216, 255, 67, 0.35); border: 1px solid rgba(76, 85, 30, 0.35); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
 .idle-state { display: flex; align-items: center; justify-content: center; gap: 18px; min-height: 150px; color: #777d78; border: 1px dashed rgba(27, 33, 30, 0.24); }
 .idle-state p { max-width: 330px; margin: 0; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 18px; }
 .idle-mark { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid currentColor; border-radius: 50%; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; }
@@ -234,6 +235,7 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 .answer-label-row > span { color: #888d88; font-size: 9px; text-transform: uppercase; }
 .answer-copy { max-width: 780px; margin: 31px 0 0; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: clamp(23px, 3vw, 34px); line-height: 1.38; }
 .insufficient-note { margin: 28px 0 0; padding: 12px 14px; color: #725711; background: #fff3c8; border-left: 3px solid #b58118; font-size: 10px; line-height: 1.55; }
+.memory-operation-status { margin: 22px 0 0; padding: 10px 12px; color: #4c551e; background: rgba(216, 255, 67, 0.3); border-left: 3px solid var(--acid); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
 .citations { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
 .citation-summary { color: var(--ink-soft); cursor: pointer; font-size: 9px; letter-spacing: 0.12em; list-style: none; text-transform: uppercase; }
 .citation-summary::-webkit-details-marker { display: none; }
@@ -295,6 +297,20 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 .memory-placeholder > span { color: var(--acid); font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: clamp(80px, 12vw, 150px); line-height: 0.8; -webkit-text-stroke: 1px var(--ink); }
 .memory-placeholder p { margin-bottom: 12px; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: clamp(22px, 3vw, 32px); line-height: 1.25; }
 .memory-placeholder small { color: var(--ink-soft); font-size: 10px; line-height: 1.6; }
+.memory-inspector { margin-top: 54px; }
+.memory-inspector .loading-state { min-height: 92px; }
+.memory-inspector .error-state { min-height: 112px; }
+.memory-inspector .error-state button { margin-top: 15px; padding: 8px 11px; color: white; background: var(--danger); border: 1px solid var(--danger); cursor: pointer; font-size: 9px; }
+.memory-empty { padding: 27px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
+.memory-empty strong { display: block; margin-bottom: 10px; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 26px; font-weight: 500; }
+.memory-empty p { margin: 0; color: var(--ink-soft); font-size: 10px; line-height: 1.6; }
+.memory-list { display: grid; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--ink); }
+.memory-item { padding: 21px 0; border-bottom: 1px solid var(--line); }
+.memory-item p { max-width: 690px; margin: 0; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 22px; line-height: 1.35; overflow-wrap: anywhere; }
+.memory-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 13px; margin-top: 14px; color: var(--ink-soft); font-size: 9px; text-transform: uppercase; }
+.memory-meta button { margin-left: auto; padding: 8px 10px; color: var(--danger); background: transparent; border: 1px solid var(--danger); cursor: pointer; font-size: 9px; text-transform: uppercase; }
+.memory-meta button:disabled { opacity: 0.55; cursor: wait; }
+.memory-inline-error { margin: 15px 0 0; color: var(--danger); font-size: 10px; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes surface-in { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }

@@ -4,10 +4,21 @@ from dataclasses import dataclass
 from http import HTTPStatus
 from typing import List, Optional
 
+from src.agent import AgentRuntimeError, BoundedAgentRuntime
 from src.db.unit_of_work import UnitOfWorkFactory
-from src.conversation_recall import classify_conversation_recall
+from src.memory import detect_explicit_save_intent
+from src.conversation_recall import (
+    classify_conversation_recall,
+    classify_conversation_transform,
+)
 from src.conversation_citations import ConversationCitation
-from src.orchestrators.qa_orchestrator import QAOrchestrator, QAResult
+from src.orchestrators.qa_orchestrator import QACitationResult, QAOrchestrator, QAResult
+from src.services.memory import MemoryEmbeddingError, MemoryService, MemoryServiceError
+from src.response_language import (
+    conversation_context_unavailable_answer,
+    memory_confirmation,
+    resolve_response_language,
+)
 from src.repositories.conversation_repository import (
     ConversationRepository,
     ConversationSessionSnapshot,
@@ -48,6 +59,8 @@ class ConversationOrchestrator:
         qa_orchestrator: Optional[QAOrchestrator],
         message_limit: int = DEFAULT_CONVERSATION_MESSAGE_LIMIT,
         token_budget: int = DEFAULT_CONVERSATION_TOKEN_BUDGET,
+        memory_service: Optional[MemoryService] = None,
+        agent_runtime: Optional[BoundedAgentRuntime] = None,
     ) -> None:
         if message_limit <= 0:
             raise ValueError("message_limit must be positive")
@@ -57,6 +70,8 @@ class ConversationOrchestrator:
         self._qa_orchestrator = qa_orchestrator
         self._message_limit = message_limit
         self._token_budget = token_budget
+        self._memory_service = memory_service
+        self._agent_runtime = agent_runtime
 
     def create_session(self, *, owner_id: str) -> ConversationSessionSnapshot:
         with self._unit_of_work_factory() as unit_of_work:
@@ -116,16 +131,171 @@ class ConversationOrchestrator:
                 include_messages=False,
             ) is None:
                 raise self._unavailable_error()
-            repository.append_message(
+            latest_messages = repository.list_messages(
                 session_id=session_id,
                 owner_id=owner_id,
-                role="user",
-                content=normalized_query,
+                limit=1,
             )
+            pending_retry = (
+                latest_messages[0]
+                if latest_messages
+                and latest_messages[0].role == "user"
+                and latest_messages[0].content == normalized_query
+                else None
+            )
+            if pending_retry is None:
+                user_message = repository.append_message(
+                    session_id=session_id,
+                    owner_id=owner_id,
+                    role="user",
+                    content=normalized_query,
+                )
+                user_message_id = user_message.id
+            else:
+                user_message_id = pending_retry.id
             recent_messages = repository.list_messages(
                 session_id=session_id,
                 owner_id=owner_id,
                 limit=self._message_limit,
+            )
+
+        try:
+            save_intent = detect_explicit_save_intent(normalized_query)
+        except ValueError as exc:
+            raise ConversationOrchestratorError(
+                error_code="INVALID_MEMORY",
+                message=str(exc),
+                http_status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            ) from exc
+        if save_intent is not None:
+            if (
+                self._agent_runtime is not None
+                and self._agent_runtime.supports_provider(provider_name)
+            ):
+                try:
+                    agent_result = await self._agent_runtime.run(
+                        query=normalized_query,
+                        session_id=session_id,
+                        owner_id=owner_id,
+                        provider_name=provider_name,
+                        model=model,
+                        request_workflow_id=request_workflow_id,
+                        explicit_save_allowed=True,
+                        explicit_save_content=save_intent.content,
+                        explicit_save_memory_type=save_intent.memory_type,
+                        user_message_id=user_message_id,
+                    )
+                except AgentRuntimeError as exc:
+                    raise ConversationOrchestratorError(
+                        error_code=exc.error_code,
+                        message=exc.message,
+                        http_status_code=exc.http_status_code,
+                    ) from exc
+                if agent_result.status != "succeeded":
+                    raise ConversationOrchestratorError(
+                        error_code="AGENT_RUNTIME_FAILED",
+                        message="The bounded agent could not complete this request.",
+                        http_status_code=HTTPStatus.BAD_GATEWAY,
+                    )
+                confirmation = agent_result.answer or (
+                    memory_confirmation(
+                        resolve_response_language(normalized_query),
+                        agent_result.memory_status or "already_saved",
+                    )
+                )
+                with self._unit_of_work_factory() as unit_of_work:
+                    repository = unit_of_work.conversations
+                    repository.append_message(
+                        session_id=session_id,
+                        owner_id=owner_id,
+                        role="assistant",
+                        content=confirmation,
+                    )
+                    session = repository.get_session(
+                        session_id=session_id,
+                        owner_id=owner_id,
+                    )
+                    if session is None:
+                        raise self._unavailable_error()
+                return ConversationTurnResult(
+                    session=session,
+                    qa_result=QAResult(
+                        workflow_run_id=agent_result.workflow_run_id,
+                        status=agent_result.status,
+                        answer=confirmation,
+                        insufficient_info=False,
+                        retrieved_chunk_count=0,
+                        citations=[],
+                        provider=agent_result.provider,
+                        model=agent_result.model,
+                        token_input=agent_result.token_input,
+                        token_output=agent_result.token_output,
+                        memory_status=agent_result.memory_status,
+                        used_saved_memory=False,
+                    ),
+                )
+            if self._memory_service is None:
+                raise ConversationOrchestratorError(
+                    error_code="MEMORY_UNAVAILABLE",
+                    message="Memory service is unavailable.",
+                    http_status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                )
+            try:
+                save_result = await self._memory_service.save_memory(
+                    owner_id=owner_id,
+                    content=save_intent.content,
+                    memory_type=save_intent.memory_type,
+                    source_session_id=session_id,
+                    source_message_id=user_message_id,
+                )
+            except MemoryServiceError as exc:
+                raise ConversationOrchestratorError(
+                    error_code=(
+                        "MEMORY_EMBEDDING_FAILED"
+                        if isinstance(exc, MemoryEmbeddingError)
+                        else "INVALID_MEMORY"
+                    ),
+                    message=str(exc),
+                    http_status_code=(
+                        HTTPStatus.BAD_GATEWAY
+                        if isinstance(exc, MemoryEmbeddingError)
+                        else HTTPStatus.UNPROCESSABLE_ENTITY
+                    ),
+                ) from exc
+
+            confirmation = memory_confirmation(
+                resolve_response_language(normalized_query),
+                save_result.status,
+            )
+            with self._unit_of_work_factory() as unit_of_work:
+                repository = unit_of_work.conversations
+                repository.append_message(
+                    session_id=session_id,
+                    owner_id=owner_id,
+                    role="assistant",
+                    content=confirmation,
+                )
+                session = repository.get_session(
+                    session_id=session_id,
+                    owner_id=owner_id,
+                )
+                if session is None:
+                    raise self._unavailable_error()
+            return ConversationTurnResult(
+                session=session,
+                qa_result=QAResult(
+                    workflow_run_id=0,
+                    status="succeeded",
+                    answer=confirmation,
+                    insufficient_info=False,
+                    retrieved_chunk_count=0,
+                    citations=[],
+                    provider=None,
+                    model=None,
+                    token_input=None,
+                    token_output=None,
+                    memory_status=save_result.status,
+                ),
             )
 
         prior_messages = recent_messages[:-1]
@@ -140,6 +310,7 @@ class ConversationOrchestrator:
         )
 
         recall_kind = classify_conversation_recall(normalized_query)
+        transform_kind = classify_conversation_transform(normalized_query)
         if recall_kind is not None:
             conversation_context = "\n\n".join(
                 f"[{message.role}] {message.content}"
@@ -147,24 +318,110 @@ class ConversationOrchestrator:
             )
             if not prior_messages:
                 conversation_context = None
+        elif transform_kind is not None:
+            conversation_context = "\n\n".join(
+                f"[{message.role}] {message.content}"
+                for message in context.messages[:-1]
+            )
+            if not any(message.role == "assistant" for message in prior_messages):
+                conversation_context = None
         else:
             conversation_context = context.rendered_text
 
-        if self._qa_orchestrator is None:
+        if transform_kind is not None and conversation_context is None:
+            qa_result = QAResult(
+                workflow_run_id=0,
+                status="succeeded",
+                answer=conversation_context_unavailable_answer(
+                    resolve_response_language(normalized_query)
+                ),
+                insufficient_info=False,
+                retrieved_chunk_count=0,
+                citations=[],
+                provider=None,
+                model=None,
+                token_input=None,
+                token_output=None,
+            )
+        elif self._qa_orchestrator is None:
             raise RuntimeError("QA orchestrator is required for message submission")
-        qa_result = await self._qa_orchestrator.answer_question(
-            query=normalized_query,
-            top_k=top_k,
-            page_ids=page_ids,
-            section_paths=section_paths,
-            source_kinds=source_kinds,
-            provider_name=provider_name,
-            model=model,
-            request_workflow_id=request_workflow_id,
-            conversation_context=conversation_context,
-            conversation_only=recall_kind is not None,
-            owner_scope=owner_id,
-        )
+        elif (
+            self._agent_runtime is not None
+            and self._agent_runtime.supports_provider(provider_name)
+            and (recall_kind is None or transform_kind is not None)
+        ):
+            try:
+                agent_result = await self._agent_runtime.run(
+                    query=normalized_query,
+                    session_id=session_id,
+                    owner_id=owner_id,
+                    provider_name=provider_name,
+                    model=model,
+                    request_workflow_id=request_workflow_id,
+                    conversation_context=conversation_context,
+                    conversation_transform=transform_kind is not None,
+                    user_message_id=user_message_id,
+                    top_k=top_k,
+                    page_ids=page_ids,
+                    section_paths=section_paths,
+                    source_kinds=source_kinds,
+                )
+            except AgentRuntimeError as exc:
+                raise ConversationOrchestratorError(
+                    error_code=exc.error_code,
+                    message=exc.message,
+                    http_status_code=exc.http_status_code,
+                ) from exc
+            if agent_result.status != "succeeded":
+                raise ConversationOrchestratorError(
+                    error_code="AGENT_RUNTIME_FAILED",
+                    message="The bounded agent could not complete this request.",
+                    http_status_code=HTTPStatus.BAD_GATEWAY,
+                )
+            qa_result = QAResult(
+                workflow_run_id=agent_result.workflow_run_id,
+                status=agent_result.status,
+                answer=agent_result.answer,
+                insufficient_info=agent_result.insufficient_info,
+                retrieved_chunk_count=agent_result.retrieved_chunk_count,
+                citations=[
+                    QACitationResult(
+                        notion_path=citation.notion_path,
+                        page_id=citation.page_id,
+                        score=citation.score,
+                        source_kind=citation.source_kind,
+                        source_display_name=citation.source_display_name,
+                        locator=citation.locator,
+                        source_url=citation.source_url,
+                        image_index=citation.image_index,
+                        sequence_index=citation.sequence_index,
+                        original_filename=citation.original_filename,
+                    )
+                    for citation in agent_result.citations
+                ],
+                provider=agent_result.provider,
+                model=agent_result.model,
+                token_input=agent_result.token_input,
+                token_output=agent_result.token_output,
+                memory_status=agent_result.memory_status,
+                used_saved_memory=agent_result.used_saved_memory,
+            )
+        else:
+            qa_result = await self._qa_orchestrator.answer_question(
+                query=normalized_query,
+                top_k=top_k,
+                page_ids=page_ids,
+                section_paths=section_paths,
+                source_kinds=source_kinds,
+                provider_name=provider_name,
+                model=model,
+                request_workflow_id=request_workflow_id,
+                conversation_context=conversation_context,
+                conversation_only=(
+                    recall_kind is not None or transform_kind is not None
+                ),
+                owner_scope=owner_id,
+            )
 
         with self._unit_of_work_factory() as unit_of_work:
             repository = unit_of_work.conversations
@@ -194,6 +451,7 @@ class ConversationOrchestrator:
                     )
                     for citation in qa_result.citations
                 ],
+                used_saved_memory=qa_result.used_saved_memory,
             )
             session = repository.get_session(
                 session_id=session_id,

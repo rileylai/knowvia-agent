@@ -106,6 +106,16 @@ from src.services.conversation_context import (
     build_conversation_title,
     estimate_conversation_tokens,
 )
+from src.services.memory import (
+    MEMORY_EMBEDDING_DIMENSIONS,
+    MEMORY_EMBEDDING_MODEL,
+    MEMORY_SEARCH_TOP_K,
+    MemoryEmbeddingError,
+    MemorySaveResult,
+    MemoryService,
+    MemoryServiceError,
+    MemoryValidationError,
+)
 from src.services.upload_limits import (
     IMAGE_MIME_TYPES,
     MAX_EXTRACTED_TEXT_CHARS,

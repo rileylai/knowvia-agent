@@ -16,6 +16,7 @@ from src.app.schemas.conversations import (
     ConversationTurnResponse,
 )
 from src.app.schemas.qa import QACitation, QARequest, QAResponse
+from src.app.schemas.memories import MemoryCreateRequest, MemoryResponse, MemorySaveResponse
 
 __all__ = [
     "ConversationMessageRequest",
@@ -26,6 +27,9 @@ __all__ = [
     "QACitation",
     "QARequest",
     "QAResponse",
+    "MemoryCreateRequest",
+    "MemoryResponse",
+    "MemorySaveResponse",
 ]
 from src.app.schemas.source_ingest import (
     ChatTextIngestionRequest,

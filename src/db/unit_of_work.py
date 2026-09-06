@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from src.repositories.change_request_repository import ChangeRequestRepository
 from src.repositories.chunk_repository import ChunkRepository
 from src.repositories.conversation_repository import ConversationRepository
+from src.repositories.memory_repository import MemoryRepository
 from src.repositories.notion_block_repository import NotionBlockRepository
 from src.repositories.notion_page_repository import NotionPageRepository
 from src.repositories.source_document_repository import SourceDocumentRepository
@@ -39,6 +40,7 @@ class SqlAlchemyUnitOfWork:
         self._source_documents: Optional[SourceDocumentRepository] = None
         self._change_requests: Optional[ChangeRequestRepository] = None
         self._conversations: Optional[ConversationRepository] = None
+        self._memories: Optional[MemoryRepository] = None
 
     def __enter__(self) -> "SqlAlchemyUnitOfWork":
         if self._session is not None:
@@ -54,6 +56,7 @@ class SqlAlchemyUnitOfWork:
             self._source_documents = SourceDocumentRepository(session)
             self._change_requests = ChangeRequestRepository(session)
             self._conversations = ConversationRepository(session)
+            self._memories = MemoryRepository(session)
             return self
         except Exception:
             self._clear_repositories()
@@ -120,6 +123,12 @@ class SqlAlchemyUnitOfWork:
         return self._conversations
 
     @property
+    def memories(self) -> MemoryRepository:
+        if self._memories is None:
+            raise UnitOfWorkInactiveError("Unit of Work is not active")
+        return self._memories
+
+    @property
     def database_dialect(self) -> Optional[str]:
         if self._session is None or self._session.bind is None:
             return None
@@ -132,3 +141,4 @@ class SqlAlchemyUnitOfWork:
         self._source_documents = None
         self._change_requests = None
         self._conversations = None
+        self._memories = None

@@ -12,6 +12,7 @@ from src.conversation_context import build_conversation_title
 from src.conversation_citations import (
     ConversationCitation,
     deserialize_conversation_citations,
+    deserialize_used_saved_memory,
     serialize_conversation_citations,
 )
 
@@ -25,6 +26,7 @@ class ConversationMessageSnapshot:
     sequence_number: int
     created_at: datetime
     citations: List[ConversationCitation]
+    used_saved_memory: bool = False
 
 
 @dataclass(frozen=True)
@@ -133,6 +135,7 @@ class ConversationRepository:
         role: str,
         content: str,
         citations: Optional[Sequence[ConversationCitation]] = None,
+        used_saved_memory: bool = False,
     ) -> ConversationMessage:
         conversation_session = (
             self._session.query(ConversationSession)
@@ -165,12 +168,13 @@ class ConversationRepository:
             role=normalized_role,
             content=normalized_content,
             sequence_number=max_sequence + 1,
-            metadata_json=(
-                serialize_conversation_citations(citations or [])
-                if normalized_role == "assistant"
-                else None
-            ),
+            metadata_json=None,
         )
+        if normalized_role == "assistant":
+            message.metadata_json = serialize_conversation_citations(
+                citations or [],
+                used_saved_memory=used_saved_memory,
+            )
         if self._is_sqlite:
             message.id = self._allocate_id(ConversationMessage)
         self._session.add(message)
@@ -228,4 +232,5 @@ class ConversationRepository:
             sequence_number=int(message.sequence_number),
             created_at=message.created_at,
             citations=deserialize_conversation_citations(message.metadata_json),
+            used_saved_memory=deserialize_used_saved_memory(message.metadata_json),
         )

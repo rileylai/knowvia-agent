@@ -61,3 +61,5 @@ class QAResponse(BaseModel):
     model: Optional[str] = None
     token_input: Optional[int] = None
     token_output: Optional[int] = None
+    memory_status: Optional[str] = None
+    used_saved_memory: bool = False

@@ -17,6 +17,7 @@ from src.repositories.conversation_repository import (
     ConversationRepository,
     ConversationSessionSnapshot,
 )
+from src.repositories.memory_repository import LongTermMemorySnapshot, MemoryRepository
 from src.repositories.notion_block_repository import NotionBlockRepository, NotionBlockSnapshot
 from src.repositories.notion_page_repository import (
     NotionPageRepository,
@@ -48,6 +49,8 @@ __all__ = [
     "ConversationMessageSnapshot",
     "ConversationRepository",
     "ConversationSessionSnapshot",
+    "LongTermMemorySnapshot",
+    "MemoryRepository",
     "ChunkBlockMappingError",
     "ChunkRepository",
     "ChunkRepositoryError",

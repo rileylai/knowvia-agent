@@ -48,10 +48,12 @@ class ConversationCitation:
 
 def serialize_conversation_citations(
     citations: Sequence[ConversationCitation],
+    *,
+    used_saved_memory: bool = False,
 ) -> Optional[str]:
     """Serialize only the typed, bounded citation projection from a QA result."""
 
-    if not citations:
+    if not citations and not used_saved_memory:
         return None
 
     bounded_citations = [
@@ -62,6 +64,7 @@ def serialize_conversation_citations(
         {
             "citation_metadata_version": CONVERSATION_CITATION_METADATA_VERSION,
             "citations": [citation.to_payload() for citation in bounded_citations],
+            "used_saved_memory": used_saved_memory,
         },
         ensure_ascii=False,
         separators=(",", ":"),
@@ -92,6 +95,20 @@ def deserialize_conversation_citations(value: Optional[str]) -> List[Conversatio
         if citation is not None:
             citations.append(citation)
     return citations
+
+
+def deserialize_used_saved_memory(value: Optional[str]) -> bool:
+    if not value:
+        return False
+    try:
+        payload = json.loads(value)
+    except (TypeError, ValueError):
+        return False
+    return (
+        isinstance(payload, dict)
+        and payload.get("citation_metadata_version") == CONVERSATION_CITATION_METADATA_VERSION
+        and payload.get("used_saved_memory") is True
+    )
 
 
 def _normalize_citation(citation: ConversationCitation) -> ConversationCitation:
@@ -199,4 +216,3 @@ def _read_optional_nonnegative_int(value: Any) -> Optional[int]:
     if value is None or isinstance(value, bool):
         return None
     return value if isinstance(value, int) and value >= 0 else None
-

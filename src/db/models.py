@@ -216,6 +216,50 @@ class ConversationMessage(Base):
     )
 
 
+class LongTermMemory(Base):
+    __tablename__ = "long_term_memories"
+    __table_args__ = (
+        UniqueConstraint(
+            "owner_id",
+            "memory_type",
+            "content_normalized",
+            name="uq_long_term_memory_owner_type_content",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    owner_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    memory_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    content_normalized: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding: Mapped[List[float]] = mapped_column(Vector(1536), nullable=False)
+    embedding_model: Mapped[str] = mapped_column(String(128), nullable=False)
+    embedding_dimensions: Mapped[int] = mapped_column(Integer, nullable=False)
+    source_session_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger,
+        ForeignKey("conversation_sessions.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    source_message_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger,
+        ForeignKey("conversation_messages.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, server_default="active", index=True
+    )
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    updated_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+
+
 class ChangeRequest(Base):
     __tablename__ = "change_requests"
 

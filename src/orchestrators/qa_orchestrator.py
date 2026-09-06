@@ -16,6 +16,8 @@ from src.providers import (
     ProviderRouter,
     ProviderRouterError,
 )
+from src.memory import is_memory_recall_query
+from src.repositories.memory_repository import LongTermMemorySnapshot
 from src.rag import (
     ProductionChunkRetriever,
     RetrievedChunk,
@@ -32,6 +34,17 @@ from src.services import (
     WorkflowRunAuditUpdateError,
     WorkflowRunService,
     format_untrusted_prompt_block,
+    MemoryService,
+    MemoryServiceError,
+)
+from src.response_language import (
+    ResponseLanguage,
+    conversation_context_unavailable_answer,
+    conversation_insufficient_info_answer,
+    conversation_recall_unavailable_answer,
+    insufficient_info_answer,
+    resolve_response_language,
+    response_language_instruction,
 )
 
 INSUFFICIENT_INFO_ANSWER = (
@@ -58,6 +71,7 @@ DEFAULT_QA_PROVIDER_NAME = "openai"
 DEFAULT_QA_MODEL = "gpt-4o-mini"
 EMBEDDING_DIMENSIONS = 1536
 VECTOR_DISTANCE_METRIC = "cosine"
+MEMORY_RETRIEVAL_MODE = "long_term_memory_semantic"
 
 
 @dataclass
@@ -86,6 +100,8 @@ class QAResult:
     model: Optional[str]
     token_input: Optional[int]
     token_output: Optional[int]
+    memory_status: Optional[str] = None
+    used_saved_memory: bool = False
 
 
 @dataclass
@@ -125,6 +141,7 @@ class QAOrchestrator:
         cost_tracker: CostTracker,
         prompt_template_loader: PromptTemplateLoader,
         workflow_run_service: WorkflowRunService,
+        memory_service: Optional[MemoryService] = None,
     ) -> None:
         self._retriever = retriever
         self._embedding_client = embedding_client
@@ -132,6 +149,7 @@ class QAOrchestrator:
         self._cost_tracker = cost_tracker
         self._prompt_template_loader = prompt_template_loader
         self._workflow_run_service = workflow_run_service
+        self._memory_service = memory_service
 
     async def answer_question(
         self,
@@ -151,6 +169,7 @@ class QAOrchestrator:
         normalized_query = query.strip()
         normalized_provider_name = provider_name.strip()
         normalized_model = model.strip()
+        response_language = resolve_response_language(normalized_query)
 
         if not normalized_query:
             raise QAOrchestratorError(
@@ -209,6 +228,7 @@ class QAOrchestrator:
                     normalized_model=normalized_model,
                     request_workflow_id=request_workflow_id,
                     conversation_context=conversation_context,
+                    response_language=response_language,
                     workflow_run_id=workflow_run.id,
                     prompt_id=prompt_id,
                     prompt_version=prompt_version,
@@ -218,6 +238,52 @@ class QAOrchestrator:
                 query_text=normalized_query,
                 request_workflow_id=request_workflow_id,
             )
+            memory_results = await self._retrieve_saved_memory(
+                query=normalized_query,
+                owner_scope=owner_scope,
+                query_embedding=query_embedding_state.query_embedding,
+            )
+            if memory_results:
+                response_answer = self._build_memory_only_answer(memory_results)
+                self._workflow_run_service.mark_workflow_succeeded(
+                    workflow_run.id,
+                    metadata_json=json.dumps(
+                        self._build_workflow_metadata(
+                            insufficient_info=False,
+                            retrieved_chunk_count=0,
+                            citation_count=0,
+                            memory_count=len(memory_results),
+                            used_saved_memory=True,
+                            provider_name=normalized_provider_name,
+                            model=normalized_model,
+                            prompt_id=prompt_id,
+                            prompt_version=prompt_version,
+                            token_input=None,
+                            token_output=None,
+                            estimated_cost=None,
+                            retrieval_mode=MEMORY_RETRIEVAL_MODE,
+                            retrieval_fallback_reason=(
+                                query_embedding_state.retrieval_fallback_reason
+                            ),
+                            query_embedding_state=query_embedding_state,
+                        ),
+                        sort_keys=True,
+                    ),
+                )
+                return QAResult(
+                    workflow_run_id=workflow_run.id,
+                    status="succeeded",
+                    answer=response_answer,
+                    insufficient_info=False,
+                    retrieved_chunk_count=0,
+                    citations=[],
+                    provider=None,
+                    model=None,
+                    token_input=None,
+                    token_output=None,
+                    used_saved_memory=True,
+                )
+
             retrieval_result = self._retriever.retrieve_with_metadata(
                 query_text=normalized_query,
                 top_k=top_k,
@@ -243,6 +309,8 @@ class QAOrchestrator:
                             insufficient_info=True,
                             retrieved_chunk_count=len(retrieved_chunks),
                             citation_count=len(citations),
+                            memory_count=0,
+                            used_saved_memory=False,
                             provider_name=normalized_provider_name,
                             model=normalized_model,
                             prompt_id=prompt_id,
@@ -260,7 +328,7 @@ class QAOrchestrator:
                 return QAResult(
                     workflow_run_id=workflow_run.id,
                     status="succeeded",
-                    answer=INSUFFICIENT_INFO_ANSWER,
+                    answer=insufficient_info_answer(response_language),
                     insufficient_info=True,
                     retrieved_chunk_count=len(retrieved_chunks),
                     citations=citations,
@@ -283,6 +351,7 @@ class QAOrchestrator:
                     ),
                 }
             )
+            system_message += "\n" + response_language_instruction(response_language)
             if conversation_context and conversation_context.strip():
                 user_message = (
                     f"{user_message}\n\n"
@@ -348,6 +417,8 @@ class QAOrchestrator:
                         insufficient_info=insufficient_info,
                         retrieved_chunk_count=len(retrieved_chunks),
                         citation_count=len(response_citations),
+                        memory_count=len(memory_results),
+                        used_saved_memory=bool(memory_results) and not insufficient_info,
                         provider_name=normalized_provider_name,
                         model=normalized_model,
                         prompt_id=prompt_id,
@@ -373,6 +444,7 @@ class QAOrchestrator:
                 model=llm_response.model,
                 token_input=llm_response.token_input,
                 token_output=llm_response.token_output,
+                used_saved_memory=bool(memory_results) and not insufficient_info,
             )
         except WorkflowRunAuditUpdateError:
             raise
@@ -523,13 +595,14 @@ class QAOrchestrator:
         normalized_model: str,
         request_workflow_id: str,
         conversation_context: Optional[str],
+        response_language: ResponseLanguage,
         workflow_run_id: int,
         prompt_id: str,
         prompt_version: str,
         prompt_bundle,
     ) -> QAResult:
         if conversation_context is None:
-            response_answer = "There are no earlier user messages in this conversation."
+            response_answer = conversation_recall_unavailable_answer(response_language)
             self._workflow_run_service.mark_workflow_succeeded(
                 workflow_run_id,
                 metadata_json=json.dumps(
@@ -579,6 +652,7 @@ class QAOrchestrator:
                 ),
             }
         )
+        system_message += "\n" + response_language_instruction(response_language)
         llm_response = await self._provider_router.route(
             normalized_provider_name,
             LLMRequest(
@@ -611,7 +685,7 @@ class QAOrchestrator:
 
         insufficient_info = _answer_indicates_insufficient_info(answer_text)
         response_answer = (
-            "I do not have enough earlier conversation context to answer that."
+            conversation_insufficient_info_answer(response_language)
             if insufficient_info
             else answer_text
         )
@@ -707,6 +781,36 @@ class QAOrchestrator:
         state.query_embedding = normalized_embedding
         return state
 
+    async def _retrieve_saved_memory(
+        self,
+        *,
+        query: str,
+        owner_scope: str,
+        query_embedding: Optional[List[float]],
+    ) -> List[LongTermMemorySnapshot]:
+        if (
+            self._memory_service is None
+            or not is_memory_recall_query(query)
+            or query_embedding is None
+        ):
+            return []
+        try:
+            return await self._memory_service.search_memories(
+                owner_id=owner_scope,
+                query=query,
+                query_embedding=query_embedding,
+            )
+        except MemoryServiceError:
+            return []
+
+    def _build_memory_only_answer(
+        self,
+        memories: List[LongTermMemorySnapshot],
+    ) -> str:
+        if len(memories) == 1:
+            return memories[0].content
+        return "\n".join(f"- {memory.content}" for memory in memories)
+
     def _build_context_text(self, retrieved_chunks: List[RetrievedChunk]) -> str:
         context_lines = []
         for idx, chunk in enumerate(retrieved_chunks, start=1):
@@ -782,6 +886,8 @@ class QAOrchestrator:
         insufficient_info: Optional[bool] = None,
         retrieved_chunk_count: Optional[int] = None,
         citation_count: Optional[int] = None,
+        memory_count: Optional[int] = None,
+        used_saved_memory: Optional[bool] = None,
         provider_name: str,
         model: str,
         prompt_id: str,
@@ -817,6 +923,10 @@ class QAOrchestrator:
             metadata["retrieved_chunk_count"] = retrieved_chunk_count
         if citation_count is not None:
             metadata["citation_count"] = citation_count
+        if memory_count is not None:
+            metadata["memory_count"] = memory_count
+        if used_saved_memory is not None:
+            metadata["used_saved_memory"] = used_saved_memory
         if error_code is not None:
             metadata["error_code"] = error_code
         return metadata

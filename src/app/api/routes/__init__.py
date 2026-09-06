@@ -1,5 +1,6 @@
 from src.app.api.routes.conversations import router as conversations_router
 from src.app.api.routes.notion_index import router as notion_index_router
+from src.app.api.routes.memories import router as memories_router
 from src.app.api.routes.ops import router as ops_router
 from src.app.api.routes.qa import router as qa_router
 from src.app.api.routes.source_ingest import router as source_ingest_router
@@ -23,6 +24,7 @@ def __getattr__(name: str):
 
 __all__ = [
     "notion_index_router",
+    "memories_router",
     "conversations_router",
     "ops_router",
     "qa_router",

@@ -91,6 +91,10 @@ class Settings(BaseModel):
     workflow_stale_after_seconds: int = 3600
     conversation_context_message_limit: int = 6
     conversation_context_token_budget: int = 2048
+    agent_max_tool_calls: int = 3
+    agent_max_iterations: int = 6
+    agent_tool_timeout_seconds: float = 8.0
+    agent_context_char_budget: int = 16000
     telegram_job_timeout_seconds: int = 180
     telegram_review_job_timeout_seconds: int = 10800
     telegram_indexing_job_timeout_seconds: int = 10800
@@ -194,6 +198,22 @@ class Settings(BaseModel):
             conversation_context_token_budget=_read_optional_positive_int_env(
                 "CONVERSATION_CONTEXT_TOKEN_BUDGET",
                 default=2048,
+            ),
+            agent_max_tool_calls=_read_optional_positive_int_env(
+                "AGENT_MAX_TOOL_CALLS",
+                default=3,
+            ),
+            agent_max_iterations=_read_optional_positive_int_env(
+                "AGENT_MAX_ITERATIONS",
+                default=6,
+            ),
+            agent_tool_timeout_seconds=(
+                _read_optional_positive_float_env("AGENT_TOOL_TIMEOUT_SECONDS")
+                or 8.0
+            ),
+            agent_context_char_budget=_read_optional_positive_int_env(
+                "AGENT_CONTEXT_CHAR_BUDGET",
+                default=16000,
             ),
             telegram_job_timeout_seconds=_read_optional_positive_int_env(
                 "TELEGRAM_JOB_TIMEOUT_SECONDS",

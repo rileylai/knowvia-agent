@@ -12,7 +12,7 @@ from src.providers.embedding import (
     get_openai_embedding_capabilities,
 )
 from src.providers.llm import BaseLLMClient, LLMClientError, OpenAIClient
-from src.providers.models import LLMMessage, LLMRequest, LLMResponse
+from src.providers.models import LLMMessage, LLMRequest, LLMResponse, LLMToolCall
 from src.providers.router import (
     ProviderAlreadyRegisteredError,
     ProviderNameInvalidError,
@@ -35,6 +35,7 @@ __all__ = [
     "LLMProvider",
     "LLMRequest",
     "LLMResponse",
+    "LLMToolCall",
     "OpenAIClient",
     "OpenAIEmbeddingClient",
     "build_embedding_request_diagnostics",

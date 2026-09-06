@@ -20,6 +20,8 @@ export type QAResponse = {
   citations: QACitation[];
   provider: string | null;
   model: string | null;
+  memory_status?: "saved" | "already_saved" | null;
+  used_saved_memory: boolean;
 };
 
 export type ConversationSessionSummary = {
@@ -38,6 +40,7 @@ export type ConversationMessage = {
   sequence_number: number;
   created_at: string;
   citations: QACitation[];
+  used_saved_memory: boolean;
 };
 
 export type ConversationSession = ConversationSessionSummary & {
@@ -49,6 +52,16 @@ export type ConversationTurn = QAResponse & {
   title: string;
   updated_at: string;
   messages: ConversationMessage[];
+};
+
+export type MemoryType = "decision" | "preference" | "project_context";
+
+export type SavedMemory = {
+  id: number;
+  memory_type: MemoryType;
+  content: string;
+  status: string;
+  created_at: string;
 };
 
 export type PDFIndexResponse = {
@@ -166,7 +179,11 @@ function normalizeConversationMessages(
       : index === lastAssistantIndex
         ? fallbackCitations
         : [];
-    return { ...message, citations } as ConversationMessage;
+    return {
+      ...message,
+      citations,
+      used_saved_memory: message.used_saved_memory === true,
+    } as ConversationMessage;
   });
 }
 
@@ -184,6 +201,7 @@ function normalizeConversationTurn(value: unknown): ConversationTurn {
   return {
     ...turn,
     citations,
+    used_saved_memory: turn.used_saved_memory === true,
     messages: normalizeConversationMessages(turn.messages, citations),
   };
 }
@@ -305,6 +323,41 @@ export async function sendConversationMessage(
     throw new Error(errorMessage(payload, response.status));
   }
   return normalizeConversationTurn(payload);
+}
+
+export async function listMemories(
+  request: typeof fetch = fetch,
+): Promise<SavedMemory[]> {
+  let response: Response;
+  try {
+    response = await request("/api/memories");
+  } catch {
+    throw new Error("Unable to reach the Knowvia backend.");
+  }
+  const payload = await readJSONResponse(response);
+  if (!response.ok) {
+    throw new Error(errorMessage(payload, response.status));
+  }
+  if (!Array.isArray(payload)) {
+    throw new Error("Knowvia returned an invalid memory list.");
+  }
+  return payload as SavedMemory[];
+}
+
+export async function deleteMemory(
+  memoryId: number,
+  request: typeof fetch = fetch,
+): Promise<void> {
+  let response: Response;
+  try {
+    response = await request(`/api/memories/${memoryId}`, { method: "DELETE" });
+  } catch {
+    throw new Error("Unable to reach the Knowvia backend.");
+  }
+  if (response.status !== 204) {
+    const payload = await readJSONResponse(response);
+    throw new Error(errorMessage(payload, response.status));
+  }
 }
 
 export async function indexPDF(
