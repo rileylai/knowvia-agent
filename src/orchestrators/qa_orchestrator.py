@@ -46,6 +46,7 @@ from src.response_language import (
     resolve_response_language,
     response_language_instruction,
 )
+from src.services.execution_events import ExecutionEventSink, emit_execution_status
 
 INSUFFICIENT_INFO_ANSWER = (
     "I do not have enough information in production notes to answer safely."
@@ -165,6 +166,7 @@ class QAOrchestrator:
         conversation_context: Optional[str] = None,
         conversation_only: bool = False,
         owner_scope: str = "local",
+        event_sink: Optional[ExecutionEventSink] = None,
     ) -> QAResult:
         normalized_query = query.strip()
         normalized_provider_name = provider_name.strip()
@@ -233,17 +235,21 @@ class QAOrchestrator:
                     prompt_id=prompt_id,
                     prompt_version=prompt_version,
                     prompt_bundle=prompt_bundle,
+                    event_sink=event_sink,
                 )
             query_embedding_state = await self._build_query_embedding_state(
                 query_text=normalized_query,
                 request_workflow_id=request_workflow_id,
             )
+            if is_memory_recall_query(normalized_query):
+                emit_execution_status(event_sink, phase="searching_memory")
             memory_results = await self._retrieve_saved_memory(
                 query=normalized_query,
                 owner_scope=owner_scope,
                 query_embedding=query_embedding_state.query_embedding,
             )
             if memory_results:
+                emit_execution_status(event_sink, phase="generating")
                 response_answer = self._build_memory_only_answer(memory_results)
                 self._workflow_run_service.mark_workflow_succeeded(
                     workflow_run.id,
@@ -284,7 +290,10 @@ class QAOrchestrator:
                     used_saved_memory=True,
                 )
 
+            emit_execution_status(event_sink, phase="searching_knowledge")
             retrieval_result = self._retriever.retrieve_with_metadata(
+                # The retrieval boundary is the only public signal for enterprise
+                # search. Internal retrieval metadata remains backend-owned.
                 query_text=normalized_query,
                 top_k=top_k,
                 page_ids=page_ids,
@@ -302,6 +311,7 @@ class QAOrchestrator:
             retrieved_chunks = retrieval_result.chunks
             citations = self._build_citations(retrieved_chunks)
             if not retrieved_chunks or not citations:
+                emit_execution_status(event_sink, phase="generating")
                 self._workflow_run_service.mark_workflow_succeeded(
                     workflow_run.id,
                     metadata_json=json.dumps(
@@ -360,6 +370,7 @@ class QAOrchestrator:
                     "production-note context:\n"
                     f"{format_untrusted_prompt_block(label='CONVERSATION_HISTORY', value=conversation_context)}"
                 )
+            emit_execution_status(event_sink, phase="generating")
             llm_response = await self._provider_router.route(
                 normalized_provider_name,
                 LLMRequest(
@@ -600,6 +611,7 @@ class QAOrchestrator:
         prompt_id: str,
         prompt_version: str,
         prompt_bundle,
+        event_sink: Optional[ExecutionEventSink] = None,
     ) -> QAResult:
         if conversation_context is None:
             response_answer = conversation_recall_unavailable_answer(response_language)
@@ -653,6 +665,7 @@ class QAOrchestrator:
             }
         )
         system_message += "\n" + response_language_instruction(response_language)
+        emit_execution_status(event_sink, phase="generating")
         llm_response = await self._provider_router.route(
             normalized_provider_name,
             LLMRequest(

@@ -1312,3 +1312,74 @@ broad 判斷也會把它當作 direct recall。
 ### Scope confirmation
 
 本輪未開始 5.0.3、5.0.4 或 6.0；未加入 remote MCP、SSE、OAuth、RBAC、multi-tenant auth、new Agent tools、memory ranking 或 conversation transform changes。
+
+## 2026-09-06 6.0 SSE Streaming and UX Hardening
+
+### Implementation
+
+- 保留 `POST /api/conversations/{session_id}/messages`，新增同一 orchestrator、Agent runtime 與 persistence path 共用的 `/messages/stream` endpoint。
+- 新增 bounded SSE event sink。Public events 只有 `execution_status`、`answer_delta`、`citations`、`error` 與 `done`；每個 event 帶 `run_id` 與 monotonic `sequence`。
+- Agent tool execution 只映射為 `searching_knowledge`、`searching_memory`、`saving_memory`；answer generation 映射為 `generating`。沒有輸出 prompt、tool arguments、raw tool result 或 reasoning。
+- 目前 provider contract 只有完整 `generate()`。Backend 會在 final answer 完成後以 deterministic Unicode-safe chunks 發送 `answer_delta`，沒有修改 Provider architecture。
+- Partial answer 只存在 frontend memory。Assistant canonical message、citation metadata 與 saved-memory metadata 只在 successful completion path 寫入；provider failure 不建立 fake assistant success。
+- Frontend 使用 `fetch` POST、`ReadableStream`、streaming `TextDecoder` 與 SSE frame parser。active run 期間停用 input，session switch 會 abort 舊 stream 並檢查 session／run identity。
+
+### Automated evidence
+
+- Backend streaming tests：`8 passed`。
+- Backend full suite：`804 passed, 5 skipped`；`tests/test_api_idempotency.py::test_concurrent_claims_have_one_owner` 在 full-suite 下出現 scheduler-sensitive failure，隔離重跑通過。該既有測試與 implementation 未在本輪修改。
+- Frontend full suite：`53 passed`。
+- Frontend production build、Python `compileall` 與 `git diff --check`：PASS。
+- 覆蓋 ordered lifecycle、monotonic sequence、multilingual delta reconstruction、citations、saved-memory metadata、explicit save、insufficient info、safe error、provider failure persistence、session race、partial failure 與 existing keyboard/session regressions。
+
+### Manual verification
+
+2026-09-07 browser manual verification PASS：`Searching knowledge…` 與 `Generating answer…` 可見，answer 會 progressive rendering，完成後 `Sources · N` 正確附屬於 assistant message。
+
+### Roadmap state
+
+- `6.0=done`。
+- `6.0.1=done`。
+- `7.0=planned`。
+
+### Scope confirmation
+
+本輪未開始 5.0.3、5.0.4 或 7.0。未加入 WebSocket、GraphQL subscription、new Agent tools、MCP over SSE、native provider streaming、automatic memory、retrieval architecture changes、conversation summarization、distributed cancellation 或 replay／resume。
+
+## 2026-09-07 6.0.1 Visible SSE Progressive Rendering
+
+### Discovery
+
+- Browser manual report：`Searching knowledge…` 可見；`Generating answer…` 不可見；answer 一次完整出現；Sources 正常。
+- 原本 Agent timeline 為 `provider-1 → searching_knowledge → provider-2 → generating`。`generating` 在 final provider call 完成後才發送。
+- 原本 backend 在 task 完成後一次把所有 `answer_delta`、citations 與 `done` 放入 queue。Frontend parser 可能在同一個 `ReadableStream.read()` callback 內同步 dispatch 多個 frame，React 因此只產生一次可見 render。
+- 初始修正階段的 CUA browser service 與 local Vite HTTP probe 無法取得 browser paint timing；後續 2026-09-07 browser manual verification 已完成並 PASS。Timing 判斷同時使用 local ASGI、Agent timeline 與 frontend event tests。
+
+### Implementation
+
+- Agent runtime 在已完成 tool execution、即將進入下一次 provider generation 前發送 `generating`；explicit save 已完成時不新增 generation status。
+- Backend completion events 改為每次只產生一個 event，再交由 async generator yield；不使用 blocking sleep 或人工長 latency。
+- Deterministic answer delta default chunk size 改為 32 Unicode characters。Chunk concat 仍等於 canonical answer。
+- Frontend event handler 支援 async return，對 `execution_status` 與 `answer_delta` 等待 `requestAnimationFrame`，非 browser environment 使用 zero-delay task fallback，讓 React 有 paint boundary。
+- 保留既有 provider contract、sync endpoint、Agent tool policy、citation authority、memory policy 與 persistence behavior。
+
+### Automated evidence
+
+- Agent timing、stream lifecycle、delta reconstruction 與 disconnect regression：`11 passed`。
+- Frontend full suite：`54 passed`。
+- Backend full suite：`807 passed, 5 skipped`。
+- Frontend production build、Python `compileall` 與 `git diff --check`：PASS。
+
+### Manual verification
+
+2026-09-07 browser manual verification PASS：`Searching knowledge…` 可見，`Generating answer…` 可見，answer 會 progressive rendering，完成後 `Sources · N` 正確附屬於 assistant message。SSE UI lifecycle 符合本輪人工驗收要求。
+
+### Roadmap state
+
+- `6.0=done`。
+- `6.0.1=done`。
+- `7.0=planned`。
+
+### Scope confirmation
+
+本輪未開始 5.0.3、5.0.4 或 7.0。未加入 provider-native token streaming、WebSocket、GraphQL subscription、new Agent tools、MCP over SSE、retrieval architecture changes、automatic memory、conversation summarization、distributed queue 或 SSE replay／resume。

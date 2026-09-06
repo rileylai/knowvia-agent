@@ -14,6 +14,7 @@ from src.conversation_recall import (
 from src.conversation_citations import ConversationCitation
 from src.orchestrators.qa_orchestrator import QACitationResult, QAOrchestrator, QAResult
 from src.services.memory import MemoryEmbeddingError, MemoryService, MemoryServiceError
+from src.services.execution_events import ExecutionEventSink, emit_execution_status
 from src.response_language import (
     conversation_context_unavailable_answer,
     memory_confirmation,
@@ -35,6 +36,7 @@ from src.conversation_context import (
 class ConversationTurnResult:
     session: ConversationSessionSnapshot
     qa_result: QAResult
+    assistant_message_id: Optional[int] = None
 
 
 class ConversationOrchestratorError(Exception):
@@ -114,6 +116,7 @@ class ConversationOrchestrator:
         provider_name: str,
         model: str,
         request_workflow_id: str,
+        event_sink: Optional[ExecutionEventSink] = None,
     ) -> ConversationTurnResult:
         normalized_query = query.strip()
         if not normalized_query:
@@ -184,6 +187,7 @@ class ConversationOrchestrator:
                         explicit_save_content=save_intent.content,
                         explicit_save_memory_type=save_intent.memory_type,
                         user_message_id=user_message_id,
+                        event_sink=event_sink,
                     )
                 except AgentRuntimeError as exc:
                     raise ConversationOrchestratorError(
@@ -205,12 +209,13 @@ class ConversationOrchestrator:
                 )
                 with self._unit_of_work_factory() as unit_of_work:
                     repository = unit_of_work.conversations
-                    repository.append_message(
+                    assistant_message = repository.append_message(
                         session_id=session_id,
                         owner_id=owner_id,
                         role="assistant",
                         content=confirmation,
                     )
+                    assistant_message_id = int(assistant_message.id)
                     session = repository.get_session(
                         session_id=session_id,
                         owner_id=owner_id,
@@ -233,6 +238,7 @@ class ConversationOrchestrator:
                         memory_status=agent_result.memory_status,
                         used_saved_memory=False,
                     ),
+                    assistant_message_id=assistant_message_id,
                 )
             if self._memory_service is None:
                 raise ConversationOrchestratorError(
@@ -240,6 +246,7 @@ class ConversationOrchestrator:
                     message="Memory service is unavailable.",
                     http_status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                 )
+            emit_execution_status(event_sink, phase="saving_memory")
             try:
                 save_result = await self._memory_service.save_memory(
                     owner_id=owner_id,
@@ -269,12 +276,13 @@ class ConversationOrchestrator:
             )
             with self._unit_of_work_factory() as unit_of_work:
                 repository = unit_of_work.conversations
-                repository.append_message(
+                assistant_message = repository.append_message(
                     session_id=session_id,
                     owner_id=owner_id,
                     role="assistant",
                     content=confirmation,
                 )
+                assistant_message_id = int(assistant_message.id)
                 session = repository.get_session(
                     session_id=session_id,
                     owner_id=owner_id,
@@ -296,6 +304,7 @@ class ConversationOrchestrator:
                     token_output=None,
                     memory_status=save_result.status,
                 ),
+                assistant_message_id=assistant_message_id,
             )
 
         prior_messages = recent_messages[:-1]
@@ -365,6 +374,7 @@ class ConversationOrchestrator:
                     page_ids=page_ids,
                     section_paths=section_paths,
                     source_kinds=source_kinds,
+                    event_sink=event_sink,
                 )
             except AgentRuntimeError as exc:
                 raise ConversationOrchestratorError(
@@ -421,6 +431,7 @@ class ConversationOrchestrator:
                     recall_kind is not None or transform_kind is not None
                 ),
                 owner_scope=owner_id,
+                event_sink=event_sink,
             )
 
         with self._unit_of_work_factory() as unit_of_work:
@@ -431,7 +442,7 @@ class ConversationOrchestrator:
                 include_messages=False,
             ) is None:
                 raise self._unavailable_error()
-            repository.append_message(
+            assistant_message = repository.append_message(
                 session_id=session_id,
                 owner_id=owner_id,
                 role="assistant",
@@ -453,13 +464,18 @@ class ConversationOrchestrator:
                 ],
                 used_saved_memory=qa_result.used_saved_memory,
             )
+            assistant_message_id = int(assistant_message.id)
             session = repository.get_session(
                 session_id=session_id,
                 owner_id=owner_id,
             )
             if session is None:
                 raise self._unavailable_error()
-            return ConversationTurnResult(session=session, qa_result=qa_result)
+            return ConversationTurnResult(
+                session=session,
+                qa_result=qa_result,
+                assistant_message_id=assistant_message_id,
+            )
 
     def _snapshot_session(
         self,

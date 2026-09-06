@@ -25,6 +25,7 @@ from src.providers import (
 )
 from src.services.prompt_safety import format_untrusted_prompt_block
 from src.services.workflow_run_service import WorkflowRunService
+from src.services.execution_events import ExecutionEventSink, emit_execution_status
 from src.tools import ToolContext, ToolResult
 from src.response_language import (
     ResponseLanguage,
@@ -106,6 +107,7 @@ class BoundedAgentRuntime:
         page_ids: Optional[List[str]] = None,
         section_paths: Optional[List[str]] = None,
         source_kinds: Optional[List[str]] = None,
+        event_sink: Optional[ExecutionEventSink] = None,
     ) -> AgentRunResult:
         normalized_query = query.strip()
         if not normalized_query:
@@ -186,6 +188,11 @@ class BoundedAgentRuntime:
                 state.available_tool_names = [
                     tool["function"]["name"] for tool in available_tools
                 ]
+                if (
+                    state.memory_status not in {"saved", "already_saved"}
+                    and (state.tool_calls_used > 0 or not available_tools)
+                ):
+                    emit_execution_status(event_sink, phase="generating")
                 provider_output = await self.provider_router.route(
                     provider_name,
                     LLMRequest(
@@ -239,6 +246,7 @@ class BoundedAgentRuntime:
                         state=state,
                         workflow_id=request_workflow_id,
                         metadata=tool_metadata,
+                        event_sink=event_sink,
                     )
                     safe_text = self._bound_tool_result(result)
                     messages.append(
@@ -330,6 +338,7 @@ class BoundedAgentRuntime:
                     state=state,
                     workflow_id=request_workflow_id,
                     metadata=tool_metadata,
+                    event_sink=event_sink,
                 )
                 messages.append(
                     LLMMessage(
@@ -375,7 +384,16 @@ class BoundedAgentRuntime:
         state: AgentState,
         workflow_id: str,
         metadata: Dict[str, Any],
+        event_sink: Optional[ExecutionEventSink],
     ) -> tuple[ToolResult, Optional[AgentTerminationReason]]:
+        phase_by_tool = {
+            "search_knowledge": "searching_knowledge",
+            "search_memory": "searching_memory",
+            "save_memory": "saving_memory",
+        }
+        phase = phase_by_tool.get(tool_call.name)
+        if phase is not None:
+            emit_execution_status(event_sink, phase=phase)  # type: ignore[arg-type]
         try:
             result = await asyncio.wait_for(
                 self.tool_registry.call_tool(

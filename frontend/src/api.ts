@@ -54,6 +54,34 @@ export type ConversationTurn = QAResponse & {
   messages: ConversationMessage[];
 };
 
+export type ConversationStreamEventType =
+  | "execution_status"
+  | "answer_delta"
+  | "citations"
+  | "error"
+  | "done";
+
+export type ConversationStreamPayload = Record<string, unknown>;
+
+export type ConversationStreamEvent = {
+  event_type: ConversationStreamEventType;
+  run_id: string;
+  sequence: number;
+  payload: ConversationStreamPayload;
+};
+
+export type ConversationStreamEventHandler = (
+  event: ConversationStreamEvent,
+) => unknown;
+
+const conversationStreamEventTypes = new Set<ConversationStreamEventType>([
+  "execution_status",
+  "answer_delta",
+  "citations",
+  "error",
+  "done",
+]);
+
 export type MemoryType = "decision" | "preference" | "project_context";
 
 export type SavedMemory = {
@@ -323,6 +351,182 @@ export async function sendConversationMessage(
     throw new Error(errorMessage(payload, response.status));
   }
   return normalizeConversationTurn(payload);
+}
+
+function parseConversationStreamFrame(frame: string): ConversationStreamEvent {
+  let eventType: string | null = null;
+  const dataLines: string[] = [];
+  for (const line of frame.split("\n")) {
+    if (line.startsWith(":")) {
+      continue;
+    }
+    if (line.startsWith("event:")) {
+      eventType = line.slice("event:".length).trim();
+      continue;
+    }
+    if (line.startsWith("data:")) {
+      dataLines.push(line.slice("data:".length).trimStart());
+    }
+  }
+
+  if (
+    eventType === null ||
+    !conversationStreamEventTypes.has(eventType as ConversationStreamEventType) ||
+    dataLines.length === 0
+  ) {
+    throw new Error("Knowvia returned an invalid streaming event.");
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(dataLines.join("\n"));
+  } catch {
+    throw new Error("Knowvia returned an unreadable streaming event.");
+  }
+  if (typeof parsed !== "object" || parsed === null) {
+    throw new Error("Knowvia returned an invalid streaming event.");
+  }
+  const value = parsed as Record<string, unknown>;
+  if (
+    typeof value.run_id !== "string" ||
+    !value.run_id.trim() ||
+    !Number.isSafeInteger(value.sequence) ||
+    Number(value.sequence) < 1 ||
+    typeof value.payload !== "object" ||
+    value.payload === null
+  ) {
+    throw new Error("Knowvia returned an invalid streaming event.");
+  }
+  return {
+    event_type: eventType as ConversationStreamEventType,
+    run_id: value.run_id,
+    sequence: value.sequence as number,
+    payload: value.payload as ConversationStreamPayload,
+  };
+}
+
+function waitForRenderBoundary(): Promise<void> {
+  if (typeof requestAnimationFrame === "function") {
+    return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+  }
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+export function parseConversationStreamFrames(
+  input: string,
+): ConversationStreamEvent[] {
+  const normalized = input.replace(/\r\n/g, "\n");
+  return normalized
+    .split("\n\n")
+    .filter((frame) => frame.trim())
+    .map(parseConversationStreamFrame);
+}
+
+export async function streamConversationMessage(
+  sessionId: number,
+  query: string,
+  onEvent: ConversationStreamEventHandler,
+  request: typeof fetch = fetch,
+  signal?: AbortSignal,
+): Promise<void> {
+  let response: Response;
+  try {
+    response = await request(`/api/conversations/${sessionId}/messages/stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+      },
+      body: JSON.stringify({ query }),
+      signal,
+    });
+  } catch (caughtError) {
+    if (caughtError instanceof DOMException && caughtError.name === "AbortError") {
+      throw caughtError;
+    }
+    throw new Error("Unable to reach the Knowvia backend.");
+  }
+
+  if (!response.ok) {
+    const payload = await readJSONResponse(response);
+    throw new Error(errorMessage(payload, response.status));
+  }
+  if (!response.headers.get("content-type")?.includes("text/event-stream")) {
+    throw new Error("Knowvia returned an invalid streaming response.");
+  }
+  if (!response.body) {
+    throw new Error("Knowvia returned an empty streaming response.");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let runId: string | null = null;
+  let expectedSequence = 1;
+  let terminal = false;
+
+  const dispatchFrame = async (frame: string): Promise<void> => {
+    const event = parseConversationStreamFrames(frame)[0];
+    if (!event) {
+      return;
+    }
+    if (runId === null) {
+      runId = event.run_id;
+    } else if (event.run_id !== runId) {
+      throw new Error("Knowvia returned an event for another run.");
+    }
+    if (
+      event.event_type === "done" &&
+      event.payload.session_id !== sessionId
+    ) {
+      throw new Error("Knowvia returned an event for another session.");
+    }
+    if (event.sequence !== expectedSequence) {
+      throw new Error("Knowvia returned out-of-order streaming events.");
+    }
+    expectedSequence += 1;
+    await onEvent(event);
+    if (event.event_type === "execution_status" || event.event_type === "answer_delta") {
+      await waitForRenderBoundary();
+    }
+    if (event.event_type === "done" || event.event_type === "error") {
+      terminal = true;
+    }
+  };
+
+  try {
+    while (!terminal) {
+      const { done, value } = await reader.read();
+      if (done) {
+        buffer += decoder.decode();
+        break;
+      }
+      buffer += decoder.decode(value, { stream: true });
+      buffer = buffer.replace(/\r\n/g, "\n");
+      let boundary = buffer.indexOf("\n\n");
+      while (boundary >= 0 && !terminal) {
+        await dispatchFrame(buffer.slice(0, boundary));
+        buffer = buffer.slice(boundary + 2);
+        boundary = buffer.indexOf("\n\n");
+      }
+    }
+    if (!terminal) {
+      buffer = buffer.replace(/\r\n/g, "\n");
+      if (buffer.trim()) {
+        await dispatchFrame(buffer);
+      }
+    }
+  } finally {
+    try {
+      await reader.cancel();
+    } catch {
+      // The underlying stream may already be closed after a terminal frame.
+    }
+  }
+
+  if (!terminal) {
+    throw new Error("Knowvia ended the stream before completion.");
+  }
 }
 
 export async function listMemories(

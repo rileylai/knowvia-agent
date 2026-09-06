@@ -216,6 +216,11 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 .conversation-message-role { display: block; margin-bottom: 8px; color: #7f867f; font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; }
 .conversation-message--user .conversation-message-role { color: #b9c1b9; }
 .conversation-message p { margin: 0; white-space: pre-wrap; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 20px; line-height: 1.38; }
+.conversation-messages--streaming { margin-top: 13px; }
+.conversation-message--incomplete { border-color: var(--danger); border-style: dashed; }
+.stream-status { margin: 0 0 14px; color: var(--ink-soft); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
+.stream-status--compact { padding-bottom: 9px; border-bottom: 1px solid var(--line); }
+.stream-incomplete { margin-top: 15px; padding-top: 12px; color: var(--danger); border-top: 1px solid rgba(155, 74, 70, 0.35); font-size: 10px; line-height: 1.45; }
 .saved-memory-indicator { display: inline-block; margin-top: 13px; padding: 6px 8px; color: #4c551e; background: rgba(216, 255, 67, 0.35); border: 1px solid rgba(76, 85, 30, 0.35); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
 .idle-state { display: flex; align-items: center; justify-content: center; gap: 18px; min-height: 150px; color: #777d78; border: 1px dashed rgba(27, 33, 30, 0.24); }
 .idle-state p { max-width: 330px; margin: 0; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 18px; }

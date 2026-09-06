@@ -43,6 +43,24 @@ class ScriptedProvider(LLMProvider):
         return self.responses.pop(0)
 
 
+class TimelineProvider(ScriptedProvider):
+    def __init__(self, responses: List[LLMResponse], timeline: List[str]) -> None:
+        super().__init__(responses)
+        self.timeline = timeline
+
+    async def generate(self, request: LLMRequest) -> LLMResponse:
+        self.timeline.append(f"provider-{len(self.requests) + 1}")
+        return await super().generate(request)
+
+
+class RecordingStatusSink:
+    def __init__(self, timeline: List[str]) -> None:
+        self.timeline = timeline
+
+    def emit_execution_status(self, *, phase: str) -> None:
+        self.timeline.append(f"status-{phase}")
+
+
 class FakeRetriever:
     def __init__(self, chunks: List[RetrievedChunk]) -> None:
         self.chunks = chunks
@@ -242,6 +260,47 @@ def test_agent_chains_memory_then_knowledge_and_keeps_authorities_separate() -> 
     assert len(provider.requests) == 3
     assert provider.requests[1].messages[-1].role == "tool"
     assert "saved_memory" in provider.requests[1].messages[-1].content
+
+
+def test_generating_status_precedes_final_provider_generation() -> None:
+    timeline: List[str] = []
+    provider = TimelineProvider(
+        [
+            _call("search_knowledge", {"query": "bounded workflow"}),
+            LLMResponse(
+                provider="scripted",
+                model="scripted-1",
+                output_text="The production workflow uses a bounded agent.",
+            ),
+        ],
+        timeline,
+    )
+    router = ProviderRouter()
+    router.register_provider(provider)
+    runtime = BoundedAgentRuntime(
+        provider_router=router,
+        tool_registry=build_agent_tool_registry(
+            retriever=FakeRetriever([_chunk()]),
+            embedding_client=None,
+            memory_service=FakeMemoryService(),
+        ),
+    )
+
+    result = asyncio.run(
+        runtime.run(
+            query="What is the bounded workflow?",
+            session_id=7,
+            owner_id="owner-a",
+            provider_name="scripted",
+            model="scripted-1",
+            request_workflow_id="wf-agent-generating",
+            event_sink=RecordingStatusSink(timeline),
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert timeline.index("status-searching_knowledge") < timeline.index("status-generating")
+    assert timeline.index("status-generating") < timeline.index("provider-2")
 
 
 def test_non_explicit_save_is_rejected_even_when_provider_requests_it() -> None:

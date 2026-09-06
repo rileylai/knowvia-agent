@@ -64,6 +64,17 @@ function jsonResponse(payload: unknown, status = 200) {
   });
 }
 
+function streamFrame(eventType: string, sequence: number, payload: unknown) {
+  return `event: ${eventType}\n` +
+    `data: ${JSON.stringify({ run_id: "conversation-test-run", sequence, payload })}\n\n`;
+}
+
+function streamResponse(frames: string[]) {
+  return new Response(frames.join(""), {
+    headers: { "Content-Type": "text/event-stream" },
+  });
+}
+
 function installFetch(
   handler: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
 ) {
@@ -285,10 +296,26 @@ describe("conversation session UI", () => {
       if (input === "/api/conversations/1") {
         return jsonResponse(firstDetail);
       }
-      if (input === "/api/conversations/1/messages") {
+      if (input === "/api/conversations/1/messages/stream") {
         expect(init?.method).toBe("POST");
         expect(init?.body).toBe(JSON.stringify({ query: "What follows from that?" }));
-        return jsonResponse(turn);
+        return streamResponse([
+          streamFrame("execution_status", 1, { phase: "searching_knowledge" }),
+          streamFrame("answer_delta", 2, { text: turn.answer }),
+          streamFrame("done", 3, {
+            message_id: 13,
+            session_id: 1,
+            title: turn.title,
+            updated_at: turn.updated_at,
+            workflow_run_id: turn.workflow_run_id,
+            insufficient_info: turn.insufficient_info,
+            used_saved_memory: false,
+            retrieved_chunk_count: turn.retrieved_chunk_count,
+            provider: turn.provider,
+            model: turn.model,
+            termination_reason: "completed",
+          }),
+        ]);
       }
       throw new Error(`Unexpected request: ${String(input)}`);
     });
@@ -301,10 +328,11 @@ describe("conversation session UI", () => {
     await user.click(screen.getByRole("button", { name: "Ask Knowvia" }));
 
     expect(await screen.findByText("The follow-up is grounded.")).toBeVisible();
-    expect(screen.getByText("What follows from that?")).toBeVisible();
+    await waitFor(() => expect(screen.getByLabelText("Question")).toBeEnabled());
+    expect(screen.getAllByText("What follows from that?").length).toBeGreaterThanOrEqual(1);
     await waitFor(() => {
       expect(fetchMock.mock.calls.filter(([input]) =>
-        input === "/api/conversations/1/messages",
+        input === "/api/conversations/1/messages/stream",
       )).toHaveLength(1);
     });
   });

@@ -10,11 +10,11 @@ import {
   deleteMemory,
   listConversations,
   listKnowledgeSources,
-  sendConversationMessage,
+  streamConversationMessage,
   type ConversationMessage,
   type ConversationSession,
   type ConversationSessionSummary,
-  type ConversationTurn,
+  type ConversationStreamEvent,
   type ImageIndexResponse,
   type KnowledgeSource,
   type SavedMemory,
@@ -25,6 +25,7 @@ import {
 
 type Surface = "knowledge" | "chat" | "memory";
 type RequestState = "idle" | "loading" | "success" | "error";
+type ChatStreamState = "idle" | "connecting" | "running" | "completed" | "error";
 type InventoryState = "loading" | "success" | "empty" | "error";
 type SourceType = "pdf" | "image" | "url";
 
@@ -43,6 +44,13 @@ const surfaces: Array<{ id: Surface; label: string; index: string }> = [
   { id: "chat", label: "Chat", index: "02" },
   { id: "memory", label: "Memory", index: "03" },
 ];
+
+const executionStatusCopy: Record<string, string> = {
+  searching_knowledge: "Searching knowledge…",
+  searching_memory: "Searching saved memory…",
+  saving_memory: "Saving memory…",
+  generating: "Generating answer…",
+};
 
 const fileNameCollator = new Intl.Collator(undefined, {
   numeric: true,
@@ -581,7 +589,8 @@ function ConversationSidebar({
   state,
   error,
   activeSessionId,
-  disabled,
+  newChatDisabled,
+  sessionSelectionDisabled,
   mobileOpen,
   onNewChat,
   onRetry,
@@ -592,7 +601,8 @@ function ConversationSidebar({
   state: ConversationListState;
   error: string | null;
   activeSessionId: number | null;
-  disabled: boolean;
+  newChatDisabled: boolean;
+  sessionSelectionDisabled: boolean;
   mobileOpen: boolean;
   onNewChat: () => void;
   onRetry: () => void;
@@ -623,7 +633,7 @@ function ConversationSidebar({
           type="button"
           className="new-chat-button"
           onClick={onNewChat}
-          disabled={disabled}
+          disabled={newChatDisabled}
         >
           <span>New Chat</span>
           <span aria-hidden="true">+</span>
@@ -641,7 +651,7 @@ function ConversationSidebar({
             <div className="conversation-inline-error" role="alert">
               <strong>Conversations unavailable</strong>
               <p>{error}</p>
-              <button type="button" onClick={onRetry} disabled={disabled && state !== "error"}>
+              <button type="button" onClick={onRetry} disabled={newChatDisabled && state !== "error"}>
                 Retry
               </button>
             </div>
@@ -657,7 +667,7 @@ function ConversationSidebar({
                     type="button"
                     className={activeSessionId === session.id ? "conversation-item conversation-item--active" : "conversation-item"}
                     onClick={() => onSelect(session.id)}
-                    disabled={disabled || activeSessionId === session.id}
+                    disabled={sessionSelectionDisabled || activeSessionId === session.id}
                     aria-current={activeSessionId === session.id ? "true" : undefined}
                   >
                     <strong>{session.title}</strong>
@@ -702,11 +712,68 @@ function ConversationMessages({ messages }: { messages: ConversationMessage[] })
   );
 }
 
+function streamPayloadString(payload: Record<string, unknown>, key: string): string | null {
+  return typeof payload[key] === "string" ? payload[key] as string : null;
+}
+
+function streamPayloadCitations(payload: Record<string, unknown>): QACitation[] {
+  return Array.isArray(payload.citations) ? payload.citations as QACitation[] : [];
+}
+
+function StreamingTurn({
+  query,
+  answer,
+  phase,
+  citations,
+  failed,
+}: {
+  query: string;
+  answer: string;
+  phase: string | null;
+  citations: QACitation[];
+  failed: boolean;
+}) {
+  return (
+    <ol className="conversation-messages conversation-messages--streaming" aria-label="Streaming response">
+      <li className="conversation-message conversation-message--user">
+        <span className="conversation-message-role">You</span>
+        <p>{query}</p>
+      </li>
+      <li className={failed
+        ? "conversation-message conversation-message--assistant conversation-message--incomplete"
+        : "conversation-message conversation-message--assistant"}
+      >
+        <span className="conversation-message-role">Knowvia</span>
+        {phase && !answer && (
+          <div className="stream-status" role="status">{executionStatusCopy[phase] ?? "Working…"}</div>
+        )}
+        {phase && answer && (
+          <div className="stream-status stream-status--compact" role="status">
+            {executionStatusCopy[phase] ?? "Working…"}
+          </div>
+        )}
+        {answer && <p>{answer}</p>}
+        {!failed && citations.length > 0 && <CitationList citations={citations} />}
+        {failed && (
+          <div className="stream-incomplete" role="status">
+            This response was not completed or saved.
+          </div>
+        )}
+      </li>
+    </ol>
+  );
+}
+
 function ChatSurface() {
   const [draftsBySessionId, setDraftsBySessionId] = useState<Record<number, string>>({});
-  const [requestState, setRequestState] = useState<RequestState>("idle");
+  const [streamState, setStreamState] = useState<ChatStreamState>("idle");
   const [response, setResponse] = useState<QAResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [streamQuery, setStreamQuery] = useState("");
+  const [partialAssistantText, setPartialAssistantText] = useState("");
+  const [executionPhase, setExecutionPhase] = useState<string | null>(null);
+  const [streamCitations, setStreamCitations] = useState<QACitation[]>([]);
+  const [streamSessionId, setStreamSessionId] = useState<number | null>(null);
   const [sessions, setSessions] = useState<ConversationSessionSummary[]>([]);
   const [conversationListState, setConversationListState] = useState<ConversationListState>("loading");
   const [conversationListError, setConversationListError] = useState<string | null>(null);
@@ -719,6 +786,12 @@ function ChatSurface() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const isComposing = useRef(false);
   const isSubmitting = useRef(false);
+  const activeSessionIdRef = useRef<number | null>(null);
+  const activeStreamRef = useRef<{
+    token: symbol;
+    sessionId: number;
+    controller: AbortController;
+  } | null>(null);
 
   const question = activeSessionId === null ? "" : draftsBySessionId[activeSessionId] ?? "";
   const setQuestion = (value: string) => {
@@ -733,6 +806,25 @@ function ChatSurface() {
 
   const showError = (caughtError: unknown, fallback: string) =>
     caughtError instanceof Error ? caughtError.message : fallback;
+
+  const resetStreamState = () => {
+    setStreamState("idle");
+    setStreamQuery("");
+    setPartialAssistantText("");
+    setExecutionPhase(null);
+    setStreamCitations([]);
+    setStreamSessionId(null);
+  };
+
+  const abortActiveStream = () => {
+    const activeStream = activeStreamRef.current;
+    if (!activeStream) {
+      return;
+    }
+    activeStream.controller.abort();
+    activeStreamRef.current = null;
+    isSubmitting.current = false;
+  };
 
   const loadConversations = async () => {
     setConversationListState("loading");
@@ -762,6 +854,7 @@ function ChatSurface() {
         const created = await createConversation();
         const summary = conversationSummary(created);
         setSessions([summary]);
+        activeSessionIdRef.current = created.id;
         setActiveSessionId(created.id);
         setActiveSessionTitle(created.title);
         setMessages(created.messages);
@@ -772,6 +865,7 @@ function ChatSurface() {
       }
 
       const loaded = await getConversation(target.id);
+      activeSessionIdRef.current = loaded.id;
       setActiveSessionId(loaded.id);
       setActiveSessionTitle(loaded.title);
       setMessages(loaded.messages);
@@ -792,9 +886,11 @@ function ChatSurface() {
   }, []);
 
   const handleNewChat = async () => {
-    if (creatingSession || sessionLoading || isSubmitting.current) {
+    if (creatingSession || sessionLoading) {
       return;
     }
+    abortActiveStream();
+    resetStreamState();
     setCreatingSession(true);
     setError(null);
     setCreateRetryAvailable(false);
@@ -802,11 +898,12 @@ function ChatSurface() {
       const created = await createConversation();
       const summary = conversationSummary(created);
       setSessions((current) => [summary, ...current.filter((session) => session.id !== created.id)]);
+      activeSessionIdRef.current = created.id;
       setActiveSessionId(created.id);
       setActiveSessionTitle(created.title);
       setMessages(created.messages);
       setResponse(null);
-      setRequestState("idle");
+      setStreamState("idle");
       setDraftsBySessionId((current) => ({ ...current, [created.id]: "" }));
       setSessionLoading(false);
       replaceURLSessionId(created.id);
@@ -823,18 +920,20 @@ function ChatSurface() {
     if (
       sessionId === activeSessionId ||
       sessionLoading ||
-      creatingSession ||
-      isSubmitting.current
+      creatingSession
     ) {
       return;
     }
+    abortActiveStream();
+    resetStreamState();
     setSessionLoading(true);
     setError(null);
     setCreateRetryAvailable(false);
     setResponse(null);
-    setRequestState("idle");
+    setStreamState("idle");
     try {
       const loaded = await getConversation(sessionId);
+      activeSessionIdRef.current = loaded.id;
       setActiveSessionId(loaded.id);
       setActiveSessionTitle(loaded.title);
       setMessages(loaded.messages);
@@ -854,39 +953,161 @@ function ChatSurface() {
       return;
     }
 
+    const sessionId = activeSessionId;
+    const token = Symbol("conversation-stream");
+    const controller = new AbortController();
+    activeStreamRef.current = { token, sessionId, controller };
     isSubmitting.current = true;
-    setRequestState("loading");
+    setStreamState("connecting");
+    setStreamSessionId(sessionId);
+    setStreamQuery(query);
+    setPartialAssistantText("");
+    setExecutionPhase(null);
+    setStreamCitations([]);
     setResponse(null);
     setError(null);
     setCreateRetryAvailable(false);
 
+    let answerText = "";
+    let citations: QACitation[] = [];
+    let donePayload: Record<string, unknown> | null = null;
+    let streamError: string | null = null;
+    const isCurrentStream = () => {
+      const activeStream = activeStreamRef.current;
+      return activeStream?.token === token && activeSessionIdRef.current === sessionId;
+    };
+
     try {
-      const result: ConversationTurn = await sendConversationMessage(activeSessionId, query);
-      setResponse(result);
-      setMessages(result.messages);
-      setActiveSessionTitle(result.title);
+      await streamConversationMessage(
+        sessionId,
+        query,
+        (streamEvent: ConversationStreamEvent) => {
+          if (!isCurrentStream()) {
+            return;
+          }
+          if (streamEvent.event_type === "execution_status") {
+            setExecutionPhase(streamPayloadString(streamEvent.payload, "phase"));
+            setStreamState("running");
+            return;
+          }
+          if (streamEvent.event_type === "answer_delta") {
+            const delta = streamPayloadString(streamEvent.payload, "text") ?? "";
+            answerText += delta;
+            setPartialAssistantText(answerText);
+            setStreamState("running");
+            return;
+          }
+          if (streamEvent.event_type === "citations") {
+            citations = streamPayloadCitations(streamEvent.payload);
+            setStreamCitations(citations);
+            return;
+          }
+          if (streamEvent.event_type === "error") {
+            streamError = streamPayloadString(streamEvent.payload, "message") ?? "The request failed.";
+            setError(streamError);
+            setStreamState("error");
+            return;
+          }
+          donePayload = streamEvent.payload;
+        },
+        fetch,
+        controller.signal,
+      );
+      if (!isCurrentStream()) {
+        return;
+      }
+      if (streamError) {
+        return;
+      }
+      if (!donePayload) {
+        throw new Error("Knowvia ended the stream before completion.");
+      }
+
+      const completedPayload = donePayload as Record<string, unknown>;
+      const title = streamPayloadString(completedPayload, "title") ?? activeSessionTitle;
+      const updatedAt = streamPayloadString(completedPayload, "updated_at") ?? new Date().toISOString();
+      const insufficientInfo = completedPayload.insufficient_info === true;
+      const usedSavedMemory = completedPayload.used_saved_memory === true;
+      const memoryStatus = completedPayload.memory_saved === true
+        ? "saved"
+        : completedPayload.memory_already_saved === true
+          ? "already_saved"
+          : null;
+      const workflowRunId = typeof completedPayload.workflow_run_id === "number"
+        ? completedPayload.workflow_run_id
+        : 0;
+      const messageId = typeof completedPayload.message_id === "number"
+        ? completedPayload.message_id
+        : -(Date.now() + 1);
+      const sequenceStart = messages[messages.length - 1]?.sequence_number ?? 0;
+      const optimisticMessages: ConversationMessage[] = [
+        ...messages,
+        {
+          id: -(Date.now()),
+          session_id: sessionId,
+          role: "user",
+          content: query,
+          sequence_number: sequenceStart + 1,
+          created_at: updatedAt,
+          citations: [],
+          used_saved_memory: false,
+        },
+        {
+          id: messageId,
+          session_id: sessionId,
+          role: "assistant",
+          content: answerText,
+          sequence_number: sequenceStart + 2,
+          created_at: updatedAt,
+          citations,
+          used_saved_memory: usedSavedMemory,
+        },
+      ];
+      setMessages(optimisticMessages);
+      setActiveSessionTitle(title);
       setSessions((current) => {
-        const existing = current.find((session) => session.id === result.session_id);
+        const existing = current.find((session) => session.id === sessionId);
         const updated: ConversationSessionSummary = {
-          id: result.session_id,
-          title: result.title,
+          id: sessionId,
+          title,
           status: existing?.status ?? "active",
-          created_at: existing?.created_at ?? result.updated_at,
-          updated_at: result.updated_at,
+          created_at: existing?.created_at ?? updatedAt,
+          updated_at: updatedAt,
         };
-        return [updated, ...current.filter((session) => session.id !== result.session_id)];
+        return [updated, ...current.filter((session) => session.id !== sessionId)];
       });
-      setDraftsBySessionId((current) => ({ ...current, [result.session_id]: "" }));
-      setRequestState("success");
+      setDraftsBySessionId((current) => ({ ...current, [sessionId]: "" }));
+      setResponse({
+        workflow_run_id: workflowRunId,
+        status: "succeeded",
+        answer: answerText,
+        insufficient_info: insufficientInfo,
+        retrieved_chunk_count: typeof completedPayload.retrieved_chunk_count === "number"
+          ? completedPayload.retrieved_chunk_count
+          : 0,
+        citations,
+        provider: typeof completedPayload.provider === "string" ? completedPayload.provider : null,
+        model: typeof completedPayload.model === "string" ? completedPayload.model : null,
+        memory_status: memoryStatus,
+        used_saved_memory: usedSavedMemory,
+      });
+      setExecutionPhase(null);
+      setStreamState("completed");
     } catch (caughtError) {
+      if (!isCurrentStream() || (caughtError instanceof DOMException && caughtError.name === "AbortError")) {
+        return;
+      }
       setError(
         caughtError instanceof Error
           ? caughtError.message
           : "An unexpected error occurred.",
       );
-      setRequestState("error");
+      setStreamState("error");
     } finally {
-      isSubmitting.current = false;
+      if (activeStreamRef.current?.token === token) {
+        activeStreamRef.current = null;
+        isSubmitting.current = false;
+      }
     }
   };
 
@@ -904,8 +1125,9 @@ function ChatSurface() {
     event.currentTarget.form?.requestSubmit();
   };
 
-  const isLoading = requestState === "loading";
-  const controlsDisabled = isLoading || sessionLoading || creatingSession || conversationListState === "loading";
+  const streamActive = streamState === "connecting" || streamState === "running";
+  const controlsDisabled = streamActive || sessionLoading || creatingSession || conversationListState === "loading";
+  const sidebarBusy = sessionLoading || creatingSession || conversationListState === "loading";
 
   return (
     <div className="chat-layout">
@@ -914,7 +1136,8 @@ function ChatSurface() {
         state={conversationListState}
         error={conversationListError}
         activeSessionId={activeSessionId}
-        disabled={controlsDisabled}
+        newChatDisabled={sidebarBusy}
+        sessionSelectionDisabled={sidebarBusy}
         mobileOpen={mobileDrawerOpen}
         onNewChat={() => void handleNewChat()}
         onRetry={() => void loadConversations()}
@@ -934,7 +1157,7 @@ function ChatSurface() {
               className="chat-menu-button"
               aria-label="Open conversations"
               onClick={() => setMobileDrawerOpen(true)}
-              disabled={controlsDisabled}
+              disabled={sidebarBusy}
             >
               Conversations
             </button>
@@ -980,7 +1203,7 @@ function ChatSurface() {
             </div>
           )}
 
-          {!sessionLoading && error && requestState !== "error" && (
+          {!sessionLoading && error && streamState !== "error" && (
             <div className="error-state" role="alert">
               <span aria-hidden="true">!</span>
               <div>
@@ -995,7 +1218,7 @@ function ChatSurface() {
             </div>
           )}
 
-          {!sessionLoading && activeSessionId && messages.length === 0 && requestState === "idle" && (
+          {!sessionLoading && activeSessionId && messages.length === 0 && streamState === "idle" && (
             <div className="idle-state">
               <span className="idle-mark" aria-hidden="true">K</span>
               <p>Ask about your indexed knowledge.</p>
@@ -1006,17 +1229,20 @@ function ChatSurface() {
             <ConversationMessages messages={messages} />
           )}
 
-          {isLoading && (
-            <div className="loading-state" role="status">
-              <span className="loading-orbit" aria-hidden="true" />
-              <div>
-                <strong>Searching knowledge</strong>
-                <p>Checking indexed evidence before answering.</p>
-              </div>
-            </div>
+          {!sessionLoading &&
+            streamSessionId === activeSessionId &&
+            streamQuery &&
+            (streamActive || streamState === "error") && (
+            <StreamingTurn
+              query={streamQuery}
+              answer={partialAssistantText}
+              phase={executionPhase}
+              citations={streamCitations}
+              failed={streamState === "error"}
+            />
           )}
 
-          {requestState === "error" && error && (
+          {streamState === "error" && error && (
             <div className="error-state" role="alert">
               <span aria-hidden="true">!</span>
               <div>
@@ -1026,7 +1252,7 @@ function ChatSurface() {
             </div>
           )}
 
-          {requestState === "success" && response && (
+          {streamState === "completed" && response && (
             <article className={response.insufficient_info ? "answer answer--insufficient" : "answer"}>
               <div className="answer-label-row">
                 <h2>{response.insufficient_info ? "Insufficient info" : "Answer"}</h2>

@@ -36,6 +36,17 @@ function jsonResponse(payload: unknown, status = 200) {
   });
 }
 
+function streamFrame(eventType: string, sequence: number, payload: unknown) {
+  return `event: ${eventType}\n` +
+    `data: ${JSON.stringify({ run_id: "test-run", sequence, payload })}\n\n`;
+}
+
+function streamResponse(frames: string[]) {
+  return new Response(frames.join(""), {
+    headers: { "Content-Type": "text/event-stream" },
+  });
+}
+
 const indexedSource = {
   id: 41,
   display_name: "agent-patterns.pdf",
@@ -73,8 +84,12 @@ function withConversationAPI(legacyFetch: typeof fetch) {
     if (path === "/api/conversations/1" && method === "GET") {
       return jsonResponse(legacyConversation);
     }
-    if (path === "/api/conversations/1/messages" && method === "POST") {
-      const response = await legacyFetch("/api/qa", init);
+    if (path === "/api/conversations/1/messages/stream" && method === "POST") {
+      const response = await legacyFetch("/api/qa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: init?.body,
+      });
       if (!response.ok) {
         return response;
       }
@@ -82,8 +97,9 @@ function withConversationAPI(legacyFetch: typeof fetch) {
       const requestBody = JSON.parse(String(init?.body ?? "{}")) as { query?: string };
       const query = requestBody.query?.trim() ?? "";
       const timestamp = "2026-09-05T09:31:00Z";
+      const userMessageId = 100 + conversationMessages.length + 1;
       conversationMessages.push({
-        id: 100 + conversationMessages.length + 1,
+        id: userMessageId,
         session_id: 1,
         role: "user",
         content: query,
@@ -103,13 +119,37 @@ function withConversationAPI(legacyFetch: typeof fetch) {
           : payload.citations,
         used_saved_memory: payload.used_saved_memory === true,
       });
-      return jsonResponse({
-        ...payload,
-        session_id: 1,
-        title: query.slice(0, 48) || "New conversation",
-        updated_at: timestamp,
-        messages: conversationMessages,
-      });
+      const citations = payload.insufficient_info === true || !Array.isArray(payload.citations)
+        ? []
+        : payload.citations;
+      const assistantMessageId = 100 + conversationMessages.length;
+      const phase = payload.memory_status === "saved" || payload.memory_status === "already_saved"
+        ? "saving_memory"
+        : payload.used_saved_memory === true
+          ? "searching_memory"
+          : "searching_knowledge";
+      return streamResponse([
+        streamFrame("execution_status", 1, { phase }),
+        streamFrame("answer_delta", 2, { text: typeof payload.answer === "string" ? payload.answer : "" }),
+        ...(citations.length > 0
+          ? [streamFrame("citations", 3, { citations })]
+          : []),
+        streamFrame("done", citations.length > 0 ? 4 : 3, {
+          message_id: assistantMessageId,
+          session_id: 1,
+          title: query.slice(0, 48) || "New conversation",
+          updated_at: timestamp,
+          workflow_run_id: payload.workflow_run_id ?? 0,
+          insufficient_info: payload.insufficient_info === true,
+          used_saved_memory: payload.used_saved_memory === true,
+          memory_saved: payload.memory_status === "saved",
+          memory_already_saved: payload.memory_status === "already_saved",
+          termination_reason: payload.insufficient_info === true ? "insufficient_info" : "completed",
+          retrieved_chunk_count: payload.retrieved_chunk_count ?? 0,
+          provider: payload.provider ?? null,
+          model: payload.model ?? null,
+        }),
+      ]);
     }
 
     return legacyFetch(input, init);
@@ -254,7 +294,7 @@ describe("Knowvia frontend harness", () => {
     stubLegacyFetch(vi.fn().mockResolvedValue(jsonResponse(savedResponse)));
     render(<App />);
     await submitQuestion("記住，我們 production 使用 pgvector。");
-    expect(await screen.findByRole("status")).toHaveTextContent("Memory saved");
+    expect(await screen.findByText("Memory saved", { selector: ".memory-operation-status" })).toBeVisible();
 
     const duplicateResponse = { ...successPayload, answer: "Already saved", citations: [], memory_status: "already_saved" };
     vi.stubGlobal("fetch", withConversationAPI(vi.fn().mockResolvedValue(jsonResponse(duplicateResponse))));
@@ -263,7 +303,7 @@ describe("Knowvia frontend harness", () => {
     await waitForChatReady();
     await user.type(screen.getByLabelText("Question"), "記住，我們 production 使用 pgvector。");
     await user.click(screen.getByRole("button", { name: "Ask Knowvia" }));
-    expect(await screen.findByRole("status")).toHaveTextContent("Already saved");
+    expect(await screen.findByText("Already saved", { selector: ".memory-operation-status" })).toBeVisible();
   });
 
   it("renders the indexed PDF source inventory", async () => {
@@ -339,7 +379,6 @@ describe("Knowvia frontend harness", () => {
 
     await submitQuestion();
 
-    expect(screen.getByRole("status")).toHaveTextContent("Searching knowledge");
     expect(screen.getByRole("button", { name: "Ask Knowvia" })).toBeDisabled();
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith("/api/qa", {
@@ -1128,7 +1167,7 @@ describe("Knowvia frontend harness", () => {
     await user.type(screen.getByLabelText("Question"), "What is attention?");
     await user.click(screen.getByRole("button", { name: "Ask Knowvia" }));
     expect(await screen.findByText(successPayload.answer)).toBeVisible();
-    await user.click(screen.getByText("Sources · 1"));
+    await user.click(await screen.findByText("Sources · 1"));
     expect(screen.getByText("Knowledge/NLP/Week5/Attention")).toBeVisible();
 
     await user.clear(screen.getByLabelText("Question"));
@@ -1271,7 +1310,7 @@ describe("Knowvia frontend harness", () => {
       if (path === "/api/conversations/2" && method === "GET") {
         return jsonResponse(sessionB);
       }
-      if (path === "/api/conversations/1/messages" && method === "POST") {
+      if (path === "/api/conversations/1/messages/stream" && method === "POST") {
         return jsonResponse(
           { detail: { message: "Provider is unavailable" } },
           503,
