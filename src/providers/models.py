@@ -27,6 +27,7 @@ class LLMRequest(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
     tools: Optional[List[Dict[str, Any]]] = None
     tool_choice: Optional[str] = None
+    response_format: Optional[Dict[str, Any]] = None
 
 
 class LLMResponse(BaseModel):
@@ -38,3 +39,4 @@ class LLMResponse(BaseModel):
     token_output: Optional[int] = None
     raw_response: Optional[Dict[str, Any]] = None
     tool_calls: List[LLMToolCall] = Field(default_factory=list)
+    structured_output: Optional[Dict[str, Any]] = None

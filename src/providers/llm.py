@@ -59,6 +59,10 @@ class OpenAIClient(BaseLLMClient):
     def supports_tool_calling(self) -> bool:
         return True
 
+    @property
+    def supports_structured_output(self) -> bool:
+        return True
+
     async def generate(self, request: LLMRequest) -> LLMResponse:
         model_name = request.model.strip() or self._default_model
         if not model_name:
@@ -78,6 +82,8 @@ class OpenAIClient(BaseLLMClient):
             payload["tools"] = request.tools
         if request.tool_choice is not None:
             payload["tool_choice"] = request.tool_choice
+        if request.response_format is not None:
+            payload["response_format"] = request.response_format
 
         headers = {
             "Authorization": f"Bearer {self._api_key}",
@@ -101,6 +107,11 @@ class OpenAIClient(BaseLLMClient):
             usage = raw_response.get("usage", {})
             token_input = usage.get("prompt_tokens")
             token_output = usage.get("completion_tokens")
+            structured_output = (
+                _extract_structured_output(output_text)
+                if request.response_format is not None
+                else None
+            )
         except (KeyError, IndexError, TypeError, ValueError) as exc:
             raise LLMClientError("LLM response schema is invalid") from exc
 
@@ -113,6 +124,7 @@ class OpenAIClient(BaseLLMClient):
             token_output=token_output,
             raw_response=raw_response,
             tool_calls=tool_calls,
+            structured_output=structured_output,
         )
 
 
@@ -189,6 +201,16 @@ def _extract_tool_calls(value: Any) -> List[LLMToolCall]:
             )
         )
     return tool_calls
+
+
+def _extract_structured_output(value: str) -> Dict[str, Any]:
+    try:
+        parsed = json.loads(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("LLM structured output is not valid JSON") from exc
+    if not isinstance(parsed, dict):
+        raise ValueError("LLM structured output must be an object")
+    return parsed
 
 
 def _default_transport(

@@ -107,6 +107,52 @@ bounded multi-result。既有 global relevance floors 不因單一案例降低�
 synonym dictionary。English/Chinese cross-language recall 與 unrelated-memory fail-closed
 behavior 是下一個 slice 的 regression contract。
 
+當 saved company/project context 能 materially improve current Knowledge task 時，bounded
+Agent 可以同一 run 使用 `search_knowledge` 與 `search_memory`。Contextual memory search
+必須使用 task-oriented query，候選經既有 relevance gate 後才進入 bounded context；不得因
+mixed flow 降低既有 relevance floors，也不得 dump all memories。Knowledge-only query 不
+強制 memory，memory-only query 不強制 Knowledge。Knowledge citation 只能來自 Knowledge
+metadata；Memory 只以 `Used saved memory` 表示，兩者 authority 不得混合。
+
+Context requirement routing 使用 typed `ContextRequirementDecision`，只允許
+`needs_knowledge`、`needs_memory`、`conversation_dependency`、bounded `contextual_facets` 與
+direct recall 用的 `memory_query`。`conversation_dependency` 是 required enum，只允許 `none`
+與 `required`，不可用 default 代替 provider 欄位。Mixed task 的 facets 上限為 2，facet text 必須是 bounded、single-line 的
+atomic context dependency；每個 facet 會直接成為一個 contextual Memory query。Backend 先
+schema validate，再 deterministic 執行 required capability；unknown field、錯誤型別、空
+facet、超過上限、空 direct memory query 與 provider failure 都 fail closed。Provider 不具
+structured output capability 時，既有 bounded tool loop 仍可作相容 fallback，但不以 regex
+或 keyword 代替 selector。
+
+Accepted Knowledge evidence 是 mixed task 的 sufficiency authority。Contextual Memory 是
+optional supplemental context；部分或全部 facet 沒有 relevant hit 時，仍可用 accepted
+Knowledge 產生 Knowledge-only answer，不得因此回傳 request failure。若 required Knowledge
+缺失，Memory hit 也不能 rescue，結果仍是 `insufficient_info` 與 zero citations。
+
+Regression 必須同時驗證 decision flags、實際 tool execution、owner scope、tool count 與
+final context authority。測試只記錄 bounded decision labels、tool names、availability 與
+finalization reason，不記錄 private source content 或 raw provider response。
+
+Selector 可以參考 same-session history 來理解 current task，但 previous assistant answer
+不等於 current Knowledge evidence，previous assistant 提到的 saved fact 也不等於當次
+LongTermMemory retrieval。新的 substantive query 不得因 history 已包含相同內容而省略必要
+authority；若 decision 要求 Knowledge，Backend 必須先取得當次 Knowledge evidence，只有實際
+無 evidence 時才可進入 `insufficient_info`。既有 conversational transform 仍可只使用
+previous answer，不在本輪擴張 transform classifier。
+
+Structured substantive final synthesis 在 `conversation_dependency=none` 時不帶入 previous
+conversation；`required` 時只帶入 backend deterministic 選出的最近 completed user/assistant
+pair，並以 `CONVERSATION_REFERENCE_CONTEXT` 標記。Previous conversation 只供 reference 或
+intent interpretation，不會成為 Knowledge、Memory、citation 或 sufficiency authority。Final
+provider 仍只依 current task、accepted Knowledge、當次 retrieved Memory 與必要 reference
+context 產生答案。相同 substantive query 重送時也使用 fresh authority。這項 backend isolation
+不套用到 selector、conversation recall 或 transform path。
+
+SSE 只公開實際執行的 tool phase 與一次 final `generating` status。Provider 在 Knowledge
+result 後的 internal continuation decision 不另外顯示 `generating`，避免 mixed flow 出現
+`Generating → Searching saved memory → Generating` 的誤導狀態；SSE 仍不得包含 reasoning
+或 tool arguments。
+
 產品原則：`Save strict; recall forgiving.`
 
 ## Session isolation
@@ -196,9 +242,10 @@ provider、PostgreSQL 或 Telegram checks 必須明確 opt-in，且不得接觸 
 
 ## 7.0 Deterministic Golden Set
 
-`eval/golden_set.yaml` 以 18 個小型 scenario 覆蓋 Knowledge retrieval、grounding、
+`eval/golden_set.yaml` 以 29 個小型 scenario 覆蓋 Knowledge retrieval、grounding、
 citation、conversation、session isolation、explicit memory、authority separation、
-bounded Agent、tool safety、native MCP 與 SSE lifecycle。Runner 使用 scripted provider
+bounded Agent、Knowledge/Memory contextual routing、structured context requirement、tool
+safety、native MCP 與 SSE lifecycle。Runner 使用 scripted provider
 與 in-memory fixtures，不比較完整自然語言答案，也不需要 live LLM 或 private source。
 
 正式 command：

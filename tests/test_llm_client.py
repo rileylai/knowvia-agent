@@ -11,6 +11,7 @@ from src.providers import (
     OpenAIClient,
     ProviderRouter,
 )
+from src.agent.models import ContextRequirementDecision
 
 
 def test_openai_client_returns_llm_response_with_mock_transport() -> None:
@@ -150,6 +151,80 @@ def test_openai_client_parses_bounded_tool_calls() -> None:
     assert response.output_text == ""
     assert response.tool_calls[0].name == "search_memory"
     assert response.tool_calls[0].arguments == {"query": "What did we decide?"}
+
+
+def test_openai_client_sends_and_parses_context_requirement_structured_output() -> None:
+    captured_payload: Dict[str, Any] = {}
+
+    def fake_transport(
+        url: str,
+        headers: Dict[str, str],
+        payload: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        _ = url, headers
+        captured_payload.update(payload)
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "role": "assistant",
+                        "content": (
+                            '{"needs_knowledge":true,"needs_memory":true,'
+                            '"conversation_dependency":"none",'
+                            '"contextual_facets":[{"id":"c1",'
+                            '"text":"company size"}],"memory_query":null}'
+                        ),
+                    },
+                    "finish_reason": "stop",
+                }
+            ]
+        }
+
+    client = OpenAIClient(api_key="test-key", transport=fake_transport)
+    request = LLMRequest(
+        model="gpt-4o-mini",
+        messages=[LLMMessage(role="user", content="Which practices fit us?")],
+        response_format=ContextRequirementDecision.response_format(),
+    )
+
+    response = asyncio.run(client.generate(request))
+
+    assert captured_payload["response_format"]["type"] == "json_schema"
+    assert captured_payload["response_format"]["json_schema"]["strict"] is True
+    assert response.structured_output == {
+        "needs_knowledge": True,
+        "needs_memory": True,
+        "conversation_dependency": "none",
+        "contextual_facets": [{"id": "c1", "text": "company size"}],
+        "memory_query": None,
+    }
+
+
+def test_openai_client_rejects_invalid_context_requirement_structured_output() -> None:
+    def fake_transport(
+        url: str,
+        headers: Dict[str, str],
+        payload: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        _ = url, headers, payload
+        return {
+            "choices": [
+                {
+                    "message": {"role": "assistant", "content": "not json"},
+                    "finish_reason": "stop",
+                }
+            ]
+        }
+
+    client = OpenAIClient(api_key="test-key", transport=fake_transport)
+    request = LLMRequest(
+        model="gpt-4o-mini",
+        messages=[LLMMessage(role="user", content="Which practices fit us?")],
+        response_format=ContextRequirementDecision.response_format(),
+    )
+
+    with pytest.raises(LLMClientError):
+        asyncio.run(client.generate(request))
 
 
 def test_openai_client_serializes_follow_up_tool_messages_for_api_wire_format() -> None:

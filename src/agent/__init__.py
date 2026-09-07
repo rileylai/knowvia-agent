@@ -4,6 +4,9 @@ from src.agent.models import (
     AgentRuntimeError,
     AgentState,
     AgentTerminationReason,
+    ConversationDependency,
+    ContextualFacet,
+    ContextRequirementDecision,
 )
 from src.agent.runtime import BoundedAgentRuntime
 from src.agent.tools import (
@@ -22,6 +25,9 @@ __all__ = [
     "AgentRuntimeError",
     "AgentState",
     "AgentTerminationReason",
+    "ConversationDependency",
+    "ContextualFacet",
+    "ContextRequirementDecision",
     "AgentToolRegistry",
     "BoundedAgentRuntime",
     "KnowledgeSearchTool",

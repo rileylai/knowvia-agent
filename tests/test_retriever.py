@@ -243,12 +243,13 @@ class _FakeVectorRepository:
         self._semantic_matches = semantic_matches or []
         self._lexical_candidates = lexical_candidates or []
         self._raise_vector_error = raise_vector_error
+        self.vector_top_ks: List[int] = []
 
     def supports_vector_query(self) -> bool:
         return True
 
     def list_production_chunks_by_vector(self, **kwargs) -> list[SemanticChunkMatch]:
-        _ = kwargs
+        self.vector_top_ks.append(int(kwargs["top_k"]))
         if self._raise_vector_error:
             raise ChunkVectorQueryError("pgvector query failed")
         return list(self._semantic_matches)
@@ -259,20 +260,21 @@ class _FakeVectorRepository:
 
 
 def test_retriever_reports_pgvector_mode_when_semantic_query_succeeds() -> None:
+    repository = _FakeVectorRepository(
+        semantic_matches=[
+            SemanticChunkMatch(
+                chunk_id=7,
+                chunk_index=0,
+                chunk_text="Attention uses query key value vectors",
+                notion_path="Knowledge/NLP/Week5/Attention",
+                source_kind="notion",
+                notion_page_id="page-nlp-week5",
+                score=0.93,
+            )
+        ]
+    )
     retriever = ProductionChunkRetriever(
-        chunk_repository=_FakeVectorRepository(
-            semantic_matches=[
-                SemanticChunkMatch(
-                    chunk_id=7,
-                    chunk_index=0,
-                    chunk_text="Attention uses query key value vectors",
-                    notion_path="Knowledge/NLP/Week5/Attention",
-                    source_kind="notion",
-                    notion_page_id="page-nlp-week5",
-                    score=0.93,
-                )
-            ]
-        )
+        chunk_repository=repository
     )
 
     result = retriever.retrieve_with_metadata(
@@ -285,6 +287,98 @@ def test_retriever_reports_pgvector_mode_when_semantic_query_succeeds() -> None:
     assert result.retrieval_mode == RETRIEVAL_MODE_PGVECTOR_EXACT_COSINE
     assert result.retrieval_fallback_reason is None
     assert [chunk.chunk_id for chunk in result.chunks] == [7]
+    assert result.candidate_count == 1
+    assert result.accepted_evidence_count == 1
+    assert result.best_score == 0.93
+    assert result.relevance_floor == 0.30
+    assert repository.vector_top_ks == [6]
+
+
+def test_retriever_rejects_low_relevance_pgvector_candidates() -> None:
+    retriever = ProductionChunkRetriever(
+        chunk_repository=_FakeVectorRepository(
+            semantic_matches=[
+                SemanticChunkMatch(
+                    chunk_id=7,
+                    chunk_index=0,
+                    chunk_text="Unrelated acquisition detail",
+                    notion_path="Knowledge/Operations/Acquisitions",
+                    source_kind="notion",
+                    notion_page_id="page-operations",
+                    score=0.29,
+                )
+            ]
+        )
+    )
+
+    result = retriever.retrieve_with_metadata(
+        query_text="What is our 2027 acquisition budget?",
+        query_embedding=[0.9, 0.1],
+        top_k=5,
+        allow_legacy_embedding_scoring=False,
+    )
+
+    assert result.retrieval_mode == RETRIEVAL_MODE_PGVECTOR_EXACT_COSINE
+    assert result.candidate_count == 1
+    assert result.accepted_evidence_count == 0
+    assert result.chunks == []
+
+
+def test_retriever_accepts_pgvector_score_at_relevance_floor() -> None:
+    retriever = ProductionChunkRetriever(
+        chunk_repository=_FakeVectorRepository(
+            semantic_matches=[
+                SemanticChunkMatch(
+                    chunk_id=10,
+                    chunk_index=0,
+                    chunk_text="Borderline but accepted evidence",
+                    notion_path="Knowledge/Operations/Boundary",
+                    source_kind="notion",
+                    notion_page_id="page-operations",
+                    score=0.30,
+                )
+            ]
+        )
+    )
+
+    result = retriever.retrieve_with_metadata(
+        query_text="What is our operating boundary?",
+        query_embedding=[0.9, 0.1],
+        top_k=5,
+        allow_legacy_embedding_scoring=False,
+    )
+
+    assert [chunk.chunk_id for chunk in result.chunks] == [10]
+    assert result.accepted_evidence_count == 1
+
+
+def test_retriever_rejects_pgvector_score_below_relevance_floor() -> None:
+    retriever = ProductionChunkRetriever(
+        chunk_repository=_FakeVectorRepository(
+            semantic_matches=[
+                SemanticChunkMatch(
+                    chunk_id=11,
+                    chunk_index=0,
+                    chunk_text="Below the acceptance floor",
+                    notion_path="Knowledge/Operations/Below",
+                    source_kind="notion",
+                    notion_page_id="page-operations",
+                    score=0.299999,
+                )
+            ]
+        )
+    )
+
+    result = retriever.retrieve_with_metadata(
+        query_text="What is our operating boundary?",
+        query_embedding=[0.9, 0.1],
+        top_k=5,
+        allow_legacy_embedding_scoring=False,
+    )
+
+    assert result.chunks == []
+    assert result.candidate_count == 1
+    assert result.accepted_evidence_count == 0
 
 
 def test_retriever_falls_back_when_vector_query_fails() -> None:
@@ -347,6 +441,43 @@ def test_retriever_falls_back_when_scope_has_no_live_vectors() -> None:
     assert [chunk.chunk_id for chunk in result.chunks] == [2]
 
 
+def test_retriever_reports_candidates_rejected_by_relevance_gate() -> None:
+    retriever = ProductionChunkRetriever(
+        chunk_repository=_FakeVectorRepository(
+            lexical_candidates=[
+                RetrievalChunkCandidate(
+                    chunk_id=8,
+                    chunk_index=0,
+                    chunk_text="Unrelated operating detail",
+                    notion_path="Knowledge/Operations/Detail",
+                    source_kind="notion",
+                    notion_page_id="page-operations",
+                    embedding_text=None,
+                ),
+                RetrievalChunkCandidate(
+                    chunk_id=9,
+                    chunk_index=1,
+                    chunk_text="Another unrelated operating detail",
+                    notion_path="Knowledge/Operations/Another",
+                    source_kind="notion",
+                    notion_page_id="page-operations",
+                    embedding_text=None,
+                ),
+            ]
+        )
+    )
+
+    result = retriever.retrieve_with_metadata(
+        query_text="attention",
+        top_k=3,
+        allow_legacy_embedding_scoring=False,
+    )
+
+    assert result.chunks == []
+    assert result.candidate_count == 2
+    assert result.accepted_evidence_count == 0
+
+
 def test_retriever_fallback_can_disable_legacy_embedding_scoring() -> None:
     retriever = ProductionChunkRetriever(
         chunk_repository=_FakeVectorRepository(
@@ -384,3 +515,5 @@ def test_retriever_fallback_can_disable_legacy_embedding_scoring() -> None:
     assert result.retrieval_mode == RETRIEVAL_MODE_LEXICAL_FALLBACK
     assert result.retrieval_fallback_reason == "VECTOR_QUERY_FAILED"
     assert [chunk.chunk_id for chunk in result.chunks] == [4]
+    assert result.candidate_count == 2
+    assert result.accepted_evidence_count == 1

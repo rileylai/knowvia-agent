@@ -101,6 +101,49 @@ class ToolCallingProvider(LLMProvider):
         )
 
 
+class HistorySensitiveStructuredProvider(LLMProvider):
+    supports_tool_calling = True
+    supports_structured_output = True
+
+    def __init__(self) -> None:
+        self.requests: list[LLMRequest] = []
+
+    @property
+    def name(self) -> str:
+        return "openai"
+
+    async def generate(self, request: LLMRequest) -> LLMResponse:
+        self.requests.append(request)
+        if request.response_format is not None:
+            return LLMResponse(
+                provider=self.name,
+                model=request.model,
+                output_text="",
+                structured_output={
+                    "needs_knowledge": True,
+                    "needs_memory": True,
+                    "contextual_facets": [
+                        {"id": "c1", "text": "company size"},
+                        {"id": "c2", "text": "development preferences"},
+                    ],
+                    "memory_query": None,
+                    "conversation_dependency": "none",
+                },
+            )
+        final_user_message = next(
+            message.content for message in request.messages if message.role == "user"
+        )
+        return LLMResponse(
+            provider=self.name,
+            model=request.model,
+            output_text=(
+                "INSUFFICIENT_INFO"
+                if "[assistant]" in final_user_message
+                else "The fresh authorities support this answer."
+            ),
+        )
+
+
 class ExplicitSaveProvider(LLMProvider):
     supports_tool_calling = True
 
@@ -705,6 +748,80 @@ def test_tool_capable_provider_uses_bounded_agent_and_persists_backend_citations
         assert provider.requests[0].tools
         assert "FINAL_RESPONSE_LANGUAGE: English" in provider.requests[0].messages[0].content
         assert provider.requests[1].messages[-1].role == "tool"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_structured_substantive_api_repeats_with_isolated_final_authority() -> None:
+    session_factory = _build_session_factory()
+    _seed_knowledge(session_factory)
+    session: Session = session_factory()
+    try:
+        chunk = session.get(KnowledgeChunk, 1)
+        assert chunk is not None
+        chunk.chunk_text = (
+            "For a small company with bounded development preferences, prioritize "
+            "practices from the indexed PDF."
+        )
+        chunk.embedding = [1.0, 1.0] + [0.0] * 1534
+        chunk.embedding_model = "memory-relevance-fake-model"
+        chunk.embedding_dimensions = 1536
+        session.commit()
+    finally:
+        session.close()
+    _seed_saved_memories(
+        session_factory,
+        "Our company size is small.",
+        "Our development preferences favor bounded workflows.",
+    )
+    provider = HistorySensitiveStructuredProvider()
+    _override_database(session_factory)
+    _override_provider(
+        provider,
+        embedding_client=MemoryRelevanceEmbeddingClient(),
+    )
+    app.dependency_overrides[get_current_owner_id] = lambda: "local"
+    query = (
+        "Considering our company size and development preferences, "
+        "which practices from the indexed PDF should we prioritize?"
+    )
+
+    try:
+        client = TestClient(app)
+        session_id = _create_conversation(client)
+        responses = [
+            client.post(
+                f"/api/conversations/{session_id}/messages",
+                json={"query": query},
+            )
+            for _ in range(3)
+        ]
+
+        assert all(response.status_code == 200 for response in responses)
+        assert [response.json()["answer"] for response in responses] == [
+            "The fresh authorities support this answer.",
+            "The fresh authorities support this answer.",
+            "The fresh authorities support this answer.",
+        ]
+        assert all(response.json()["citations"] for response in responses)
+        assert all(response.json()["used_saved_memory"] for response in responses)
+        assert len(provider.requests) == 6
+        selector_requests = provider.requests[0::2]
+        final_requests = provider.requests[1::2]
+        assert "[assistant]" in selector_requests[1].messages[1].content
+        assert "[assistant]" in selector_requests[2].messages[1].content
+        assert all(
+            "[assistant]" not in request.messages[1].content
+            for request in final_requests
+        )
+        assert all(
+            "KNOWLEDGE_CONTEXT" in request.messages[-1].content
+            for request in final_requests
+        )
+        assert all(
+            "MEMORY_CONTEXT" in request.messages[-1].content
+            for request in final_requests
+        )
     finally:
         app.dependency_overrides.clear()
 

@@ -198,6 +198,59 @@ embedding 可以使用它，但不能覆寫 `content` 或取得 persistence auth
 Semantic search 使用 embedding、`owner_id` filter 與 top-k，再交給既有 relevance gate；
 不加入 automatic consolidation、temporal ranking 或 semantic dedup。
 
+在單一 bounded Agent run 中，具備 structured output capability 的 provider 先產生內部的
+`ContextRequirementDecision`：
+
+```json
+{
+  "needs_knowledge": true,
+  "needs_memory": true,
+  "contextual_facets": [
+    {"id": "c1", "text": "company size"},
+    {"id": "c2", "text": "development preferences"}
+  ],
+  "memory_query": null,
+  "conversation_dependency": "none"
+}
+```
+
+這個 contract 只描述需要哪些 context authority，以及 current substantive task 是否需要
+completed prior conversation turn 來理解 reference 或 intent；不描述答案、tool trace、message
+selection、resolved task 或 execution plan。`conversation_dependency` 是 required enum，只允許
+`none` 與 `required`，不提供 default。`none` 代表 final synthesis 不需要 previous conversation；
+`required` 時由 backend deterministic 提供最多一個同 session 最近 completed user/assistant pair
+作為 `CONVERSATION_REFERENCE_CONTEXT`。該 context 只供 reference interpretation，不是 Knowledge、
+Memory、sufficiency 或 citation authority。
+Mixed Knowledge + Memory task 必須使用 1 至 2 個 `contextual_facets`；每個 facet 只有 bounded
+`id` 與 concise、atomic 的 `text`，不得包含 tool name、corpus location、search strategy 或
+retrieval plan。Mixed task 的 `memory_query` 固定為 `null`。Direct memory-only recall 為維持
+既有 routing，仍可使用最多 500 characters 的 `memory_query`，且不帶 contextual facets。
+Malformed decision、extra field、空 facet 或超過 facet 上限直接 fail closed，不用 keyword 或
+regex 重新猜測。
+
+Selector 可以讀取 bounded same-session history 來理解 reference 與 current task，但
+previous assistant answer 不是本輪 Knowledge evidence，previous assistant 提到的 saved
+fact 也不是本輪 LongTermMemory retrieval。對新的 substantive request，authority requirement
+必須依 current answer 的依賴決定；不能因相關內容曾出現在 previous assistant response，就把
+`needs_knowledge` 或 `needs_memory` 設為 `false`。因此同一 substantive query 在同一 session
+重送時，仍會重新取得當次需要的 authority。
+
+Structured substantive final synthesis 依 selector 的 `conversation_dependency` 組裝 context。
+`none` 只帶入 current task、當次 Knowledge evidence 與當次 LongTermMemory results；`required`
+最多帶入同 session 最近一個 completed user/assistant pair，並標記為
+`CONVERSATION_REFERENCE_CONTEXT`。Selector 仍接收完整 bounded user/assistant history；conversation
+transform 則沿用 previous assistant answer 作 transformation target。這個分流與 pair selection
+都由 backend deterministic 組裝，不依賴 provider 自行忽略 history。
+
+Backend 驗證 decision 後，先以 current substantive task 執行一次 `search_knowledge`，再依
+每個 contextual facet 各執行一次 `search_memory`，query 直接使用 facet `text`，並設定
+`retrieval_mode=contextual`。因此 mixed task 維持最多 3 次 tool calls。候選先取 bounded top-k，
+再套用既有 relevance gate；partial 或 zero Memory hit 不會覆寫已接受的 Knowledge evidence。
+Direct recall 只取 final best-1，broad 與 contextual recall 維持 bounded multi-result，不掃描
+或傾倒全部 memories。Knowledge 與 Memory context、citation authority、`Used saved memory`
+disclosure 仍分開。Provider 不具 structured output capability 時，保留既有 bounded tool loop
+作為相容 fallback。
+
 下一個 `5.0.3.1` slice 將把目前少量 normalization foundation generalize 為 bounded
 structured semantic canonicalization，並規劃 query-side semantic normalization 只在 no-hit
 或 low-confidence fallback 使用。Direct recall 維持 final best-1，broad recall 維持 bounded
@@ -241,6 +294,7 @@ owner_id
 messages_used
 knowledge_context
 memory_context
+context_requirement_decision
 tool_calls_used
 max_tool_calls
 max_iterations

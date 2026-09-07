@@ -12,6 +12,7 @@ from src.app.main import app
 from src.app.api.routes.conversations import stream_conversation_message
 from src.app.schemas import ConversationMessageRequest
 from src.db.models import ConversationMessage, LongTermMemory
+from src.providers import LLMProvider, LLMRequest, LLMResponse, LLMToolCall
 
 from test_conversation_api import (
     CapturingProvider,
@@ -39,6 +40,69 @@ def _events(response) -> list[dict]:
         payload = json.loads(data)
         parsed.append({"event_type": event_type, **payload})
     return parsed
+
+
+class ContextualStreamingProvider(LLMProvider):
+    supports_tool_calling = True
+
+    def __init__(self) -> None:
+        self.requests: list[LLMRequest] = []
+        self.tool_names: list[str] = []
+
+    @property
+    def name(self) -> str:
+        return "openai"
+
+    async def generate(self, request: LLMRequest) -> LLMResponse:
+        self.requests.append(request)
+        if len(self.requests) == 1:
+            response = LLMResponse(
+                provider="openai",
+                model="gpt-4o-mini",
+                output_text="",
+                tool_calls=[
+                    LLMToolCall(
+                        id="knowledge-1",
+                        name="search_knowledge",
+                        arguments={"query": "sequential workflow", "top_k": 5},
+                    )
+                ],
+            )
+            self.tool_names.append("search_knowledge")
+            return response
+        if len(self.requests) == 2:
+            if "saved context would materially improve" not in request.messages[0].content:
+                return LLMResponse(
+                    provider="openai",
+                    model="gpt-4o-mini",
+                    output_text="The PDF evidence is sufficient.",
+                )
+            response = LLMResponse(
+                provider="openai",
+                model="gpt-4o-mini",
+                output_text="",
+                tool_calls=[
+                    LLMToolCall(
+                        id="memory-1",
+                        name="search_memory",
+                        arguments={
+                            "query": (
+                                "organization size and development practices relevant "
+                                "to adopting production AI agent practices"
+                            ),
+                            "top_k": 5,
+                            "retrieval_mode": "contextual",
+                        },
+                    )
+                ],
+            )
+            self.tool_names.append("search_memory")
+            return response
+        return LLMResponse(
+            provider="openai",
+            model="gpt-4o-mini",
+            output_text="Prioritize controlled tool invocation for this organization.",
+        )
 
 
 def test_streaming_knowledge_flow_has_bounded_ordered_events_and_persists_once() -> None:
@@ -159,6 +223,56 @@ def test_streaming_memory_recall_reports_used_memory_without_enterprise_citation
         app.dependency_overrides.clear()
 
 
+def test_streaming_contextual_memory_flow_reports_both_searches_and_keeps_authorities_separate() -> None:
+    session_factory = _build_session_factory()
+    _seed_knowledge(session_factory)
+    _seed_saved_memories(
+        session_factory,
+        "Our organization has approximately 1000 people.",
+        "We prefer SDD/TDD development practices.",
+    )
+    provider = ContextualStreamingProvider()
+    _override_database(session_factory)
+    _override_provider(provider, embedding_client=MemoryRelevanceEmbeddingClient())
+    app.dependency_overrides[get_current_owner_id] = lambda: "local"
+
+    try:
+        client = TestClient(app)
+        session_id = _create_conversation(client)
+        response = client.post(
+            f"/api/conversations/{session_id}/messages/stream",
+            json={
+                "query": (
+                    "Based on the production AI agent practices in the indexed PDF, "
+                    "what should our company pay particular attention to when adopting them?"
+                )
+            },
+        )
+
+        assert response.status_code == 200, response.text
+        events = _events(response)
+        phases = [
+            event["payload"]["phase"]
+            for event in events
+            if event["event_type"] == "execution_status"
+        ]
+        assert phases == [
+            "searching_knowledge",
+            "searching_memory",
+            "generating",
+        ]
+        assert provider.tool_names == ["search_knowledge", "search_memory"]
+        assert any(event["event_type"] == "citations" for event in events)
+        assert events[-1]["event_type"] == "done"
+        assert events[-1]["payload"]["used_saved_memory"] is True
+        assert sum(event["event_type"] == "done" for event in events) == 1
+        assert "arguments" not in response.text
+        assert "tool_calls" not in response.text
+        assert "raw_response" not in response.text
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_streaming_explicit_save_reports_save_status_and_safe_metadata() -> None:
     session_factory = _build_session_factory()
     _override_database(session_factory)
@@ -184,6 +298,7 @@ def test_streaming_explicit_save_reports_save_status_and_safe_metadata() -> None
         )
         assert [event["payload"]["phase"] for event in events if event["event_type"] == "execution_status"] == [
             "saving_memory",
+            "generating",
         ]
         assert events[-1]["payload"]["memory_saved"] is True
         assert events[-1]["payload"]["used_saved_memory"] is False
@@ -216,6 +331,7 @@ def test_streaming_explicit_save_uses_backend_intent_for_company_statement() -> 
         )
         assert [event["payload"]["phase"] for event in events if event["event_type"] == "execution_status"] == [
             "saving_memory",
+            "generating",
         ]
         assert events[-1]["event_type"] == "done"
         assert events[-1]["payload"]["memory_saved"] is True

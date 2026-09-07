@@ -18,6 +18,224 @@ scenarios:
     expected_citation_kind: pdf
     expected_memory_use: false
 
+  - id: knowledge-only-does-not-force-memory
+    category: knowledge_memory_routing
+    setup:
+      fixture: atlas
+      evidence: pdf
+      saved_memory:
+        memory_type: project_context
+        content: Our organization has approximately 1000 people and prefers SDD/TDD.
+    user_input: What practices does the indexed PDF recommend?
+    expected_behavior: A PDF factual question uses Knowledge evidence without forcing saved-memory lookup.
+    forbidden_behavior:
+      - no search_memory call is required
+      - saved memory is not added without a task need
+    verification:
+      - search_knowledge was selected
+      - search_memory was not selected
+      - a PDF citation is present
+      - used_saved_memory is false
+    expected_tool: search_knowledge
+    expected_citation_kind: pdf
+    expected_memory_use: false
+
+  - id: contextual-memory-application
+    category: contextual_memory
+    setup:
+      fixture: atlas
+      evidence: pdf
+      saved_memory:
+        memory_type: project_context
+        content: Our organization has approximately 1000 people and prefers SDD/TDD development practices.
+    user_input: Based on the production AI agent practices in the indexed PDF, what should our company prioritize when adopting them?
+    expected_behavior: The bounded Agent combines PDF evidence with relevant saved company context.
+    forbidden_behavior:
+      - no memory dump
+      - saved memory does not become a Knowledge citation
+      - no more than three tool calls
+    verification:
+      - search_knowledge and search_memory were selected
+      - the contextual memory query is task-oriented
+      - a PDF citation is present
+      - used_saved_memory is true
+      - tool calls are at most 3
+    expected_citation_kind: pdf
+    expected_memory_use: true
+    max_tool_calls: 3
+
+  - id: context-requirement-knowledge-only
+    category: context_requirement
+    setup:
+      fixture: atlas
+      evidence: pdf
+      saved_memory:
+        memory_type: project_context
+        content: Our organization has approximately 1000 people and prefers SDD/TDD.
+    user_input: What practices are described in the indexed PDF?
+    expected_behavior: The structured decision selects Knowledge without forcing Memory.
+    forbidden_behavior:
+      - no search_memory execution
+      - no saved-memory disclosure
+    verification:
+      - structured decision requires Knowledge only
+      - search_knowledge executes once
+      - search_memory does not execute
+      - a PDF citation is present
+      - used_saved_memory is false
+    expected_citation_kind: pdf
+    expected_memory_use: false
+
+  - id: context-requirement-memory-only
+    category: context_requirement
+    setup:
+      fixture: atlas
+      evidence: none
+      saved_memory:
+        memory_type: company
+        content: Our database is PostgreSQL.
+    user_input: What DB do we use?
+    expected_behavior: The structured decision selects direct Memory recall only.
+    forbidden_behavior:
+      - no search_knowledge execution
+      - no enterprise citation
+    verification:
+      - structured decision requires Memory only
+      - search_memory executes once
+      - search_knowledge does not execute
+      - used_saved_memory is true
+      - citations are empty
+    expected_memory_use: true
+
+  - id: contextual-facet-mixed
+    category: context_requirement
+    setup:
+      fixture: atlas
+      evidence: pdf
+      saved_memory:
+        memory_type: project_context
+        content: Our organization has approximately 1000 people and prefers SDD/TDD.
+    user_input: Considering our company size and development preferences, which PDF practices should we prioritize?
+    expected_behavior: The structured decision selects Knowledge and relevant contextual Memory.
+    forbidden_behavior:
+      - no memory dump
+      - saved memory does not become a citation
+      - no more than three tool calls
+    verification:
+      - structured decision requires both authorities
+      - search_knowledge and search_memory execute once
+      - each contextual facet is an atomic bounded requirement
+      - a PDF citation is present
+      - used_saved_memory is true
+    expected_citation_kind: pdf
+    expected_memory_use: true
+    max_tool_calls: 3
+
+  - id: standalone-conversation-dependency-none
+    category: context_requirement
+    setup:
+      fixture: atlas
+      evidence: pdf
+      saved_memory:
+        memory_type: project_context
+        content: Our organization has approximately 1000 people and prefers SDD/TDD.
+    user_input: Considering our company size and development preferences, which PDF practices should we prioritize?
+    expected_behavior: A self-contained substantive task reacquires fresh authorities without prior conversation in final synthesis.
+    forbidden_behavior:
+      - no previous user or assistant history in final synthesis
+      - no insufficient_info or provider contract error across the standalone replay
+    verification:
+      - structured selector returns conversation_dependency none
+      - Knowledge and both contextual Memory dependencies execute on every turn
+      - final synthesis excludes prior conversation history
+    expected_citation_kind: pdf
+    expected_memory_use: true
+    max_tool_calls: 3
+
+  - id: repeated-standalone-dependency-none
+    category: context_requirement
+    setup:
+      fixture: atlas
+      evidence: pdf
+      saved_memory:
+        memory_type: project_context
+        content: Our organization has approximately 1000 people and prefers SDD/TDD.
+    user_input: Considering our company size and development preferences, which PDF practices should we prioritize?
+    expected_behavior: Four repeated substantive turns remain standalone and complete.
+    forbidden_behavior:
+      - no history contamination in final synthesis
+      - no request failure or insufficient_info sentinel
+    verification:
+      - conversation_dependency none is selected four times
+      - fresh Knowledge and Memory retrieval runs four times
+      - every turn completes
+    expected_citation_kind: pdf
+    expected_memory_use: true
+    max_tool_calls: 3
+
+  - id: referential-substantive-dependency-required
+    category: context_requirement
+    setup:
+      fixture: atlas
+      evidence: pdf
+    user_input: What about the second one?
+    expected_behavior: A referential substantive task receives only the most recent completed turn as interpretation context.
+    forbidden_behavior:
+      - no older conversation history in final synthesis
+      - conversation reference is not a Knowledge citation source
+    verification:
+      - structured selector returns conversation_dependency required
+      - final synthesis contains CONVERSATION_REFERENCE_CONTEXT
+      - only the immediately preceding completed user/assistant pair is included
+    expected_citation_kind: pdf
+    expected_memory_use: false
+    max_tool_calls: 3
+
+  - id: contextual-facet-partial-memory-miss
+    category: context_requirement
+    setup:
+      fixture: atlas
+      evidence: pdf
+      saved_memory:
+        memory_type: project_context
+        content: Our organization has approximately 1000 people.
+    user_input: Based on the indexed PDF, what practices should our company prioritize?
+    expected_behavior: A partial contextual Memory miss does not block an answer grounded in Knowledge and available saved context.
+    forbidden_behavior:
+      - no insufficient_info because one contextual facet missed
+      - saved memory does not become a Knowledge citation
+    verification:
+      - structured decision requires both authorities
+      - two bounded contextual Memory searches execute
+      - one contextual Memory search may have no hit
+      - a PDF citation is present
+      - used_saved_memory is true
+    expected_citation_kind: pdf
+    expected_memory_use: true
+    max_tool_calls: 3
+
+  - id: contextual-facet-all-memory-miss
+    category: context_requirement
+    setup:
+      fixture: atlas
+      evidence: pdf
+      saved_memory:
+        memory_type: project_context
+        content: Our organization has approximately 1000 people.
+    user_input: Considering our deployment constraints and target customer profile, which PDF practices should we prioritize?
+    expected_behavior: Missing contextual Memory leaves a normal Knowledge-only grounded answer.
+    forbidden_behavior:
+      - no insufficient_info solely because contextual Memory missed
+      - no saved-memory disclosure
+    verification:
+      - structured decision requires both authorities
+      - two bounded contextual Memory searches execute with no hits
+      - a PDF citation is present
+      - used_saved_memory is false
+    expected_citation_kind: pdf
+    expected_memory_use: false
+    max_tool_calls: 3
+
   - id: knowledge-insufficient
     category: grounding
     setup:
@@ -29,6 +247,25 @@ scenarios:
       - no general-model guess
       - no citation fabricated from another source
     verification:
+      - insufficient_info is true
+      - citations are empty
+    expected_termination: insufficient_info
+
+  - id: unsupported-enterprise-fact-rejected-by-knowledge-gate
+    category: grounding
+    setup:
+      fixture: atlas
+      evidence: pdf
+    user_input: What is our 2027 acquisition budget?
+    expected_behavior: Raw retrieval candidates below the Knowledge acceptance floor are rejected before final synthesis.
+    forbidden_behavior:
+      - no weakly related PDF chunk is treated as sufficient evidence
+      - no provider contract error
+      - no citation is emitted from rejected evidence
+    verification:
+      - Knowledge retrieval reports raw candidates
+      - accepted evidence count is zero
+      - final synthesis is not called
       - insufficient_info is true
       - citations are empty
     expected_termination: insufficient_info
@@ -297,4 +534,3 @@ scenarios:
       - event types contain execution_status and done
       - event types do not contain citations
     expected_termination: insufficient_info
-

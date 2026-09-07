@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Literal, Optional, Type
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -91,6 +91,7 @@ class SearchMemoryArguments(BaseModel):
     query: str = Field(min_length=1, max_length=2000)
     top_k: int = Field(default=5, ge=1, le=5)
     memory_type: Optional[str] = None
+    retrieval_mode: Optional[Literal["direct", "broad", "contextual"]] = None
 
     @field_validator("query")
     @classmethod
@@ -198,6 +199,23 @@ class KnowledgeSearchTool(AgentToolAdapter):
         structured = {
             "authority": "knowledge_evidence",
             "retrieved_chunk_count": len(retrieval.chunks),
+            "knowledge_candidate_count": (
+                retrieval.candidate_count
+                if retrieval.candidate_count is not None
+                else len(retrieval.chunks)
+            ),
+            "knowledge_accepted_evidence_count": (
+                retrieval.accepted_evidence_count
+                if retrieval.accepted_evidence_count is not None
+                else len(evidence)
+            ),
+            "knowledge_context_count": len(evidence),
+            "knowledge_best_score": (
+                round(retrieval.best_score, 6)
+                if retrieval.best_score is not None
+                else None
+            ),
+            "knowledge_relevance_floor": retrieval.relevance_floor,
             "insufficient_info": not bool(evidence),
             "evidence": evidence,
             "citations": [citation.__dict__ for citation in citations],
@@ -222,9 +240,13 @@ class MemorySearchTool(AgentToolAdapter):
         self._spec = ToolSpec(
             name="search_memory",
             description=(
-                "Search the current owner's explicitly saved personal or project memory. "
-                "Use it for natural questions when the answer may have been explicitly saved; "
-                "the query does not need to contain memory or remember keywords."
+                "Search the current owner's explicitly saved personal, company, or project "
+                "memory. Use it for direct recall or when saved context would materially "
+                "improve the current task, including alongside search_knowledge. For contextual "
+                "tasks, set retrieval_mode to contextual and use one concise atomic query per "
+                "saved-context dependency; do not concatenate multiple dependencies. "
+                "Do not use it for every Knowledge-only query or to dump all memories; the query "
+                "does not need to contain memory or remember keywords."
             ),
             input_schema=SearchMemoryArguments.model_json_schema(),
         )
@@ -247,23 +269,35 @@ class MemorySearchTool(AgentToolAdapter):
         has_backend_recall_query = (
             isinstance(backend_recall_query, str) and bool(backend_recall_query.strip())
         )
+        has_explicit_retrieval_mode = parsed.retrieval_mode is not None
+        use_backend_recall_query = has_backend_recall_query and not has_explicit_retrieval_mode
         effective_query = (
             backend_recall_query.strip()
-            if has_backend_recall_query
+            if use_backend_recall_query
             else parsed.query
         )
         retrieval_mode = (
-            "broad" if is_broad_memory_recall_query(effective_query) else "direct"
+            (
+                "broad"
+                if is_broad_memory_recall_query(effective_query)
+                else "direct"
+            )
+            if not has_explicit_retrieval_mode
+            else parsed.retrieval_mode
         )
-        backend_memory_type = memory_recall_type_filter(effective_query)
+        backend_memory_type = (
+            memory_recall_type_filter(effective_query)
+            if retrieval_mode != "contextual"
+            else None
+        )
         selected_memory_type = (
             backend_memory_type
-            if has_backend_recall_query
+            if use_backend_recall_query
             else backend_memory_type or parsed.memory_type
         )
         effective_top_k = (
             min(parsed.top_k, MAX_BROAD_MEMORY_RESULTS)
-            if retrieval_mode == "broad"
+            if retrieval_mode in {"broad", "contextual"}
             else 1
         )
         try:
@@ -272,6 +306,7 @@ class MemorySearchTool(AgentToolAdapter):
                 query=effective_query,
                 top_k=effective_top_k,
                 memory_type=selected_memory_type,
+                retrieval_mode=retrieval_mode,
             )
         except MemoryServiceError:
             return ToolResult.failure("tool_error", "Saved memory search failed.")

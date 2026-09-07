@@ -8,7 +8,7 @@ def test_7_0_golden_set_has_all_core_contract_scenarios() -> None:
     golden_set = load_golden_set()
 
     assert golden_set.version == 1
-    assert len(golden_set.scenarios) == 18
+    assert len(golden_set.scenarios) == 29
     assert {scenario.category for scenario in golden_set.scenarios} == {
         "knowledge",
         "grounding",
@@ -17,6 +17,9 @@ def test_7_0_golden_set_has_all_core_contract_scenarios() -> None:
         "session_isolation",
         "memory",
         "memory_authority",
+        "knowledge_memory_routing",
+        "contextual_memory",
+        "context_requirement",
         "agent",
         "tool_safety",
         "mcp",
@@ -33,10 +36,9 @@ def test_7_0_golden_set_has_all_core_contract_scenarios() -> None:
 def test_7_0_deterministic_runner_passes_every_core_scenario() -> None:
     report = run_golden_set()
 
-    assert report["total"] == 18
-    assert report["passed"] == 18
+    assert report["total"] == 29
+    assert report["passed"] == 29
     assert report["failed"] == 0
     assert report["pass_rate"] == 1.0
     assert all(result["passed"] for result in report["results"])
     assert all(result["failure_reason"] is None for result in report["results"])
-

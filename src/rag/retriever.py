@@ -18,6 +18,8 @@ RETRIEVAL_MODE_PGVECTOR_EXACT_COSINE = "pgvector_exact_cosine"
 RETRIEVAL_MODE_LEXICAL_FALLBACK = "lexical_fallback"
 RETRIEVAL_FALLBACK_VECTOR_QUERY_FAILED = "VECTOR_QUERY_FAILED"
 RETRIEVAL_FALLBACK_VECTOR_DATA_UNAVAILABLE = "VECTOR_DATA_UNAVAILABLE"
+KNOWLEDGE_RELEVANCE_FLOOR = 0.30
+KNOWLEDGE_VECTOR_CANDIDATE_POOL_MAX = 20
 
 
 @dataclass
@@ -41,6 +43,10 @@ class RetrievalResult:
     chunks: List[RetrievedChunk]
     retrieval_mode: str
     retrieval_fallback_reason: Optional[str]
+    candidate_count: Optional[int] = None
+    accepted_evidence_count: Optional[int] = None
+    best_score: Optional[float] = None
+    relevance_floor: Optional[float] = None
 
 
 class ProductionChunkRetriever:
@@ -93,13 +99,15 @@ class ProductionChunkRetriever:
                 chunks=[],
                 retrieval_mode=RETRIEVAL_MODE_LEXICAL_FALLBACK,
                 retrieval_fallback_reason=None,
+                candidate_count=0,
+                accepted_evidence_count=0,
             )
 
         if normalized_query_embedding is not None and supports_vector_query:
             try:
                 semantic_matches = self._chunk_repository.list_production_chunks_by_vector(
                     query_embedding=normalized_query_embedding,
-                    top_k=top_k,
+                    top_k=min(top_k * 2, KNOWLEDGE_VECTOR_CANDIDATE_POOL_MAX),
                     page_ids=page_ids,
                     section_paths=section_paths,
                     source_kinds=source_kinds,
@@ -121,13 +129,22 @@ class ProductionChunkRetriever:
                     retrieval_fallback_reason=RETRIEVAL_FALLBACK_VECTOR_QUERY_FAILED,
                 )
             if semantic_matches:
+                accepted_matches = [
+                    match
+                    for match in semantic_matches
+                    if match.score >= KNOWLEDGE_RELEVANCE_FLOOR
+                ][:top_k]
                 return RetrievalResult(
                     chunks=[
                         self._to_retrieved_chunk(match)
-                        for match in semantic_matches
+                        for match in accepted_matches
                     ],
                     retrieval_mode=RETRIEVAL_MODE_PGVECTOR_EXACT_COSINE,
                     retrieval_fallback_reason=None,
+                    candidate_count=len(semantic_matches),
+                    accepted_evidence_count=len(accepted_matches),
+                    best_score=max(match.score for match in semantic_matches),
+                    relevance_floor=KNOWLEDGE_RELEVANCE_FLOOR,
                 )
 
         candidates = self._chunk_repository.list_production_chunks(
@@ -207,10 +224,14 @@ class ProductionChunkRetriever:
             )
 
         ranked.sort(key=lambda item: (-item.score, item.chunk_id))
+        accepted_chunks = ranked[:top_k]
         return RetrievalResult(
-            chunks=ranked[:top_k],
+            chunks=accepted_chunks,
             retrieval_mode=RETRIEVAL_MODE_LEXICAL_FALLBACK,
             retrieval_fallback_reason=retrieval_fallback_reason,
+            candidate_count=len(candidates),
+            accepted_evidence_count=len(accepted_chunks),
+            best_score=accepted_chunks[0].score if accepted_chunks else None,
         )
 
     def _to_retrieved_chunk(self, match: SemanticChunkMatch) -> RetrievedChunk:

@@ -12,6 +12,8 @@ from src.rag.chunker import (
     chunk_notion_page,
 )
 from src.rag.retriever import (
+    KNOWLEDGE_RELEVANCE_FLOOR,
+    KNOWLEDGE_VECTOR_CANDIDATE_POOL_MAX,
     ProductionChunkRetriever,
     RetrievedChunk,
     RetrievalResult,
@@ -55,6 +57,8 @@ __all__ = [
     "EmbeddingInputRecord",
     "ExcludedContext",
     "HeadingSource",
+    "KNOWLEDGE_RELEVANCE_FLOOR",
+    "KNOWLEDGE_VECTOR_CANDIDATE_POOL_MAX",
     "NORMALIZATION_VERSION",
     "NotionChunkDraft",
     "PROVENANCE_VERSION",

@@ -262,7 +262,7 @@ def test_agent_chains_memory_then_knowledge_and_keeps_authorities_separate() -> 
     assert "saved_memory" in provider.requests[1].messages[-1].content
 
 
-def test_generating_status_precedes_final_provider_generation() -> None:
+def test_generating_status_is_emitted_for_final_provider_generation() -> None:
     timeline: List[str] = []
     provider = TimelineProvider(
         [
@@ -300,7 +300,7 @@ def test_generating_status_precedes_final_provider_generation() -> None:
 
     assert result.status == "succeeded"
     assert timeline.index("status-searching_knowledge") < timeline.index("status-generating")
-    assert timeline.index("status-generating") < timeline.index("provider-2")
+    assert timeline.index("provider-2") < timeline.index("status-generating")
 
 
 def test_non_explicit_save_is_rejected_even_when_provider_requests_it() -> None:

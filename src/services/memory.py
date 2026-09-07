@@ -26,6 +26,7 @@ MEMORY_SEARCH_TOP_K = 5
 # unrelated range (~0.35), while allowing generic broad recall (~0.25).
 MEMORY_DIRECT_RELEVANCE_FLOOR = 0.40
 MEMORY_BROAD_RELEVANCE_FLOOR = 0.20
+MEMORY_RETRIEVAL_MODES = frozenset({"direct", "broad", "contextual"})
 
 
 class MemoryServiceError(Exception):
@@ -130,6 +131,7 @@ class MemoryService:
         query_embedding: Optional[List[float]] = None,
         top_k: int = MEMORY_SEARCH_TOP_K,
         memory_type: Optional[str] = None,
+        retrieval_mode: Optional[str] = None,
     ) -> List[LongTermMemorySnapshot]:
         normalized_owner_id = self._normalize_owner_id(owner_id)
         normalized_query = self._normalize_content(query)
@@ -138,6 +140,11 @@ class MemoryService:
             normalized_memory_type = memory_type.strip().lower()
             if normalized_memory_type not in ALLOWED_MEMORY_TYPES:
                 raise MemoryValidationError("memory_type is not supported")
+        normalized_retrieval_mode = None
+        if retrieval_mode is not None:
+            normalized_retrieval_mode = retrieval_mode.strip().lower()
+            if normalized_retrieval_mode not in MEMORY_RETRIEVAL_MODES:
+                raise MemoryValidationError("retrieval_mode is not supported")
         embedding = query_embedding
         if embedding is None:
             embedding, _ = await self._embed(normalized_query)
@@ -151,6 +158,7 @@ class MemoryService:
         return self._select_relevant_memories(
             matches=matches,
             query=normalized_query,
+            retrieval_mode=normalized_retrieval_mode,
         )
 
     def _select_relevant_memories(
@@ -158,12 +166,19 @@ class MemoryService:
         *,
         matches: List[LongTermMemorySnapshot],
         query: str,
+        retrieval_mode: Optional[str] = None,
     ) -> List[LongTermMemorySnapshot]:
         if not matches:
             return []
-        is_broad_recall = is_broad_memory_recall_query(query)
+        is_broad_recall = (
+            retrieval_mode in {"broad", "contextual"}
+            if retrieval_mode is not None
+            else is_broad_memory_recall_query(query)
+        )
         relevance_floor = (
-            MEMORY_BROAD_RELEVANCE_FLOOR
+            MEMORY_DIRECT_RELEVANCE_FLOOR
+            if retrieval_mode == "contextual"
+            else MEMORY_BROAD_RELEVANCE_FLOOR
             if is_broad_recall
             else MEMORY_DIRECT_RELEVANCE_FLOOR
         )

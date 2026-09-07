@@ -248,6 +248,26 @@ def test_vector_query_applies_section_filter_and_skips_null_vectors(
     assert results[0].score > 0.0
 
 
+def test_vector_query_excludes_ineligible_high_score_chunk(
+    pgvector_session: Session,
+) -> None:
+    _seed_vector_query_fixture(pgvector_session)
+    ineligible_chunk = pgvector_session.get(KnowledgeChunk, 3)
+    assert ineligible_chunk is not None
+    ineligible_chunk.eligibility_status = "pending"
+    pgvector_session.commit()
+
+    repository = ChunkRepository(pgvector_session)
+    results = repository.list_production_chunks_by_vector(
+        query_embedding=_embedding(1.0, 0.0),
+        top_k=5,
+        page_ids=["page-a"],
+    )
+
+    assert results
+    assert all(result.chunk_id != 3 for result in results)
+
+
 def test_vector_query_keeps_production_safe_source_kind_scope(
     pgvector_session: Session,
 ) -> None:

@@ -1591,3 +1591,411 @@ fallback 到 original `content`。
 本輪為 documentation-only sync，只修改 roadmap、decision、data contract、quality guardrail
 與 daily log；未開始 `5.0.3.1` implementation，也未修改 runtime、tests、migration、
 dependencies 或 frontend。
+
+## 2026-09-07 5.0.3.2 Contextual Memory Application
+
+### Diagnosis
+
+- `CURRENT_TOOL_SELECTION`：既有 bounded Agent 將三個 allowlisted tools 交給 provider 的
+  `tool_choice=auto`；mixed Knowledge task 的 scripted repro 只選了 `search_knowledge`，
+  沒有繼續選 `search_memory`。
+- `WHY_SEARCH_MEMORY_IS_NOT_SELECTED`：system prompt 只描述 direct saved-memory recall，
+  沒有說明 saved context 在能 materially improve current task 時可與 Knowledge 一起使用，
+  也沒有提供 contextual memory query 的形狀。
+- `CURRENT_SEARCH_MEMORY_QUERY_CONSTRUCTION`：若 Agent 自己選 `search_memory`，memory
+  tool 使用 provider 的 `arguments.query`；只有 deterministic direct-recall metadata 才會
+  覆寫 query。原本沒有 task-oriented contextual query contract。
+- `CURRENT_TOOL_CHAINING_BEHAVIOR`：既有 runtime 已支援 sequential `ToolCall → ToolResult`
+  loop，最多 3 次 tool calls；不需要 planner、第二個 Agent 或新 tool。
+- `CURRENT_CONTEXT_ASSEMBLY`：Knowledge 與 Memory 分別保存於 bounded run state；Knowledge
+  result 產生 backend citation，Memory result 使用 saved-memory authority 與
+  `Used saved memory`，兩者以分開 context 送入 final provider。
+
+### Minimal fix and implementation
+
+- 在 Agent prompt 與 `search_memory` tool description 中加入 materiality rule：mixed task
+  可使用兩個 tool，Knowledge-only 不強制 memory，不 dump all memories；contextual call
+  使用 task-oriented query 並設定 `retrieval_mode=contextual`。
+- `SearchMemoryArguments` 新增 bounded `direct | broad | contextual` mode。Contextual
+  retrieval 最多取 3 筆，再使用既有 relevance gate；direct 維持 final best-1，沒有降低
+  global relevance floor。
+- Memory service 只接受既有三種 retrieval modes；contextual 使用 direct relevance floor
+  的 bounded multi-result 行為，保留 owner scope、schema、allowlist 與 persistence policy。
+- 未加入 general deterministic intent classifier、planner、new tool、retrieval rebuild、
+  synonym dictionary 或 automatic memory write。
+
+### Automated evidence
+
+- TDD red：mixed contextual repro 先因只執行 `search_knowledge` 而失敗；修正後
+  `tests/test_contextual_memory_application.py`、streaming、agent eval 與 memory hardening
+  focused set 共 `24 passed`。
+- Golden Set 已新增 `knowledge-only-does-not-force-memory` 與
+  `contextual-memory-application`，完整 `test_agent_eval.py` 通過，Golden Set `20/20`。
+- Backend full suite：`828 passed, 5 skipped`。
+- Frontend regression：`62 passed`；production build PASS。既有 React list-key warning
+  仍會在測試輸出，但不影響本 slice，且未修改 frontend。
+- `git diff --check` PASS。
+
+### Manual verification
+
+- `5.0.3` browser positive recall、Memory Inspector original content、`Used saved memory`
+  與 unrelated-memory negative controls 已由使用者確認 PASS，狀態更新為 `done`。
+- `5.0.3.2` browser verification：`Not yet manually verified.`
+- 待驗證 A：Knowledge-only PDF question 應只有 Sources，沒有 `Used saved memory`。
+- 待驗證 B：Memory-only recall 應只有 `Used saved memory`，`citations=[]`。
+- 待驗證 C：Knowledge + company/project context task 應同時呈現 Sources 與
+  `Used saved memory`，且回答只使用 relevant memory。
+- 待驗證 D：有 unrelated saved memory 時應 fail closed，不應套用該 memory。
+- 待驗證 E：不得因一般 Knowledge query dump all memories；SSE 只顯示 bounded
+  searching/generating statuses。
+
+### Roadmap state
+
+- `5.0.3=done`。
+- `5.0.3.1=planned`；本輪未開始 implementation。
+- `5.0.3.2=manual_verification`。
+- `5.0.4=deferred`。
+- `7.0=manual_verification`；final Demo 等待 5.0.3.1、5.0.3.2 manual verification
+  與重新跑 evaluation 後。
+- `2.4 YouTube` 與 `2.5 Notion UX` 維持 `deferred`，不阻塞 MVP closure。
+
+## 2026-09-07 5.0.3.2.1 Contextual Memory Live-Provider Routing
+
+### Browser finding
+
+- Knowledge-only PDF question PASS：顯示 `Sources`，沒有 `Used saved memory`。
+- Memory-only `What DB do we use?` PASS：回答 PostgreSQL，顯示 `Used saved memory`。
+- Mixed contextual questions FAIL：live provider 在 `search_knowledge` 後直接 final；回答沒有
+  套用已保存的 company size 約 1000 人或 SDD/TDD development preference。
+- 這是 `5.0.3.2` 的 live-provider routing gap，不是 MemoryService、relevance gate 或
+  context authority mixing。
+
+### Diagnosis evidence
+
+- `LIVE_ITERATION_1_DECISION`：provider selected `search_knowledge`。
+- `LIVE_ITERATION_2_DECISION`：provider selected final text directly。
+- `SEARCH_MEMORY_AVAILABLE`：true；第二輪 request 仍包含 `search_memory`。
+- `SEARCH_MEMORY_SELECTED`：false。
+- `FINALIZATION_REASON`：Knowledge evidence 已存在，但 request 沒有 post-Knowledge
+  contextual re-check contract，live-like provider 因此以 Knowledge-only final path 結束。
+- `ROOT_CAUSE`：runtime capability 與 provider tool-selection reliability 分離；原本的
+  general system guidance 沒有在 Knowledge ToolResult 後明確要求 provider 保留 original
+  personalization intent 並重新檢查 saved context。
+- 另一個同一 seam 的問題是 mixed query 可能被舊 deterministic `memory_recall_query`
+  metadata 覆寫。當 provider 明確設定 `retrieval_mode=contextual` 時，這會錯誤取代其
+  task-oriented query，並可能從 query 文字誤推 `memory_type`。
+
+### Implementation
+
+- Knowledge tool result 處理完成後，runtime 更新第一則 bounded system message，重申
+  original user task、Knowledge evidence availability、`search_memory` availability，以及
+  contextual application 在 finalization 前的 materiality check。
+- Contract 保留 Knowledge-only factual/extraction task 可直接 final；不要求每一題搜尋
+  memory，也不加入 keyword classifier、regex routing、planner 或第二個 Agent。
+- Provider 明確傳 `retrieval_mode=contextual` 時，Memory tool 保留 provider 的
+  task-oriented query，跳過 direct-recall metadata query override，也不從 contextual query
+  自動套用 memory-type filter。
+- SSE 在 final provider response 確定後才發出一次 `generating`；Knowledge → Memory 的
+  internal continuation 不再產生誤導性的 `Generating → Searching saved memory → Generating`。
+- 新增 live-like provider behavior regression，只記錄 bounded decision labels、tool names、
+  tool availability 與 finalization reason；沒有 raw provider response 或 private source
+  content。
+
+### Automated evidence
+
+- Red：live-like provider 在第二輪 direct final，且 `search_memory_available=true`、
+  `search_memory_selected=false`。
+- Green：live-like routing regression 與既有 contextual flow 通過。
+- Contextual、memory hardening、Agent、conversation、streaming focused regression：
+  `80 passed`。
+- Golden Set：`20/20`。
+- Python compileall、`git diff --check`：PASS。
+
+### Manual verification
+
+- `5.0.3.2.1`：`Not yet manually verified.`
+- 重新執行 mixed browser probes，確認可見狀態為
+  `Searching knowledge… → Searching saved memory… → Generating answer…`，不出現重複的
+  `Generating answer…`。
+- 確認 final answer 實際包含約 1000 人與 SDD/TDD context，而非只重述 user question。
+- 重跑 Knowledge-only、Memory-only、irrelevant-memory 與 no-memory-dump negative controls。
+
+### Roadmap state
+
+- `5.0.3=done`。
+- `5.0.3.1=planned`；本輪未開始 implementation。
+- `5.0.3.2=manual_verification`。
+- `5.0.3.2.1=manual_verification`。
+- `5.0.4=deferred`。
+- `7.0=manual_verification`；final Demo 仍等待 memory hardening slices 完成並重新跑 evaluation。
+
+## 2026-09-07 5.0.3.2.2 Bounded Context Requirement Selection
+
+### Diagnosis
+
+- Current provider contract 是 `LLMRequest(tool_choice=auto)` 搭配 `LLMResponse.tool_calls`。Provider 可以在 `search_knowledge` 後直接回 final text。
+- Post-Knowledge re-check 只能提供 guidance，不能保證 live provider 每次選擇 `search_memory`，因此同一 mixed query 會出現 Knowledge-only 或 Knowledge + Memory 兩種結果。
+- Existing `AgentState` 已分開保存 `knowledge_context`、`memory_context` 與 citations；tool registry 也已有 `search_knowledge`、`search_memory`、`save_memory`。這個 slice 不需要重寫 retrieval service 或 MCP surface。
+
+### Structured decision contract
+
+- 新增 typed `ContextRequirementDecision`，只包含 `needs_knowledge`、`needs_memory` 與 bounded `memory_query`。
+- `StrictBool`、Pydantic schema、`extra=forbid` 與 conditional validation 拒絕 malformed decision。`needs_memory=false` 時 `memory_query` 固定為 `null`；`needs_memory=true` 時 query 不得為空且最多 500 characters。
+- OpenAI-compatible provider 使用 strict JSON schema `response_format`。Selector request 不提供 tools，final request 也不提供 tools。
+
+### Backend execution
+
+- 具 structured output capability 的 provider 先執行 internal selector。Backend 驗證 decision 後固定以 Knowledge、Memory 順序執行 required capability。
+- Required retrieval 仍使用既有 tool registry，因此保留 owner scope、argument validation、relevance gate、timeout、citation 與 max 3 tool calls。
+- Final generation 只執行一次，收到分離的 `KNOWLEDGE_CONTEXT` 與 `MEMORY_CONTEXT`。Knowledge 是 enterprise claim 與 citation authority；Memory 只作 personalization context。
+- Knowledge hit + Memory no-hit 仍可回答 Knowledge。若 decision 要求 Knowledge 但沒有 Knowledge evidence，Memory 不能取代它，結果維持 `insufficient_info` 與 zero citations。
+- Explicit save 與 conversation transform 不進 selector；不新增 `needs_save`、planner、classifier、MCP tool 或 public API。Provider 不支援 structured output 時保留既有 bounded loop。
+
+### Automated evidence
+
+- TDD red：新 selector test collection 先因 `ContextRequirementDecision` 不存在失敗；implementation 後 structured selection focused set `19 passed`。
+- 新增 4 個 `context-requirement-*` Golden Set cases，包含 Knowledge-only、Memory-only、mixed 與 Memory no-hit fallback；Golden Set `24/24`。
+- Backend full suite：`841 passed, 5 skipped`。MCP targeted regression `10 passed`。
+- Frontend regression：`62 passed`；production build PASS。既有 `ConversationSidebar` React list-key warning 仍存在，但本輪未修改 frontend。
+- `compileall`、`git diff --check` PASS。
+
+### Manual verification
+
+- `5.0.3.2.2`：`Not yet manually verified.`
+- 待驗證 Knowledge-only：只有 Sources，沒有 `Used saved memory`。
+- 待驗證 Memory-only：只有 `Used saved memory`，沒有 Sources。
+- 待驗證 mixed 連續 3 次：`Searching knowledge…`、`Searching saved memory…`、`Generating answer…` 各出現一次，且回答實際使用 relevant company size 與 SDD/TDD context。
+- 待驗證 Memory no-hit、unrelated memory 與 explicit save regression。
+
+### Roadmap state
+
+- `5.0.3=done`。
+- `5.0.3.1=planned`；本輪未開始 implementation。
+- `5.0.3.2=manual_verification`。
+- `5.0.3.2.1=manual_verification`。
+- `5.0.3.2.2=in_progress`。
+- `5.0.4=deferred`。
+- `7.0=manual_verification`。
+
+## 2026-09-07 5.0.3.2.3 Same-Session Context Requirement Stability
+
+### Diagnosis
+
+- TURN 1 與 TURN 2 都不符合 `classify_conversation_recall` 或
+  `classify_conversation_transform`，因此一般 substantive query 走同一個 structured
+  context-selection runtime path。
+- TURN 2 的 selector input 會包含 bounded previous user/assistant content；citation 與
+  `used_saved_memory` metadata 不會被組進 selector history。
+- 原本 selector contract 沒有明確禁止把 previous assistant answer 當成 Knowledge evidence，
+  也沒有禁止把 previous saved-fact mention 當成當次 Memory retrieval。Provider 因而可能把
+  `needs_knowledge` 降為 `false`，Backend 不再執行 Knowledge，finalization 才錯誤進入
+  `insufficient_info`。
+
+### 修正
+
+- Selector contract 明確保留：history 只協助理解 reference 與 task intent；previous answer
+  與 previous saved-fact mention 都不是 current authority。
+- 新的 substantive request 依當次 answer dependency 選擇 authority；沒有 query equality、
+  keyword/regex 或 company-specific special case。
+- 既有 conversational transform path 不變，仍可使用 previous assistant answer 作為
+  transformation target。
+
+### Automated evidence
+
+- TDD red：authority contract test 在缺少新 selector wording 時失敗；補上 contract 後
+  focused context selection suite `12 passed`。
+- 新增 same-session repeated substantive query 3-turn regression；每一輪都重新執行
+  Knowledge 與 Memory，且不進入 `insufficient_info`。
+- Targeted regression：`90 passed`；full backend：`843 passed, 5 skipped`。
+- Native MCP：`10 passed`；frontend：`62 passed`；production build PASS。
+- Python compileall 與 `git diff --check` PASS。
+
+### Manual verification
+
+- `5.0.3.2.3`：`Not yet manually verified.`
+- 待 fresh New Chat 連續送出三次相同 mixed query，確認每次都有 Knowledge、Memory、Sources、
+  `Used saved memory`，且不會從第二輪開始變成 `insufficient_info`。
+
+### Roadmap state
+
+- `5.0.3.2.3=in_progress`，implementation 與 targeted automated regression complete。
+- `5.0.3.2`、`5.0.3.2.1`、`5.0.3.2.2` 仍待各自 browser verification；`5.0.3.1=planned`。
+- `5.0.4=deferred`，本輪未開始 general transform hardening。
+
+## 2026-09-07 5.0.3.2.5 Knowledge Evidence Acceptance Gate
+
+### Diagnosis
+
+- `ChunkRepository.list_production_chunks_by_vector` 使用 PostgreSQL `embedding <=> query_embedding`，即 cosine distance；以 `1 - distance` 轉為 `[0, 1]` normalized similarity，並以 distance ascending 排序。分數越高代表越相關，raw distance 的理論範圍是 `[0, 2]`。
+- pgvector 原本有 owner、source kind、embedding non-null、eligibility 與 indexed source status filter，也會先 `LIMIT top_k`，但沒有 explicit relevance floor，top-k candidate 直接成為 accepted evidence。
+- lexical fallback 原本以 token overlap、coverage、density 與 phrase bonus 計算 `[0, 1]` score，只保留 `score > 0`，再取 top-k；此 semantics 維持不變。Lexical score 與 vector similarity 雖然數值範圍相同，但意義不同，不直接互相比較。
+
+### Score inspection
+
+- 使用現有 indexed Knowledge 做 read-only bounded audit，沒有輸出 raw chunk text，也沒有修改 production data。
+- Positive top-10 score：`0.502864–0.554262`，source diversity `3`。
+- Mixed top-10 score：`0.305077–0.358821`，source diversity `3`。
+- Negative top-10 score：`0.199179–0.267197`，source diversity `4`。
+- Separation：mixed 最低分 `0.305077` 高於 negative 最高分 `0.267197`，間隔約 `0.03788`；positive、mixed 與 negative 存在可用分離區間。
+- Threshold feasibility：採 `knowledge_relevance_floor=0.30` 可保留目前 positive 與 mixed top-10 evidence，並拒絕 negative top-10 candidates。此 floor 使用 inclusive comparison。
+
+### Implementation
+
+- pgvector 改為 bounded candidate pool，大小為 `2 × top_k` 且上限 20；candidate 先通過既有 eligibility，再由 retriever 套用 inclusive relevance floor，最後截取要求的 top-k。
+- `RetrievalResult`、`KnowledgeSearchTool`、`AgentState` 與 workflow metadata 分別保留 candidate count、accepted evidence count、Knowledge context count、best score 與 relevance floor。
+- Knowledge-required 且 accepted evidence 為零時，backend deterministic 回傳 `insufficient_info`、zero citations，並在 structured context path 不呼叫 final provider。Memory hit 不能取代 rejected Knowledge evidence。
+- 新增 Golden Set case `unsupported-enterprise-fact-rejected-by-knowledge-gate`，模擬 raw candidates 存在但全部低於 acceptance floor。
+
+### Automated evidence
+
+- TDD RED：新增 low-score pgvector regression 後，原始 implementation 回傳 `accepted_evidence_count=1`；修正後低於 floor rejected、等於 floor accepted。
+- Focused retrieval、context requirement、Agent、Golden Set、MCP、PDF、URL、Image regression：`78 passed`。
+- Backend full regression：`853 passed, 6 skipped`。
+- `compileall` 與 `git diff --check`：PASS。
+- Golden Set：`25/25`。
+
+### Manual verification
+
+- `5.0.3.2.5`：`Not yet manually verified.`
+- CUA service 無法啟動；sandbox 也不允許 local Uvicorn bind。隔離 port 的 backend 可啟動，但 live OpenAI probe 會新增 conversation/message 並可能傳送 indexed context，因此未在缺少明確授權下執行。
+- 待 browser fresh session 驗證 positive PDF answer 有 Sources、acquisition budget 回 `insufficient_info` 且 zero Sources、mixed query 同時使用 Knowledge 與 saved memory；same-session selector/history instability 不在本輪處理。
+
+### Roadmap state
+
+- `5.0.3.2.5=manual_verification`，implementation 與 automated verification complete。
+- `5.0.3.2`、`5.0.3.2.1`、`5.0.3.2.2`、`5.0.3.2.3`、`5.0.3.2.4` 維持 `manual_verification`。
+- `5.0.3.1=planned`，本輪未開始。
+- `5.0.4=deferred`，`7.0=manual_verification`。
+
+## 2026-09-07 5.0.3.2.6 Contextual Facet Retrieval Stability
+
+### Implementation
+
+- Mixed structured selector decision 新增 bounded `ContextualFacet`，每次最多 2 個 facet；每個
+  facet 只包含 bounded `id` 與 single-line `text`。Mixed task 禁止再使用 free-form
+  `memory_query`。
+- Backend 先執行一次 `search_knowledge`，再依 selector 順序以 facet text 各執行一次
+  `search_memory(retrieval_mode=contextual)`，總數仍受 max 3 tool calls 限制。
+- Direct memory-only structured routing 保留既有 `memory_query` compatibility。Knowledge 與
+  Memory context、citation authority 與 `Used saved memory` disclosure 維持分離。
+- Partial 或 zero contextual Memory hit 不會使已接受的 Knowledge 變成 insufficient；required
+  Knowledge 缺失時，Memory 仍不能取代 Knowledge。
+- 兩個 facet search 只公開一次 `searching_memory` SSE status，不把 facet text 或 tool arguments
+  暴露給前端。
+
+### Automated evidence
+
+- TDD red：新 facet test 先因 `ContextualFacet` 尚未存在而在 collection 階段失敗；完成 typed
+  contract 與 deterministic execution 後，focused context、contextual memory、LLM wire、Agent
+  eval、runtime 與 streaming suite 共 `62 passed`。
+- Golden Set 改為 `contextual-facet-mixed`、`contextual-facet-partial-memory-miss` 與
+  `contextual-facet-all-memory-miss`，驗證 per-facet query、partial/all miss 與 max 3 calls。
+- Backend full regression：`858 passed, 6 skipped`；frontend regression：`62 passed`；production
+  build PASS。
+- `git diff --check`：PASS。
+
+### Manual verification
+
+- `5.0.3.2.6`：`Not yet manually verified.`
+- 待 browser 驗證 Knowledge-only、Memory-only、mixed contextual、同一 session 重送三次 mixed
+  query，以及 contextual facet 沒有 saved Memory 時仍能產生 Knowledge-only answer。
+
+### Roadmap state
+
+- `5.0.3.2.6=manual_verification`，implementation 與 automated verification complete。
+- `5.0.3.2.6` 未標記 `done`，等待 browser manual acceptance。
+- `5.0.3.1=planned`，`5.0.4=deferred`，`7.0=manual_verification`。
+
+## 2026-09-07 5.0.3.2.7 Final Synthesis Authority Isolation
+
+### Confirmed cause
+
+- Controlled replay 固定同一份 final `LLMRequest`、Knowledge context 與 Memory context。保留
+  previous assistant answer 時連續回傳 sentinel；只移除該 assistant turn 或整段 conversation
+  history 後，連續三次都回傳 final text。
+- Retrieval aggregates 與 3-call budget 沒有變化。Failure 位於 structured substantive final
+  synthesis 的 history contamination，不在 selector、Knowledge retrieval 或 contextual facet
+  retrieval。
+
+### Implementation
+
+- Bounded conversation context 新增 user-side projection。一般 substantive request 同時建立完整
+  history 給 selector，以及不含 assistant messages 的 context 給 final synthesis。
+- Structured selector 完成且 fresh Knowledge/Memory retrieval 結束後，final provider 只接收
+  bounded user-side context、current task、當次 Knowledge 與當次 Memory。Backend deterministic
+  移除 previous assistant，不只依賴 prompt instruction。
+- Final authority contract 明定 previous assistant 不屬於 current Knowledge evidence，也不能決定
+  sufficiency；相同 substantive task 必須依 fresh authority 重新 synthesis。
+- Conversation recall 與 transform 使用原本 dedicated path。Transform 仍可把 previous assistant
+  answer 當作 transformation target。
+- `ContextualFacet`、facet query、Knowledge `0.30`、Memory contextual `0.40`、max 3 tool calls、
+  citation ownership 與 SSE phase 都沒有修改。
+
+### Automated evidence
+
+- TDD red：history-sensitive provider 在 repeated final request 看見 `[assistant]` 時回
+  `INSUFFICIENT_INFO`；修正前 repeated substantive regression 失敗。
+- Green：production conversation API 在同一 session 連續三次 mixed query 都 completed，三輪皆有
+  Sources 與 `Used saved memory`。第二、三輪 selector 可見 assistant history，final requests
+  則不可見；每輪仍執行 Knowledge 加兩次 contextual Memory search。
+- Authority、contextual Memory、conversation API、transform/recall、Agent、tool registry、Native
+  MCP、SSE 與 controlled replay harness targeted suite：`122 passed`。
+- Golden Set：`26/26`。Frontend：`62 passed`。Production build 與 Python compileall：PASS。
+- Backend full suite 兩次都只有既有 SQLite concurrency test
+  `test_concurrent_claims_have_one_owner` 失敗；其餘 `866 passed, 6 skipped`，該 test 單獨重跑
+  `1 passed`。本 slice 未修改 idempotency code。
+
+### Manual verification
+
+- `5.0.3.2.7`：`Not yet manually verified.`
+- Fresh New Chat 連續三次送出相同 mixed query。每輪應依序顯示 Knowledge、Memory 與 generating
+  status，產生含 Sources、`Used saved memory`、company size 與 development preferences 的答案；
+  第二、三輪不得出現 `insufficient_info` 或 Request failed。
+- 另重跑 Knowledge-only、Memory-only 與成功答案後的 `用中文說` transform regression。
+
+### Roadmap state
+
+- `5.0.3.2.6=manual_verification`。
+- `5.0.3.2.7=manual_verification`。
+- Parent `5.0.3.2=manual_verification`。
+- `5.0.3.1=planned`，`5.0.4=deferred`；本輪未開始兩者 implementation。
+
+## 2026-09-07 5.0.3.2.8 Substantive Conversation Dependency Contract
+
+### Implementation
+
+- `ContextRequirementDecision` 新增 required `ConversationDependency` enum，只允許 `none` 與
+  `required`。Wire schema 明確要求欄位，missing、null、boolean、未知 enum 與 extra field 都
+  fail closed。
+- Selector 仍接收 bounded 完整 user/assistant history。`none` 的 structured substantive final
+  不帶任何 previous conversation；`required` 由 backend 從同 session bounded context deterministic
+  選出最近一個 completed user/assistant pair，標記為 `CONVERSATION_REFERENCE_CONTEXT`。
+- Recent pair 不會把 trailing failed pending user-only turn 視為 completed。沒有合法 pair 時
+  使用既有 `PROVIDER_ERROR` bounded failure semantics。Reference context 只作 interpretation，
+  不成為 Knowledge、Memory、sufficiency 或 citation authority。
+- Transform、conversation recall、direct Memory routing、ContextualFacet、retrieval floors、
+  max 3 tool calls 與 SSE public phases 維持不變。
+
+### Automated evidence
+
+- TDD red：`.8` tests 先因 `ConversationDependency` 尚未存在而 collection fail；完成 schema、
+  deterministic pair selection 與 final context branching 後 focused suite 通過。
+- Focused context、conversation context、LLM wire、conversation API、streaming、Agent runtime
+  與 Golden Set：`98 passed`。
+- Golden Set 擴充三個 scenario：standalone `none`、四次 repeated standalone `none`、
+  referential `required`；完整 deterministic result `29/29`。
+- `git diff --check` 與 Python `compileall`：PASS。
+
+### Manual verification
+
+- `5.0.3.2.8`：`Not yet manually verified.`
+- Browser guide：Fresh New Chat 連續四次 mixed query；再驗證 Knowledge-only、Memory-only、
+  successful-answer transform；最後以 `What about the second one?` 驗證 recent completed pair
+  boundary。Expected SSE 仍只有 existing Knowledge、Memory、Generating、done phases。
+- `5.0.3.2.6`、`5.0.3.2.7` 與 parent `5.0.3.2` 持續維持 `manual_verification`。
+
+### Roadmap state
+
+- `5.0.3.2.8=manual_verification`，implementation 與 automated verification complete。
+- `5.0.3.2.6=manual_verification`、`5.0.3.2.7=manual_verification`、parent `5.0.3.2=manual_verification`。
+- `5.0.3.1=planned`，`5.0.4=deferred`；本輪未開始兩者 implementation。

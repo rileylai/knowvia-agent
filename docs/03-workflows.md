@@ -111,6 +111,33 @@ Frontend session switch 先完成 backend load，成功後才替換 active ident
 loop，最多執行 3 次 allowlisted tool calls；不支援 tool calling 的 provider 保留 QA
 fallback。Streaming endpoint 會在同一個 persistence path 上發送 bounded SSE events。
 
+具 structured output capability 的 provider 會先對 current task 產生
+`ContextRequirementDecision`。Mixed Knowledge + Memory decision 會帶 1 至 2 個 bounded
+`contextual_facets`，每個 facet 是一個 atomic context dependency。Backend 先以 current
+substantive task 執行 `search_knowledge`，再將每個 facet `text` 原樣作為一個
+`search_memory` query，並設定 `retrieval_mode=contextual`。所有 retrieval 仍計入最多 3 次
+tool calls；required tools 超過 budget 時 fail closed。純 Knowledge factual question 不強制
+Memory，direct memory-only recall 保留既有 `memory_query` routing，也不強制 Knowledge。
+
+Selector 可使用 bounded conversation history 理解 reference 與 task intent，但 previous
+assistant answer 不具 Knowledge authority，previous assistant 提到的 saved fact 也不取代
+當次 LongTermMemory retrieval。新的 substantive request 即使與前一輪完全相同，也依當次
+需求重新選擇並取得 authority；只有既有 bounded conversational transform 才使用 previous
+answer 作 transformation target。
+
+Selector 同時產生 `conversation_dependency`：self-contained substantive task 使用 `none`，
+reference 需要 preceding turn 才能理解時使用 `required`。Retrieval 完成後，runtime 在
+`none` 時只以 current task、Knowledge evidence 與 saved-memory context 組裝 final provider
+request；`required` 時最多加入同 session 最近一個 completed user/assistant pair，標記為
+`CONVERSATION_REFERENCE_CONTEXT`。Previous conversation 只供 reference interpretation，不是
+Knowledge、Memory、sufficiency 或 citation authority。selector 仍使用完整 bounded history，
+conversation transform 也仍以 previous assistant answer 為 target。Knowledge 是
+enterprise claim 與 citation 的唯一 authority；Memory 只能作 optional personalization
+context。部分或全部 contextual Memory miss 時，只要已接受 Knowledge evidence，final
+provider 仍可產生 Knowledge-only answer；Memory 不得取代缺少的 required Knowledge。
+Malformed selector 或 provider error 不執行未授權的 retrieval。Provider 不具 structured
+output capability 時，保留既有 bounded tool loop。
+
 ## Memory search
 
 ```text
@@ -138,7 +165,7 @@ User explicitly asks to remember something
 ```
 
 第一版只接受 `decision`、`preference` 與 `project_context`。一般對話內容不會
-自動轉成 persistent memory。Agent 可用自然問題搜尋已保存的 personal 或 project
+自動轉成 persistent memory。Agent 可用自然問題搜尋已保存的 personal、company 或 project
 context，不要求 query 包含 `memory`、`remember` 或 `saved`。
 
 ## Session isolation 與 New Chat
