@@ -22,6 +22,7 @@ class LongTermMemorySnapshot:
     status: str
     created_at: datetime
     updated_at: datetime
+    retrieval_text: Optional[str] = None
     score: Optional[float] = None
 
 
@@ -54,6 +55,7 @@ class MemoryRepository:
         owner_id: str,
         memory_type: str,
         content: str,
+        retrieval_text: Optional[str],
         content_normalized: str,
         embedding: List[float],
         embedding_model: str,
@@ -65,6 +67,7 @@ class MemoryRepository:
             owner_id=owner_id,
             memory_type=memory_type,
             content=content,
+            retrieval_text=retrieval_text,
             content_normalized=content_normalized,
             embedding=embedding,
             embedding_model=embedding_model,
@@ -196,6 +199,7 @@ class MemoryRepository:
             status=memory.status,
             created_at=memory.created_at,
             updated_at=memory.updated_at,
+            retrieval_text=memory.retrieval_text or memory.content,
             score=score,
         )
 

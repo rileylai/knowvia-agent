@@ -159,12 +159,14 @@ created_at
 可以保存，但不代表每次都送進 provider。
 
 目前 3.0 backend 已提供 `POST /api/conversations`、`GET /api/conversations`、
-`GET /api/conversations/{session_id}` 與
-`POST /api/conversations/{session_id}/messages`。Message request 使用 current
+`GET /api/conversations/{session_id}`、
+`POST /api/conversations/{session_id}/messages` 與同一 persistence path 的
+`POST /api/conversations/{session_id}/messages/stream`。Message request 使用 current
 question 做主要 Knowledge retrieval query；同一 session 的 bounded history 只供
 follow-up interpretation。Repository 以 `owner_id` 過濾 session 與 message，無權限或
-不存在的 session 以相同的 unavailable error fail closed。QA 仍是 synchronous
-request/response；provider 失敗時可保留 user message，但不寫入 fake assistant message。
+不存在的 session 以相同的 unavailable error fail closed。同步與 SSE request 都由
+backend 保存 canonical assistant message；provider 失敗時可保留 user message，但不
+寫入 fake assistant message。
 
 ## `LongTermMemory`
 
@@ -177,6 +179,7 @@ id
 owner_id
 memory_type: decision | preference | project_context
 content
+retrieval_text: optional derived semantic representation for search
 embedding
 embedding_model
 embedding_dimensions
@@ -187,9 +190,18 @@ created_at
 updated_at
 ```
 
-只有 explicit save 才能建立或更新 memory。第一版 semantic search 使用
-embedding、`owner_id` filter 與 top-k，不加入 automatic consolidation、temporal
-ranking 或 semantic dedup。
+只有 explicit-save authorization 通過後才能建立或更新 memory，也只有在此之後才可產生
+`retrieval_text`。`content` 是使用者授權的原文與 user authority，Memory Inspector 只顯示
+這個欄位。`retrieval_text` 是 bounded、derived 的 semantic retrieval representation；
+embedding 可以使用它，但不能覆寫 `content` 或取得 persistence authority。Canonicalization
+不得新增 fact、改 entity/value 或猜 unknown acronym；產生失敗時回退到 `content`。
+Semantic search 使用 embedding、`owner_id` filter 與 top-k，再交給既有 relevance gate；
+不加入 automatic consolidation、temporal ranking 或 semantic dedup。
+
+下一個 `5.0.3.1` slice 將把目前少量 normalization foundation generalize 為 bounded
+structured semantic canonicalization，並規劃 query-side semantic normalization 只在 no-hit
+或 low-confidence fallback 使用。Direct recall 維持 final best-1，broad recall 維持 bounded
+multi-result；不降低現有 global relevance floors。
 
 ## `Citation`
 

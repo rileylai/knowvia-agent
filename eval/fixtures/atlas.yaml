@@ -1,0 +1,29 @@
+version: 1
+knowledge:
+  - id: atlas-pdf
+    source_kind: pdf
+    source_display_name: Project Atlas Deployment Guide.pdf
+    locator: page 1
+    notion_path: Project Atlas Deployment Guide
+    notion_page_id: atlas-pdf
+    chunk_text: Production database is PostgreSQL. Vector search uses pgvector. Release review happens every Friday.
+    score: 0.94
+  - id: atlas-url
+    source_kind: url
+    source_display_name: Atlas API conventions
+    source_url: https://example.invalid/atlas/api-conventions
+    locator: chunk 1
+    notion_path: Atlas API conventions
+    notion_page_id: atlas-url
+    chunk_text: The Atlas API uses snake_case for request and response field names.
+    score: 0.93
+  - id: atlas-image
+    source_kind: image
+    source_display_name: Atlas architecture screenshot
+    locator: image 1, chunk 1
+    notion_path: Atlas architecture screenshot
+    notion_page_id: atlas-image
+    citation_metadata: '{"image_index": 1, "sequence_index": 0, "original_filename": "atlas-architecture.png"}'
+    chunk_text: The architecture screenshot labels PostgreSQL as the production database.
+    score: 0.92
+

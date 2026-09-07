@@ -221,7 +221,11 @@ class MemorySearchTool(AgentToolAdapter):
         self._memory_service = memory_service
         self._spec = ToolSpec(
             name="search_memory",
-            description="Search the current owner's explicitly saved conversational memory.",
+            description=(
+                "Search the current owner's explicitly saved personal or project memory. "
+                "Use it for natural questions when the answer may have been explicitly saved; "
+                "the query does not need to contain memory or remember keywords."
+            ),
             input_schema=SearchMemoryArguments.model_json_schema(),
         )
 

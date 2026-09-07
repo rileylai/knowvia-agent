@@ -16,6 +16,7 @@ ALLOWED_MEMORY_TYPES = frozenset(
     }
 )
 MAX_MEMORY_CONTENT_CHARS = 2000
+MAX_MEMORY_RETRIEVAL_TEXT_CHARS = 2000
 
 _EXPLICIT_SAVE_PATTERNS = (
     re.compile(r"^\s*(?:記住|請記住|請幫我記住)\s*[,，:：]?\s*(?P<content>.+?)\s*$", re.IGNORECASE),
@@ -28,7 +29,7 @@ _EXPLICIT_SAVE_PATTERNS = (
 _DIRECT_MEMORY_RECALL_PATTERNS = (
     re.compile(r"^\s*(?:你記得)?我的[^?？\n]{1,64}[?？]\s*$", re.IGNORECASE),
     re.compile(
-        r"^\s*what\s+(?:is|'s|are)\s+(?:my|our)\b[^?!.]{1,80}[?!.]\s*$",
+        r"^\s*what\s+(?:is|'s|are)\s+my\b[^?!.]{1,80}[?!.]\s*$",
         re.IGNORECASE,
     ),
     re.compile(r"^\s*what\s+do\s+i\b[^?!.]{1,80}[?!.]\s*$", re.IGNORECASE),
@@ -57,6 +58,10 @@ _BROAD_MEMORY_RECALL_PATTERNS = (
     ),
 )
 
+_SAFE_RETRIEVAL_EXPANSIONS = (
+    (re.compile(r"(?<![A-Za-z0-9])DB(?![A-Za-z0-9])", re.IGNORECASE), "database (DB)"),
+)
+
 
 @dataclass(frozen=True)
 class ExplicitSaveIntent:
@@ -73,6 +78,14 @@ def normalize_memory_content(content: str) -> str:
             f"memory content must be at most {MAX_MEMORY_CONTENT_CHARS} characters"
         )
     return normalized
+
+
+def normalize_memory_retrieval_text(content: str) -> str:
+    """Build a bounded search representation without changing memory authority."""
+    normalized = normalize_memory_content(content)
+    for pattern, replacement in _SAFE_RETRIEVAL_EXPANSIONS:
+        normalized = pattern.sub(replacement, normalized)
+    return normalized[:MAX_MEMORY_RETRIEVAL_TEXT_CHARS]
 
 
 def normalize_memory_duplicate_key(content: str) -> str:

@@ -41,7 +41,7 @@ flowchart LR
 
 | Component | 狀態 | 責任 |
 | --- | --- | --- |
-| Web App | `NEW` | Knowledge Tab、Chat、Memory Inspector、SSE client |
+| Web App | `IMPLEMENTED` | Knowledge Tab、Chat、Memory Inspector、SSE client |
 | FastAPI backend | `EXISTING` | API boundary、auth、dependency wiring |
 | Knowledge APIs | `MODIFY` | 將 source ingestion 與 Notion sync 統一成 Knowledge flow |
 | Source ingestion | `EXISTING` / `MODIFY` | 現有 parser/persist；補 generic chunk/index |
@@ -49,13 +49,13 @@ flowchart LR
 | Knowledge Layer | `MODIFY` | 統一 `KnowledgeSource`、`SourceDocument`、`KnowledgeChunk` |
 | Retrieval Service | `EXISTING` / `MODIFY` | 共用 Notion、PDF、Image、URL 的 pgvector 與 lexical fallback；套用 source eligibility |
 | Conversation State | `EXISTING` | durable session、message、owner isolation 與 short-term context budget |
-| Context Assembly | `MODIFY` | 在 synchronous QA 中組合 bounded conversation context 與 knowledge evidence |
-| Memory Service | `NEW` | explicit save、owner scope、semantic retrieval |
+| Context Assembly | `IMPLEMENTED` | 組合 bounded conversation context、Knowledge evidence 與 saved memory |
+| Memory Service | `IMPLEMENTED` | explicit save、owner scope、semantic retrieval |
 | Bounded Knowledge Agent | `IMPLEMENTED` | 單一 Agent 的有限 tool loop 與 answer generation |
 | MCP Tool Layer | `IMPLEMENTED` | native stdio protocol adapter；重用 allowlisted tool registry，不擁有 business logic |
 | Provider Layer | `EXISTING` / `MODIFY` | Provider Router、LLM 與 embedding adapters |
-| PostgreSQL + pgvector | `EXISTING` | durable records、sessions、messages、chunks、vectors、future memory |
-| SSE | `NEW` | browser streaming transport |
+| PostgreSQL + pgvector | `EXISTING` / `MODIFY` | durable records、sessions、messages、chunks、vectors 與 memory |
+| SSE | `IMPLEMENTED` | browser streaming transport |
 | Redis/RQ | `LEGACY` | Telegram worker；不列入 Knowvia MVP core |
 
 ## Knowledge ingestion
@@ -137,10 +137,10 @@ Context Assembly 分開處理三種資料：
 KnowledgeChunk 與 LongTermMemory 不能共用 retrieval corpus。
 
 3.0 的 current path 仍由 backend 載入同一 session 的 bounded history，將最近 6 則
-messages 與 token budget 傳入 synchronous request。Tool-capable provider 會進入 bounded
-Agent loop；不支援 tool calling 的既有 provider fixture 保留原本 QA fallback。Session、
-message、title、`updated_at` 與 assistant citation metadata 由 backend persistence 管理，
-SSE 仍屬 6.0。
+messages 與 token budget 傳入 request。Tool-capable provider 會進入 bounded Agent loop；
+不支援 tool calling 的既有 provider fixture 保留原本 QA fallback。Session、message、
+title、`updated_at` 與 assistant citation metadata 由 backend persistence 管理。SSE
+使用同一 orchestrator 與 persistence path，不改變 Agent policy。
 
 ## Provider 與 persistence
 

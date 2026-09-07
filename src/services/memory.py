@@ -12,6 +12,7 @@ from src.memory import (
     is_broad_memory_recall_query,
     normalize_memory_content,
     normalize_memory_duplicate_key,
+    normalize_memory_retrieval_text,
 )
 from src.providers import EmbeddingClient, EmbeddingClientError, EmbeddingRequest
 from src.repositories.memory_repository import LongTermMemorySnapshot
@@ -70,6 +71,10 @@ class MemoryService:
         if selected_type not in ALLOWED_MEMORY_TYPES:
             raise MemoryValidationError("memory_type is not supported")
         duplicate_key = normalize_memory_duplicate_key(normalized_content)
+        try:
+            retrieval_text = normalize_memory_retrieval_text(normalized_content)
+        except Exception:
+            retrieval_text = normalized_content
 
         with self._unit_of_work_factory() as unit_of_work:
             existing = unit_of_work.memories.get_exact(
@@ -80,7 +85,7 @@ class MemoryService:
             if existing is not None:
                 return MemorySaveResult(status="already_saved", memory=existing)
 
-        embedding, embedding_model = await self._embed(normalized_content)
+        embedding, embedding_model = await self._embed(retrieval_text)
 
         with self._unit_of_work_factory() as unit_of_work:
             existing = unit_of_work.memories.get_exact(
@@ -94,6 +99,7 @@ class MemoryService:
                 owner_id=normalized_owner_id,
                 memory_type=selected_type,
                 content=normalized_content,
+                retrieval_text=retrieval_text,
                 content_normalized=duplicate_key,
                 embedding=embedding,
                 embedding_model=embedding_model,

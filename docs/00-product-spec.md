@@ -249,11 +249,11 @@ done
 | Notion read、listing、page/full/incremental index | `EXISTING` |
 | PDF、Image/OCR、URL、YouTube、chat text parse/persist | `EXISTING` |
 | Notion-only pgvector QA 與 lexical fallback | `EXISTING` |
-| Generic multi-source chunk/index/retrieval | `MODIFY` |
-| Conversation sessions 與 short-term memory | `NEW` |
-| LongTermMemory 與 explicit save | `NEW` |
-| Bounded Agent loop 與 MCP adapters | `NEW` |
-| SSE 與 Web UI | `NEW` |
+| Generic multi-source chunk/index/retrieval | `IMPLEMENTED`（PDF、URL、Image 與既有 Notion path） |
+| Conversation sessions 與 short-term memory | `IMPLEMENTED` |
+| LongTermMemory 與 explicit save | `IMPLEMENTED` |
+| Bounded Agent loop 與 MCP adapters | `IMPLEMENTED` |
+| SSE 與 Web UI | `IMPLEMENTED` |
 | Telegram、Supplement、Notion write-back、RQ | `LEGACY` |
 
 ## 明確非目標

@@ -107,14 +107,16 @@ session，只有成功確認 list 為空時才建立第一個 session。Active i
 與 token budget 組成 bounded context；current question 仍作為主要 retrieval query。
 QA success 才保存 assistant message。Provider 失敗時不保存 fake assistant message。
 Frontend session switch 先完成 backend load，成功後才替換 active identity 與 messages；
-失敗時保留原本 session、messages 與 URL。Conversation session、bounded Agent loop
-與 SSE 尚未實作。
+失敗時保留原本 session、messages 與 URL。Tool-capable provider 會進入 bounded Agent
+loop，最多執行 3 次 allowlisted tool calls；不支援 tool calling 的 provider 保留 QA
+fallback。Streaming endpoint 會在同一個 persistence path 上發送 bounded SSE events。
 
 ## Memory search
 
 ```text
 search_memory
   -> verify owner_id
+  -> embed natural user query
   -> semantic search LongTermMemory
   -> top-k
   -> label results as saved memory
@@ -129,13 +131,15 @@ Memory 結果不能被引用成 enterprise document citation。
 User explicitly asks to remember something
   -> Agent selects save_memory
   -> backend validates type and owner
-  -> persist LongTermMemory
-  -> embed memory
+  -> build bounded retrieval_text
+  -> embed retrieval_text
+  -> persist original content and retrieval_text
   -> return saved status
 ```
 
 第一版只接受 `decision`、`preference` 與 `project_context`。一般對話內容不會
-自動轉成 persistent memory。
+自動轉成 persistent memory。Agent 可用自然問題搜尋已保存的 personal 或 project
+context，不要求 query 包含 `memory`、`remember` 或 `saved`。
 
 ## Session isolation 與 New Chat
 
@@ -187,6 +191,10 @@ done
 
 執行狀態可呈現 search、context assembly 與 generation 的簡短摘要。不得暴露
 private model chain-of-thought、provider secret 或原始私有內容。
+
+目前 answer delta 是 backend 在 provider 完成完整回答後切出的 bounded Unicode-safe
+chunks，不是 provider-native token streaming。SSE replay、reconnect 與 distributed
+cancellation 不屬於目前 MVP contract。
 
 ## 錯誤與停止
 

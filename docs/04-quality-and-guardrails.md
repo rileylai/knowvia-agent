@@ -95,6 +95,20 @@ backend 驗證 owner、類型、內容長度與 persistence policy。
 Exact duplicate 可以被拒絕或回傳既有 memory。MVP 不做 semantic dedup、
 automatic consolidation、memory graph、importance ranking 或 temporal ranking。
 
+Memory 可另外保存 bounded `retrieval_text` 作為 semantic search representation。它只能在
+explicit-save authorization 通過後產生，不能改寫 user-authoritative `content`，也不能取得
+persistence authority。下一個 representation slice 的 canonicalization 不得新增 fact、改
+entity/value 或猜 unknown acronym；產生失敗時，embedding 回退使用原始 `content`。
+Memory search 可接受自然 user query，不要求 query 包含 `memory`、`remember` 或 `saved`。
+
+Query-side semantic normalization 只作 no-hit 或 low-confidence fallback。Retrieval candidate
+先取 top-k，再套用既有 relevance gate；direct recall 只回傳 final best-1，broad recall 維持
+bounded multi-result。既有 global relevance floors 不因單一案例降低，也不建立大型 hard-coded
+synonym dictionary。English/Chinese cross-language recall 與 unrelated-memory fail-closed
+behavior 是下一個 slice 的 regression contract。
+
+產品原則：`Save strict; recall forgiving.`
+
 ## Session isolation
 
 每個 Chat Window 對應一個 `conversation_session`。Short-term context 只來自
@@ -179,3 +193,21 @@ Runtime log 使用英文；產品文件使用繁體中文。
 測試預設使用 fixtures、injected clients 與 isolated database。Live Notion、
 provider、PostgreSQL 或 Telegram checks 必須明確 opt-in，且不得接觸 production
 資源。
+
+## 7.0 Deterministic Golden Set
+
+`eval/golden_set.yaml` 以 18 個小型 scenario 覆蓋 Knowledge retrieval、grounding、
+citation、conversation、session isolation、explicit memory、authority separation、
+bounded Agent、tool safety、native MCP 與 SSE lifecycle。Runner 使用 scripted provider
+與 in-memory fixtures，不比較完整自然語言答案，也不需要 live LLM 或 private source。
+
+正式 command：
+
+```bash
+uv run --no-env-file --frozen python -m eval.run_agent_eval \
+  --report /tmp/knowvia-eval.json
+```
+
+Core scenario 全部通過才算 regression pass。Report 只包含 scenario id、category、
+bounded check name、結果與失敗原因，不輸出 prompt、raw provider response、source
+chunk 或 embedding。

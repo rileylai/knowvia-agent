@@ -34,6 +34,10 @@ def test_pgvector_migration_upgrades_and_downgrades_fresh_sqlite_db(
         column["name"]
         for column in inspector.get_columns("source_documents")
     }
+    memory_columns = {
+        column["name"]
+        for column in inspector.get_columns("long_term_memories")
+    }
     column_names = {column["name"] for column in inspector.get_columns("knowledge_chunks")}
     knowledge_chunk_indexes = {
         index["name"] for index in inspector.get_indexes("knowledge_chunks")
@@ -46,6 +50,7 @@ def test_pgvector_migration_upgrades_and_downgrades_fresh_sqlite_db(
     assert "embedding_text" in column_names
     assert "file_hash" in source_document_columns
     assert {"requested_url", "final_url"} <= source_document_columns
+    assert "retrieval_text" in memory_columns
     assert notion_page_columns["last_edited_time"]["nullable"] is True
     assert notion_page_columns["parent_notion_page_id"]["nullable"] is True
     assert "ix_notion_pages_parent_notion_page_id" in {
@@ -153,6 +158,55 @@ def test_pgvector_migration_preserves_existing_chunk_rows_and_null_vectors(
     assert row["notion_path"] == "Knowledge/PageA/Intro"
     assert row["embedding_text"] == "[0.1,0.2]"
     assert row["embedding"] is None
+
+
+def test_memory_retrieval_migration_preserves_existing_content_as_fallback(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'memory.db'}"
+    config = _build_alembic_config(database_url=database_url, monkeypatch=monkeypatch)
+
+    command.upgrade(config, "6f7a8b9c0d1e")
+
+    engine = create_engine(database_url)
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO long_term_memories (
+                    id,
+                    owner_id,
+                    memory_type,
+                    content,
+                    content_normalized,
+                    embedding,
+                    embedding_model,
+                    embedding_dimensions
+                ) VALUES (
+                    1,
+                    'owner-a',
+                    'project_context',
+                    'legacy memory',
+                    'legacy memory',
+                    '[0.1]',
+                    'legacy-model',
+                    1
+                )
+                """
+            )
+        )
+
+    command.upgrade(config, "head")
+
+    with engine.connect() as connection:
+        retrieval_text = connection.execute(
+            text(
+                "SELECT retrieval_text FROM long_term_memories WHERE id = 1"
+            )
+        ).scalar_one()
+
+    assert retrieval_text == "legacy memory"
 
 
 def _build_alembic_config(

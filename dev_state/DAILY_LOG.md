@@ -1471,3 +1471,123 @@ broad 判斷也會把它當作 direct recall。
 ### Scope confirmation
 
 Knowledge scroll 只修改 frontend route layout 與 regression test。Explicit save 只修正既有 Agent/tool path 的 trusted explicit-save handling；未修改 API contract、SSE protocol、Knowledge retrieval、citation authority、Memory Inspector contract 或 7.0。
+
+## 2026-09-07 7.0 Evaluation and Demo Hardening
+
+### Focused discovery
+
+- Existing `tests/evals/` contains legacy Notion and step-98/99 evaluation surfaces, but
+  no deterministic runner for the current Agent, Memory, MCP and SSE contracts.
+- Existing Agent runtime, scripted provider tests, native MCP protocol tests, SSE tests,
+  `mock_data/` PDFs, `scripts/preflight.py` and frontend workspace were reusable.
+- Formal browser verification is still a separate gate. This implementation does not
+  use live LLM routing, live URLs, live OCR, private Notion or a production database.
+
+### Implementation
+
+- Added `eval/golden_set.yaml` with 18 scenarios covering Knowledge retrieval,
+  insufficient information, PDF/URL/Image citations, conversation context, session
+  isolation, explicit and non-explicit memory, cross-session recall, authority separation,
+  unknown tools, invalid arguments, max tool calls, native MCP discovery/permission and
+  both SSE lifecycle branches.
+- Added `python -m eval.run_agent_eval`, which reuses the bounded Agent runtime, tool
+  registry, native MCP protocol and deterministic fixture provider. Reports contain only
+  scenario ids, categories, bounded checks and failure reasons.
+- Added a small Atlas fixture containing metadata-level PDF, URL and Image evidence;
+  it does not copy production source text.
+- Added `scripts/demo_preflight.py` for read-only health, readiness, migration, frontend,
+  indexed-source, Agent allowlist and native MCP checks.
+- Updated current-state README, architecture/workflow/quality/deployment docs and the
+  roadmap. The README now separates completed runtime capabilities from deferred
+  YouTube indexing, Notion UX, provider-native streaming and 5.0.3/5.0.4 follow-ups.
+
+### Automated evidence
+
+- 7.0 focused tests: `4 passed`.
+- Deterministic Golden Set: `18/18` scenarios passed, pass rate `1.0`.
+- Report command: `uv run --no-env-file --frozen python -m eval.run_agent_eval`.
+- Demo preflight report builder covers seven required checks and keeps source names and
+  dependency error details out of report detail strings.
+
+### Manual verification
+
+Not yet manually verified. Run the formal browser Demo Story in
+`docs/06-deployment-and-demo.md`, then record the observed result here.
+
+### Roadmap state
+
+- `7.0=manual_verification`.
+- `5.0.3=planned`。
+- `5.0.4=planned`。
+
+### Scope confirmation
+
+本輪未加入新的 Knowledge source、Agent tool、MCP transport、provider-native streaming、
+SSE replay/reconnect、retrieval reranker、automatic memory、cloud deployment 或 frontend
+visual redesign。沒有修改資料庫 schema，也沒有執行 destructive demo reset。
+
+## 2026-09-07 5.0.3 Semantic Memory Recall Hardening
+
+### Focused diagnosis
+
+- `what database do we use?`、`what DB do we use?`、`我們 DB 用什麼？`、`我們公司的 database 是什麼？` 與 `what datastore do we use?` 不符合原本的 deterministic memory query shape。
+- `what is our company size?` 原本會因 `our` 的 broad shape 被誤標為 memory query；本輪將 deterministic shape 收窄到 `my`，project fact 交給 Agent tool selection。
+- Generic query 若 provider 沒有選 `search_memory`，原本 Agent 會直接回到 `INSUFFICIENT_INFO`；這是 routing guidance 缺口，不是 memory permission failure。
+- LongTermMemory 原本只以 `content` 做 embedding，沒有可分開調整的 retrieval representation。Bounded fixture diagnostic 顯示原始 `DB` representation 對 `database` query 得分為 `0.000000`，更新後 representation 得分為 `0.577350`，direct relevance floor 仍為 `0.40`。
+- Bounded fixture 中 unrelated `what frontend framework do we use?` 得分為 `0.000000`，被 relevance gate 拒絕；`what is our company size?` 是否為 negative control 取決於是否存在對應的 explicit saved memory。沒有降低任何 global similarity threshold，也沒有新增 general intent classifier。
+
+### Implementation
+
+- LongTermMemory 新增 nullable `retrieval_text`；既有 rows 由 migration 以 `content` 作為 fallback，新 save 才建立 derived representation。
+- Explicit save 保留原始 `content` 與 owner/type/persistence policy。只做 bounded `DB` → `database (DB)` safety normalization；未知 `PG` 不自行展開。Normalization failure 回退到 `content`。
+- Memory embedding 使用 `retrieval_text`，Memory Inspector/API 仍使用 `content`。Search query 維持自然 user query，owner scope、top-k、relevance gate 與 zero-citation authority boundary 不變。
+- Agent system guidance 與 `search_memory` tool description 明確支援不含 `memory`、`remember` 或 `saved` 的自然 project-memory question。
+
+### Automated evidence
+
+- TDD red：新增 hardening tests 3 failed，分別暴露 missing `retrieval_text`、自然 query no-hit 與 Agent no-tool routing。
+- TDD green：`tests/test_memory_recall_hardening.py` `7 passed`；migration regression `3 passed`；memory/Agent/conversation focused regression `88 passed`。
+- Backend full suite：`822 passed, 5 skipped`。Frontend full suite：`62 passed`。Frontend production build、Python compileall 與 `git diff --check`：PASS。
+- Fresh SQLite migration、existing-memory fallback、owner scope、explicit-save rejection、MCP 與 Golden Set regression 均通過。
+
+### Manual verification
+
+- Browser positive-path verification 已完成：`Remember that our DB uses PostgreSQL.` 可以 explicit save；`What DB do we use?`、`我們公司用什麼 db？` 可透過 saved memory 回答 PostgreSQL；已存在的 company-size memory 也可由 Agent 選擇 saved-memory retrieval 並回答約 1000 人。
+- Memory Inspector 仍顯示 original saved content；`Used saved memory` 與 enterprise Sources authority 維持分離。
+- Final unrelated-memory negative-control browser verification 尚未完成，因此 `5.0.3` 維持 `manual_verification`。
+
+### Roadmap state
+
+- `5.0.3=manual_verification`。
+- `5.0.3.1=planned`。
+- `5.0.4=deferred`。
+- `7.0=manual_verification`。
+
+### Scope confirmation
+
+本輪未加入 automatic memory extraction、structured-output LLM normalization、large synonym dictionary、global threshold 放寬、retrieval reranker、new tool、MCP transport 或 Knowledge/Memory corpus mixing。
+
+## 2026-09-07 Documentation-only roadmap planning sync
+
+### Planning result
+
+- `5.0.3` implementation 已完成，positive browser verification 已確認，僅保留 final unrelated-memory negative-control browser verification；狀態維持 `manual_verification`。
+- 新增 `5.0.3.1 Generalized Semantic Memory Representation=planned`。目標是將 bounded DB/database normalization foundation generalize 為 bounded structured semantic canonicalization，同時保留 explicit-save authority。
+- `5.0.4 Same-Session Conversational Transform Hardening=deferred`。
+- `7.0=manual_verification` 的 final manual Demo 延至 `5.0.3.1` 完成並重新跑 evaluation 後。
+- `2.4 YouTube` 與 `2.5 Notion UX` 維持 `deferred` priority，不阻塞目前 MVP closure。
+
+### New decision
+
+LongTermMemory 的 original `content` 是 user authority。Derived `retrieval_text` 只供
+semantic retrieval 使用，不能取得 persistence authority，且只有 explicit-save authorization
+通過後才可產生。Canonicalization 不得新增 fact、改 entity/value 或猜 unknown acronym；failure
+fallback 到 original `content`。
+
+產品原則：`Save strict; recall forgiving.`
+
+### Scope confirmation
+
+本輪為 documentation-only sync，只修改 roadmap、decision、data contract、quality guardrail
+與 daily log；未開始 `5.0.3.1` implementation，也未修改 runtime、tests、migration、
+dependencies 或 frontend。

@@ -25,7 +25,7 @@ cloud sync。這些是 Future Work。
 
 Compose 仍保留 Redis service 給 legacy queue。現有 API 的 Notion index、PDF、URL 與
 Image/OCR validate/parse/index、source persistence 與 QA 都是 synchronous path；
-YouTube 與 chat text 尚未完成 generic chunk/index pipeline。本地 positive QA baseline
+YouTube 與 chat text 尚未完成 generic chunk/index pipeline。本地正向 QA 與正式 demo
 使用 `mock_data/` 中的 PDF，不需要 Notion discovery 或 page selection。
 
 Knowvia API startup、API preflight 與 core readiness 不建立或要求 Redis/RQ。
@@ -94,26 +94,47 @@ TELEGRAM_*_TIMEOUT_SECONDS
 
 不要把 secrets 寫進文件、fixture、log 或 commit。
 
-## Demo 流程
+## Demo preflight
 
-1. 開啟 Knowledge Tab。
-2. 從 `mock_data/` 選取一份 PDF，或貼上可公開取得的 HTTP/HTTPS article URL。
-3. Backend 完成 validate、parse、normalize、chunk、embedding 與 indexing。
-4. 確認 Knowledge inventory 顯示 indexed source 與 chunk count。
-5. 開啟 Chat 並提出該 source 明確涵蓋的問題。
-6. UI 顯示 grounded answer 與 backend-owned citation。
-7. 對沒有足夠 evidence 的問題回傳 `insufficient_info`，並驗證 invalid source 顯示
-   error。
+執行以下 bounded command。它只讀取 health/readiness、migration、source inventory，
+並透過 native MCP `initialize` 與 `tools/list` 檢查三個 allowlisted tools；不會刪除
+database、Knowledge 或 Memory。
 
-3.0 Conversation Sessions 的 browser flow 另外確認：首次進入 Chat 先顯示
-conversation list loading；list 成功且有 session 時載入最新或 URL 指定的 session；
-list 為空時才建立第一個 `New conversation`。送出第一則問題後 title 使用 user message
-前 48 chars，follow-up 仍在同一 session 內。按 `New Chat` 後應取得新的 backend
-`session_id`，舊 session messages 不會帶入；切換失敗時保留原本內容。Reload 後使用 URL
-中的 `session_id` 還原同一 session。
+```bash
+npm --prefix frontend run build
+uv run --no-env-file --frozen python scripts/demo_preflight.py
+```
 
-如果 SSE 已完成，UI 可顯示 search、source count、memory search、generation、
-answer delta、citations 與 done。不得顯示 private model chain-of-thought。
+Preflight 會檢查 frontend `dist/` build artifact；如果 frontend 或 API 使用不同 host，
+可傳入 `--api-url`、`--frontend-url`；正式 demo
+的 PDF 預設名稱是 `Best Practices for Building AI Agents That Work in Production.pdf`。
+
+## 5 至 10 分鐘 Demo Story
+
+| Step | What I do | Expected screen | What this proves | Fallback |
+| --- | --- | --- | --- | --- |
+| 1 | 開啟 Knowledge Tab，確認 Indexed Sources。 | PDF source 與 chunk count 可見。 | Source inventory 可查。 | 重新整理 Knowledge Tab。 |
+| 2 | 在 Chat 問：`What practices keep an AI agent reliable in production?` | `Searching knowledge...`、progressive answer、`Sources · N`。 | PDF grounding 與 backend citation。 | `What does the article say about deterministic control flow?` |
+| 3 | 在同一個 Chat 問：`Can you summarize that in one sentence?` | 回答沿用同一 session context。 | Short-term conversation context。 | `Give me the main point in one sentence.` |
+| 4 | 明確輸入：`Remember that our API convention is snake_case.` | `Saving memory...` 後顯示 `Memory saved`。 | Explicit persistent memory。 | `Please remember our API convention is snake_case.` |
+| 5 | 按 `New Chat`，問：`What API convention did we save?` | `Used saved memory`，沒有 `Sources`。 | Cross-session memory 與 authority 分離。 | `What do you remember about our API convention?` |
+| 6 | 回到 Knowledge question，問：`Which practices does the indexed PDF describe?` | `Sources · N` 再次出現。 | Saved memory 不冒充 enterprise citation。 | 使用 Step 2 的 backup query。 |
+| 7 | 問：`What is our 2027 acquisition budget?` | `insufficient_info`，zero Sources。 | Evidence 不足時 fail closed。 | `What is our undocumented 2027 acquisition budget?` |
+| 8 | Refresh browser，查看目前 session 與 Memory Inspector。 | conversation、citation disclosure 與 memory indicator 保留。 | Durable state。 | 重新開啟同一個 `session_id`。 |
+| 9 | （Technical appendix）執行 `initialize` 與 `tools/list`。 | 只列出三個 Agent tools。 | Native MCP boundary。 | 使用 deterministic eval report。 |
+
+正式 browser 驗證尚未完成前，roadmap 的 `7.0` 維持 `manual_verification`。
+
+## Browser acceptance checklist
+
+用 desktop 100% zoom 完成 Demo Story，確認以下行為：
+
+- Knowledge grounded answer 會顯示 progressive answer 與 `Sources · N`。
+- same-session follow-up 能使用前一則對話，New Chat 不會帶入舊 short-term context。
+- explicit save 顯示 `Memory saved`，New Chat recall 顯示 `Used saved memory`，且不顯示 document Sources。
+- unsupported enterprise question 顯示 `insufficient_info` 與 zero Sources。
+- refresh 後 conversation、citation disclosure 與 memory indicator 仍存在。
+- Global Navigation、session list、conversation、Knowledge 與 Memory 各自可 scroll，composer 位於 Chat pane 底部。
 
 ## Parser 評估
 

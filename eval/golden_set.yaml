@@ -1,0 +1,300 @@
+version: 1
+scenarios:
+  - id: knowledge-grounded
+    category: knowledge
+    setup:
+      fixture: atlas
+      evidence: pdf
+    user_input: What database does the indexed deployment guide use?
+    expected_behavior: The bounded Agent searches enterprise Knowledge and returns a grounded answer.
+    forbidden_behavior:
+      - no saved-memory lookup
+      - no answer without backend evidence
+    verification:
+      - search_knowledge was selected
+      - a PDF citation is present
+      - saved memory was not used
+    expected_tool: search_knowledge
+    expected_citation_kind: pdf
+    expected_memory_use: false
+
+  - id: knowledge-insufficient
+    category: grounding
+    setup:
+      fixture: atlas
+      evidence: none
+    user_input: What is our 2027 acquisition budget?
+    expected_behavior: The Agent fails closed with insufficient_info and no citations.
+    forbidden_behavior:
+      - no general-model guess
+      - no citation fabricated from another source
+    verification:
+      - insufficient_info is true
+      - citations are empty
+    expected_termination: insufficient_info
+
+  - id: citation-pdf
+    category: citation
+    setup:
+      fixture: atlas
+      evidence: pdf
+    user_input: Which vector search system does the deployment guide name?
+    expected_behavior: The answer carries a backend-owned PDF locator.
+    forbidden_behavior:
+      - no model-authored source locator
+    verification:
+      - citation source_kind is pdf
+      - citation locator is present
+    expected_tool: search_knowledge
+    expected_citation_kind: pdf
+
+  - id: citation-url
+    category: citation
+    setup:
+      fixture: atlas
+      evidence: url
+    user_input: What naming convention does the Atlas API use?
+    expected_behavior: The answer carries a validated URL citation.
+    forbidden_behavior:
+      - no citation without source_url
+    verification:
+      - citation source_kind is url
+      - source_url is present
+    expected_tool: search_knowledge
+    expected_citation_kind: url
+
+  - id: citation-image
+    category: citation
+    setup:
+      fixture: atlas
+      evidence: image
+    user_input: What database is labeled in the architecture screenshot?
+    expected_behavior: The answer carries deterministic image provenance.
+    forbidden_behavior:
+      - no invented OCR region
+    verification:
+      - citation source_kind is image
+      - image locator is present
+      - image provenance metadata is preserved
+    expected_tool: search_knowledge
+    expected_citation_kind: image
+
+  - id: conversation-same-session
+    category: conversation
+    setup:
+      fixture: conversation
+      history:
+        - role: user
+          content: Our release review happens every Friday.
+        - role: assistant
+          content: I will keep Friday as the release review day.
+      new_session: false
+    user_input: Can you summarize that?
+    expected_behavior: Same-session context is available to the bounded follow-up.
+    forbidden_behavior:
+      - no cross-session data is required
+    verification:
+      - prior user and assistant messages are in context
+      - current question is in context
+
+  - id: session-new-chat-isolation
+    category: session_isolation
+    setup:
+      fixture: conversation
+      history: []
+      previous_session_content: Our release review happens every Friday.
+      new_session: true
+    user_input: What did I just tell you?
+    expected_behavior: A new session has no prior short-term context.
+    forbidden_behavior:
+      - no previous-session content appears in context
+    verification:
+      - previous-session content is absent
+      - current question remains available
+
+  - id: memory-explicit-save
+    category: memory
+    setup:
+      fixture: atlas
+      evidence: none
+      explicit_save:
+        memory_type: preference
+        content: Our API convention is snake_case.
+    user_input: Remember that our API convention is snake_case.
+    expected_behavior: An explicit save persists one owner-scoped memory.
+    forbidden_behavior:
+      - no save without explicit authorization
+    verification:
+      - save_memory was selected
+      - memory_saved is true
+      - saved content comes from the classified user request
+    expected_tool: save_memory
+
+  - id: memory-non-explicit-protection
+    category: memory
+    setup:
+      fixture: atlas
+      evidence: none
+      provider_requests_save: true
+    user_input: Our API convention is snake_case.
+    expected_behavior: The backend rejects a provider-requested persistent write without explicit intent.
+    forbidden_behavior:
+      - no memory row is created
+      - no implicit save is accepted
+    verification:
+      - termination is permission_denied
+      - saved memory count remains zero
+    expected_termination: permission_denied
+
+  - id: memory-cross-session-recall
+    category: memory
+    setup:
+      fixture: atlas
+      evidence: none
+      saved_memory:
+        memory_type: preference
+        content: Our API convention is snake_case.
+    user_input: What API convention did we save?
+    expected_behavior: A new session can use explicit saved memory without document citations.
+    forbidden_behavior:
+      - no Knowledge citation is attached
+      - no other owner's memory is visible
+    verification:
+      - search_memory was selected
+      - used_saved_memory is true
+      - citations are empty
+    expected_tool: search_memory
+    expected_memory_use: true
+
+  - id: authority-knowledge-and-memory
+    category: memory_authority
+    setup:
+      fixture: atlas
+      evidence: pdf
+      saved_memory:
+        memory_type: project_context
+        content: The team calls this project Atlas.
+      provider_script: memory_then_knowledge
+    user_input: Use our saved project name and the deployment guide to answer.
+    expected_behavior: Knowledge and saved memory are both used with separate authority markers.
+    forbidden_behavior:
+      - memory must not become a document citation
+      - tool chaining must stay bounded
+    verification:
+      - search_memory and search_knowledge were selected
+      - a PDF citation is present
+      - used_saved_memory is true
+      - tool_calls is at most 3
+    expected_memory_use: true
+    expected_citation_kind: pdf
+    max_tool_calls: 3
+
+  - id: agent-unknown-tool
+    category: agent
+    setup:
+      fixture: atlas
+      evidence: none
+      provider_requests_tool: run_sql
+    user_input: Look up the deployment database.
+    expected_behavior: An unknown provider tool request is rejected safely.
+    forbidden_behavior:
+      - run_sql must not execute
+    verification:
+      - termination is invalid_tool
+      - no tool result is accepted
+    expected_termination: invalid_tool
+
+  - id: tool-invalid-arguments
+    category: tool_safety
+    setup:
+      fixture: atlas
+      evidence: pdf
+      invalid_arguments: true
+    user_input: Look up the deployment database.
+    expected_behavior: Invalid tool arguments fail schema validation before execution.
+    forbidden_behavior:
+      - retriever must not execute the invalid call
+    verification:
+      - termination is invalid_arguments
+      - retrieval call count is zero
+    expected_termination: invalid_arguments
+
+  - id: agent-max-tool-calls
+    category: agent
+    setup:
+      fixture: atlas
+      evidence: none
+      repeated_tool_calls: 4
+    user_input: Keep searching until you find something.
+    expected_behavior: The runtime stops at three tool calls.
+    forbidden_behavior:
+      - fourth tool call must not execute
+    verification:
+      - tool_calls equals 3
+      - termination is max_tool_calls
+    expected_termination: max_tool_calls
+    max_tool_calls: 3
+
+  - id: mcp-discovery
+    category: mcp
+    setup:
+      fixture: atlas
+      evidence: none
+    user_input: initialize and list tools
+    expected_behavior: Native MCP exposes the bounded allowlist.
+    forbidden_behavior:
+      - no unallowlisted tool is advertised
+    verification:
+      - initialize succeeds
+      - tools/list returns exactly three tools
+    mcp_tools:
+      - search_knowledge
+      - search_memory
+      - save_memory
+
+  - id: mcp-unauthorized-save
+    category: mcp
+    setup:
+      fixture: atlas
+      evidence: none
+    user_input: save this memory through MCP without trusted authorization
+    expected_behavior: Native MCP save fails closed without server-side explicit-save context.
+    forbidden_behavior:
+      - client arguments cannot grant persistence permission
+    verification:
+      - tools/call returns permission_denied
+      - memory service is not called
+    expected_termination: permission_denied
+
+  - id: sse-knowledge-lifecycle
+    category: sse
+    setup:
+      fixture: atlas
+      evidence: pdf
+    user_input: Stream the grounded deployment answer.
+    expected_behavior: SSE emits bounded status, progressive answer, citations, and done.
+    forbidden_behavior:
+      - no prompt, raw tool result, or chain-of-thought event
+    verification:
+      - event order is execution_status, answer_delta, citations, done
+      - deltas reconstruct the answer
+    sse_event_types:
+      - execution_status
+      - answer_delta
+      - citations
+      - done
+
+  - id: sse-insufficient-lifecycle
+    category: sse
+    setup:
+      fixture: atlas
+      evidence: none
+    user_input: Stream an unsupported enterprise answer.
+    expected_behavior: SSE completes with insufficient_info and no citations event.
+    forbidden_behavior:
+      - no citations event is emitted
+    verification:
+      - event types contain execution_status and done
+      - event types do not contain citations
+    expected_termination: insufficient_info
+
