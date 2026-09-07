@@ -246,6 +246,7 @@ def test_explicit_save_cross_session_recall_and_authority_boundary() -> None:
             "we decided to use pgvector in production.",
         ),
         ("記住，我偏好 concise answers。", "我偏好什麼？", "我偏好 concise answers。"),
+        ("記住我的公司叫做Knowvia", "我的公司叫什麼？", "我的公司叫做Knowvia"),
     ),
 )
 def test_direct_saved_memory_recall_queries(

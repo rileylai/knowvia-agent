@@ -11,7 +11,7 @@ from src.app.dependencies import get_current_owner_id
 from src.app.main import app
 from src.app.api.routes.conversations import stream_conversation_message
 from src.app.schemas import ConversationMessageRequest
-from src.db.models import ConversationMessage
+from src.db.models import ConversationMessage, LongTermMemory
 
 from test_conversation_api import (
     CapturingProvider,
@@ -162,8 +162,9 @@ def test_streaming_memory_recall_reports_used_memory_without_enterprise_citation
 def test_streaming_explicit_save_reports_save_status_and_safe_metadata() -> None:
     session_factory = _build_session_factory()
     _override_database(session_factory)
+    provider = ExplicitSaveProvider()
     _override_provider(
-        ExplicitSaveProvider(),
+        provider,
         embedding_client=FakeEmbeddingClient(),
     )
     app.dependency_overrides[get_current_owner_id] = lambda: "local"
@@ -177,11 +178,63 @@ def test_streaming_explicit_save_reports_save_status_and_safe_metadata() -> None
         )
 
         events = _events(response)
+        assert any(
+            tool["function"]["name"] == "save_memory"
+            for tool in provider.requests[0].tools or []
+        )
         assert [event["payload"]["phase"] for event in events if event["event_type"] == "execution_status"] == [
             "saving_memory",
         ]
         assert events[-1]["payload"]["memory_saved"] is True
         assert events[-1]["payload"]["used_saved_memory"] is False
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_streaming_explicit_save_uses_backend_intent_for_company_statement() -> None:
+    session_factory = _build_session_factory()
+    provider = ExplicitSaveProvider(
+        memory_type="company",
+        content="provider supplied content",
+    )
+    _override_database(session_factory)
+    _override_provider(provider, embedding_client=FakeEmbeddingClient())
+    app.dependency_overrides[get_current_owner_id] = lambda: "local"
+
+    try:
+        client = TestClient(app)
+        session_id = _create_conversation(client)
+        response = client.post(
+            f"/api/conversations/{session_id}/messages/stream",
+            json={"query": "記住我的公司叫做Knowvia"},
+        )
+
+        events = _events(response)
+        assert any(
+            tool["function"]["name"] == "save_memory"
+            for tool in provider.requests[0].tools or []
+        )
+        assert [event["payload"]["phase"] for event in events if event["event_type"] == "execution_status"] == [
+            "saving_memory",
+        ]
+        assert events[-1]["event_type"] == "done"
+        assert events[-1]["payload"]["memory_saved"] is True
+        assert events[-1]["payload"]["memory_already_saved"] is False
+
+        inspector = client.get("/api/memories")
+        assert inspector.status_code == 200
+        assert [(memory["memory_type"], memory["content"]) for memory in inspector.json()] == [
+            ("project_context", "我的公司叫做Knowvia")
+        ]
+
+        session = session_factory()
+        try:
+            memories = session.query(LongTermMemory).all()
+            assert [(memory.memory_type, memory.content) for memory in memories] == [
+                ("project_context", "我的公司叫做Knowvia")
+            ]
+        finally:
+            session.close()
     finally:
         app.dependency_overrides.clear()
 

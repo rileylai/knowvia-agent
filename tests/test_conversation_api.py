@@ -104,9 +104,17 @@ class ToolCallingProvider(LLMProvider):
 class ExplicitSaveProvider(LLMProvider):
     supports_tool_calling = True
 
-    def __init__(self, *, save: bool = True) -> None:
+    def __init__(
+        self,
+        *,
+        save: bool = True,
+        memory_type: str = "preference",
+        content: str = "I prefer all API responses to use snake_case.",
+    ) -> None:
         self.requests: list[LLMRequest] = []
         self.save = save
+        self.memory_type = memory_type
+        self.content = content
 
     @property
     def name(self) -> str:
@@ -124,8 +132,8 @@ class ExplicitSaveProvider(LLMProvider):
                         id="save-call-1",
                         name="save_memory",
                         arguments={
-                            "memory_type": "preference",
-                            "content": "I prefer all API responses to use snake_case.",
+                            "memory_type": self.memory_type,
+                            "content": self.content,
                         },
                     )
                 ],

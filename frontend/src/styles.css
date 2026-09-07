@@ -1,15 +1,17 @@
 :root {
   font-family: Menlo, "Cascadia Mono", ui-monospace, monospace;
-  color: #1b211e;
+  color: var(--ink);
   background: #e8e7df;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --ink: #1b211e;
+  --ink: #182019;
   --ink-soft: #59605b;
   --paper: #f4f3eb;
   --paper-deep: #e8e7df;
-  --acid: #d8ff43;
-  --line: rgba(27, 33, 30, 0.19);
+  --accent: #a8b39a;
+  --accent-hover: #cbd2c1;
+  --sidebar-hover: rgba(203, 210, 193, 0.1);
+  --line: rgba(24, 32, 25, 0.19);
   --danger: #b52a25;
 }
 
@@ -19,6 +21,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  min-height: 100dvh;
   background:
     linear-gradient(rgba(27, 33, 30, 0.025) 1px, transparent 1px),
     linear-gradient(90deg, rgba(27, 33, 30, 0.025) 1px, transparent 1px),
@@ -32,37 +35,26 @@ button { color: inherit; }
 .app-shell {
   display: grid;
   grid-template-columns: 264px minmax(0, 1fr);
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .sidebar {
-  position: sticky;
-  top: 0;
+  position: static;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
   padding: 28px 22px 22px;
   color: #f6f6ed;
-  background:
-    radial-gradient(circle at 18% 9%, rgba(216, 255, 67, 0.11), transparent 26%),
-    var(--ink);
+  background: var(--ink);
   border-right: 1px solid #080b09;
 }
 
-.brand-lockup { display: flex; align-items: center; gap: 12px; }
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  color: var(--ink);
-  background: var(--acid);
-  border-radius: 50% 50% 48% 44%;
-  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif;
-  font-size: 25px;
-  font-weight: 600;
-  transform: rotate(-7deg);
-}
+.brand-lockup { display: flex; align-items: flex-start; gap: 0; }
 .brand-lockup strong { display: block; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 20px; font-weight: 500; }
 .brand-lockup span { display: block; margin-top: 2px; color: #aeb5af; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
 
@@ -81,9 +73,9 @@ button { color: inherit; }
   transition: color 160ms ease, padding-left 160ms ease, background 160ms ease;
 }
 .nav-item span { font-size: 9px; color: #777f79; }
-.nav-item:hover { color: white; padding-left: 17px; }
-.nav-item--active { color: var(--ink); background: var(--acid); border-top-color: var(--acid); }
-.nav-item--active span { color: #4c551e; }
+.nav-item:hover { color: var(--accent-hover); background: var(--sidebar-hover); padding-left: 17px; }
+.nav-item--active { color: var(--ink); background: var(--accent); border-top-color: var(--accent); }
+.nav-item--active span { color: var(--ink); }
 .nav-item:focus-visible, button:focus-visible, textarea:focus-visible { outline: 3px solid #65b6ff; outline-offset: 3px; }
 
 .sidebar-foot {
@@ -98,7 +90,7 @@ button { color: inherit; }
   text-transform: uppercase;
 }
 
-main { min-width: 0; padding: 0 clamp(28px, 5vw, 78px) 64px; }
+main { display: flex; flex-direction: column; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: hidden; padding: 0 clamp(28px, 5vw, 78px) 64px; }
 .top-rule {
   display: flex;
   justify-content: space-between;
@@ -111,24 +103,24 @@ main { min-width: 0; padding: 0 clamp(28px, 5vw, 78px) 64px; }
 }
 
 .surface { max-width: 1030px; margin: 0 auto; animation: surface-in 380ms cubic-bezier(.2,.8,.2,1) both; }
-.chat-layout { display: grid; grid-template-columns: 218px minmax(0, 1fr); gap: clamp(24px, 4vw, 58px); max-width: 1280px; margin: 0 auto; }
-.conversation-panel { position: sticky; top: 0; display: flex; flex-direction: column; min-width: 0; height: calc(100vh - 64px); max-height: 820px; padding: 46px 0 18px; border-right: 1px solid var(--line); }
+.chat-layout { display: grid; grid-template-columns: 218px minmax(0, 1fr); flex: 1 1 auto; min-width: 0; min-height: 0; overflow: hidden; gap: clamp(24px, 4vw, 58px); max-width: 1280px; width: 100%; margin: 0 auto; }
+.conversation-panel { position: static; display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; max-height: none; overflow: hidden; padding: 46px 0 18px; border-right: 1px solid var(--line); }
 .conversation-panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .conversation-panel-kicker { color: #68705a; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; }
 .conversation-panel h2 { margin: 7px 0 21px; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 25px; font-weight: 500; }
 .conversation-close { display: none; padding: 0; color: var(--ink-soft); background: transparent; border: 0; font-size: 25px; line-height: 1; cursor: pointer; }
 .new-chat-button { display: flex; align-items: center; justify-content: space-between; width: calc(100% - 18px); padding: 11px 12px; color: white; background: var(--ink); border: 1px solid var(--ink); cursor: pointer; }
-.new-chat-button:not(:disabled):hover { color: var(--ink); background: var(--acid); }
+.new-chat-button:not(:disabled):hover { color: var(--ink); background: var(--accent); }
 .new-chat-button:disabled { color: #7e847f; background: #d8d8d0; border-color: #c8c8c0; cursor: not-allowed; }
-.conversation-list { min-height: 0; margin-top: 22px; padding-right: 18px; overflow-y: auto; }
+.conversation-list { flex: 1 1 auto; min-height: 0; margin-top: 22px; padding-right: 18px; overflow-y: auto; }
 .conversation-list-items { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
 .conversation-item { display: grid; gap: 6px; width: 100%; padding: 12px 10px; color: var(--ink-soft); text-align: left; background: transparent; border: 0; border-top: 1px solid var(--line); cursor: pointer; }
-.conversation-item:hover:not(:disabled) { color: var(--ink); background: rgba(216, 255, 67, 0.18); }
+.conversation-item:hover:not(:disabled) { color: var(--ink); background: rgba(203, 210, 193, 0.24); }
 .conversation-item:disabled { cursor: default; }
 .conversation-item strong { overflow: hidden; color: inherit; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 16px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
 .conversation-item span { overflow: hidden; color: #858b85; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
-.conversation-item--active { color: var(--ink); background: var(--acid); border-top-color: var(--ink); }
-.conversation-item--active span { color: #4c551e; }
+.conversation-item--active { color: var(--ink); background: var(--accent); border-top-color: var(--ink); }
+.conversation-item--active span { color: var(--ink); }
 .conversation-empty { color: var(--ink-soft); font-size: 10px; line-height: 1.5; }
 .conversation-skeleton { display: grid; gap: 8px; padding-top: 5px; }
 .conversation-skeleton span { display: block; width: 100%; height: 36px; background: linear-gradient(90deg, rgba(27, 33, 30, 0.08), rgba(27, 33, 30, 0.02), rgba(27, 33, 30, 0.08)); background-size: 200% 100%; animation: skeleton-shimmer 1.2s linear infinite; }
@@ -140,11 +132,26 @@ main { min-width: 0; padding: 0 clamp(28px, 5vw, 78px) 64px; }
 .conversation-inline-error button:disabled { opacity: 0.55; cursor: not-allowed; }
 .drawer-backdrop { display: none; }
 .chat-header-actions { display: flex; align-items: flex-end; gap: 16px; }
-.chat-menu-button { display: none; padding: 9px 10px; color: var(--ink); background: var(--acid); border: 1px solid var(--ink); cursor: pointer; font-size: 9px; text-transform: uppercase; }
+.chat-menu-button { display: none; padding: 9px 10px; color: var(--ink); background: var(--accent); border: 1px solid var(--ink); cursor: pointer; font-size: 9px; text-transform: uppercase; }
 .chat-menu-button:disabled { opacity: 0.5; cursor: not-allowed; }
 .current-session-label { margin: 14px 0 0; color: var(--ink-soft); font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; }
 .surface--chat { padding-top: clamp(56px, 9vh, 108px); }
-.surface--quiet { max-width: 840px; padding-top: clamp(70px, 13vh, 150px); }
+.chat-pane { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; min-height: 0; height: 100%; overflow: hidden; }
+.chat-pane--active { padding-top: clamp(24px, 4vh, 48px); }
+.surface--quiet {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: 840px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-top: clamp(70px, 13vh, 150px);
+  padding-bottom: 64px;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
 .section-kicker { margin-bottom: 18px; color: #68705a; font-size: 10px; letter-spacing: 0.13em; text-transform: uppercase; }
 h1, h2, p { margin-top: 0; }
 h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: clamp(52px, 7vw, 94px); font-weight: 400; line-height: 0.94; letter-spacing: -0.055em; }
@@ -152,6 +159,11 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 
 .chat-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 36px; }
 .chat-header h1 { max-width: 760px; }
+.chat-header--compact { align-items: center; gap: 24px; }
+.chat-header--compact h1 { font-size: clamp(30px, 3.5vw, 50px); line-height: 1; letter-spacing: -0.04em; }
+.chat-header--compact .section-kicker { margin-bottom: 8px; }
+.chat-header--compact .current-session-label { margin-top: 8px; }
+.chat-header--compact .runtime-badge { padding-bottom: 0; }
 .runtime-badge {
   display: flex;
   align-items: center;
@@ -163,7 +175,7 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.runtime-badge span, .status-light { width: 8px; height: 8px; background: #8ab425; border-radius: 50%; box-shadow: 0 0 0 4px rgba(138, 180, 37, 0.13); }
+.runtime-badge span, .status-light { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 0 4px rgba(168, 179, 154, 0.2); }
 
 .ask-form {
   margin-top: 54px;
@@ -176,8 +188,11 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 .ask-form textarea {
   display: block;
   width: 100%;
-  min-height: 116px;
-  resize: vertical;
+  min-height: 68px;
+  max-height: 156px;
+  height: auto;
+  overflow-y: hidden;
+  resize: none;
   padding: 8px 0;
   color: var(--ink);
   background: transparent;
@@ -185,7 +200,7 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
   border-bottom: 1px solid var(--line);
   border-radius: 0;
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif;
-  font-size: clamp(22px, 2.6vw, 32px);
+  font-size: clamp(16px, 1.5vw, 20px);
   line-height: 1.28;
 }
 .ask-form textarea::placeholder { color: #9b9e96; }
@@ -206,10 +221,34 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
   cursor: pointer;
   transition: transform 140ms ease, box-shadow 140ms ease;
 }
-.form-footer button:not(:disabled):hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--acid); }
+.form-footer button:not(:disabled):hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--accent); }
 .form-footer button:disabled { color: #7e847f; background: #d8d8d0; border-color: #c8c8c0; cursor: not-allowed; }
 
-.result-region { margin-top: 34px; min-height: 180px; }
+.conversation-scroll,
+.chat-history { flex: 1 1 auto; min-width: 0; min-height: 0; margin: 0; padding: 0 4px 24px 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.conversation-scroll .result-region { min-height: 180px; margin-top: clamp(24px, 4vh, 44px); }
+.chat-pane--active .conversation-scroll .result-region { margin-top: 24px; }
+.chat-pane > .ask-form {
+  flex: 0 0 auto;
+  margin-top: 14px;
+  padding: 10px 12px 8px;
+  border-color: var(--line);
+  box-shadow: none;
+}
+.chat-pane > .ask-form label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.chat-pane > .ask-form .form-footer { gap: 12px; padding-top: 8px; }
+.chat-pane > .ask-form .form-footer p { min-width: 0; overflow: hidden; color: var(--ink-soft); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.chat-pane > .ask-form .form-footer button { min-width: 112px; gap: 8px; padding: 8px 10px; font-size: 9px; }
 .conversation-messages { display: grid; gap: 13px; margin: 0; padding: 0; list-style: none; }
 .conversation-message { max-width: 86%; padding: 17px 19px; background: var(--paper); border: 1px solid var(--line); }
 .conversation-message--user { justify-self: end; background: var(--ink); border-color: var(--ink); color: #f6f6ed; }
@@ -221,14 +260,14 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 .stream-status { margin: 0 0 14px; color: var(--ink-soft); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
 .stream-status--compact { padding-bottom: 9px; border-bottom: 1px solid var(--line); }
 .stream-incomplete { margin-top: 15px; padding-top: 12px; color: var(--danger); border-top: 1px solid rgba(155, 74, 70, 0.35); font-size: 10px; line-height: 1.45; }
-.saved-memory-indicator { display: inline-block; margin-top: 13px; padding: 6px 8px; color: #4c551e; background: rgba(216, 255, 67, 0.35); border: 1px solid rgba(76, 85, 30, 0.35); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
+.saved-memory-indicator { display: inline-block; margin-top: 13px; padding: 6px 8px; color: var(--ink); background: rgba(168, 179, 154, 0.35); border: 1px solid rgba(24, 32, 25, 0.35); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
 .idle-state { display: flex; align-items: center; justify-content: center; gap: 18px; min-height: 150px; color: #777d78; border: 1px dashed rgba(27, 33, 30, 0.24); }
 .idle-state p { max-width: 330px; margin: 0; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 18px; }
 .idle-mark { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid currentColor; border-radius: 50%; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; }
 .loading-state, .error-state { display: flex; align-items: center; gap: 20px; min-height: 122px; padding: 24px; background: rgba(244, 243, 235, 0.68); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
 .loading-state strong, .error-state strong { display: block; margin-bottom: 7px; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 23px; font-weight: 500; }
 .loading-state p, .error-state p { margin: 0; color: var(--ink-soft); font-size: 11px; }
-.loading-orbit { width: 34px; height: 34px; border: 1px solid var(--ink); border-top-color: var(--acid); border-radius: 50%; animation: spin 800ms linear infinite; }
+.loading-orbit { width: 34px; height: 34px; border: 1px solid var(--ink); border-top-color: var(--accent); border-radius: 50%; animation: spin 800ms linear infinite; }
 .error-state { color: var(--danger); border-top-color: var(--danger); }
 .error-state > span { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; border: 1px solid currentColor; border-radius: 50%; font-weight: 500; }
 .error-state p { color: #6c413e; }
@@ -240,11 +279,11 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 .answer-label-row > span { color: #888d88; font-size: 9px; text-transform: uppercase; }
 .answer-copy { max-width: 780px; margin: 31px 0 0; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: clamp(23px, 3vw, 34px); line-height: 1.38; }
 .insufficient-note { margin: 28px 0 0; padding: 12px 14px; color: #725711; background: #fff3c8; border-left: 3px solid #b58118; font-size: 10px; line-height: 1.55; }
-.memory-operation-status { margin: 22px 0 0; padding: 10px 12px; color: #4c551e; background: rgba(216, 255, 67, 0.3); border-left: 3px solid var(--acid); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+.memory-operation-status { margin: 22px 0 0; padding: 10px 12px; color: var(--ink); background: rgba(168, 179, 154, 0.3); border-left: 3px solid var(--accent); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
 .citations { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
 .citation-summary { color: var(--ink-soft); cursor: pointer; font-size: 9px; letter-spacing: 0.12em; list-style: none; text-transform: uppercase; }
 .citation-summary::-webkit-details-marker { display: none; }
-.citation-summary::before { content: "+"; display: inline-block; width: 16px; color: var(--acid); font-size: 13px; letter-spacing: 0; }
+.citation-summary::before { content: "+"; display: inline-block; width: 16px; color: var(--accent); font-size: 13px; letter-spacing: 0; }
 .citations[open] .citation-summary::before { content: "−"; }
 .citations ol { display: grid; gap: 0; margin: 15px 0 0; padding: 0; list-style: none; }
 .citations li { display: grid; grid-template-columns: 45px 1fr; gap: 12px; padding: 16px 0; border-top: 1px solid var(--line); }
@@ -254,7 +293,7 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 .citation-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; color: #757b76; font-size: 9px; }
 .citation-meta code { overflow-wrap: anywhere; font: inherit; }
 
-.capability-card { padding: clamp(25px, 4vw, 42px); background: var(--paper); border: 1px solid var(--ink); box-shadow: 10px 10px 0 var(--acid); }
+.capability-card { padding: clamp(25px, 4vw, 42px); background: var(--paper); border: 1px solid var(--ink); box-shadow: 10px 10px 0 var(--accent); }
 .capability-status { display: flex; align-items: center; gap: 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
 .capability-card > p { max-width: 650px; margin: 28px 0; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: 22px; line-height: 1.45; color: #4e5550; }
 .capability-card > .source-format-note { margin: -12px 0 24px; color: var(--ink-soft); font-family: inherit; font-size: 9px; letter-spacing: 0.08em; line-height: 1.6; text-transform: uppercase; }
@@ -275,7 +314,7 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 .url-control { display: flex; align-items: flex-end; gap: 8px; flex: 1; }
 .url-control label { color: var(--ink-soft); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
 .url-control input { min-width: 0; flex: 1; padding: 11px 12px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); font: inherit; }
-.url-control input:focus { outline: 2px solid var(--acid); outline-offset: 1px; }
+.url-control input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .citation-meta a { color: inherit; overflow-wrap: anywhere; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .source-result { margin-top: 22px; }
@@ -299,7 +338,7 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 .inventory-empty { margin: 0; padding: 18px 0; color: var(--ink-soft); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
 
 .memory-placeholder { display: grid; grid-template-columns: auto 1fr; gap: clamp(24px, 5vw, 64px); align-items: center; margin-top: 62px; padding: 34px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
-.memory-placeholder > span { color: var(--acid); font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: clamp(80px, 12vw, 150px); line-height: 0.8; -webkit-text-stroke: 1px var(--ink); }
+.memory-placeholder > span { color: var(--accent); font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: clamp(80px, 12vw, 150px); line-height: 0.8; -webkit-text-stroke: 1px var(--ink); }
 .memory-placeholder p { margin-bottom: 12px; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; font-size: clamp(22px, 3vw, 32px); line-height: 1.25; }
 .memory-placeholder small { color: var(--ink-soft); font-size: 10px; line-height: 1.6; }
 .memory-inspector { margin-top: 54px; }
@@ -322,18 +361,20 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
 @keyframes skeleton-shimmer { to { background-position: -200% 0; } }
 
 @media (max-width: 760px) {
-  .app-shell { grid-template-columns: 1fr; }
-  .sidebar { position: static; min-height: auto; padding: 18px 18px 0; }
+  .app-shell { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+  .sidebar { position: static; height: auto; min-height: 0; padding: 18px 18px 0; }
   .brand-lockup { margin-bottom: 18px; }
   .sidebar nav { grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 0; }
   .nav-item { grid-template-columns: 1fr; gap: 4px; padding: 12px 9px; border: 0; border-left: 1px solid rgba(255, 255, 255, 0.13); }
   .nav-item:hover { padding-left: 9px; }
   .sidebar-foot { display: none; }
   main { padding: 0 18px 42px; }
+  main.main--chat { padding-bottom: 0; }
   .top-rule span:first-child { display: none; }
   .top-rule { justify-content: flex-end; }
   .surface--chat, .surface--quiet { padding-top: 48px; }
-  .chat-layout { display: block; }
+  .surface--chat { padding-top: 20px; }
+  .chat-layout { display: flex; flex-direction: column; }
   .conversation-panel { position: fixed; z-index: 20; top: 0; left: 0; width: min(86vw, 320px); height: 100vh; max-height: none; padding: 26px 18px; background: var(--paper); border-right: 1px solid var(--ink); box-shadow: 18px 0 45px rgba(27, 33, 30, 0.16); transform: translateX(-105%); transition: transform 180ms ease; }
   .conversation-panel--open { transform: translateX(0); }
   .conversation-panel-header { padding-bottom: 4px; }
@@ -341,12 +382,20 @@ h1 { margin-bottom: 0; font-family: "Iowan Old Style", "Palatino Linotype", Pala
   .conversation-list { padding-right: 0; }
   .drawer-backdrop { position: fixed; z-index: 19; inset: 0; display: block; width: 100%; height: 100%; padding: 0; background: rgba(27, 33, 30, 0.45); border: 0; cursor: pointer; }
   .chat-menu-button { display: block; }
-  .chat-header-actions { align-items: center; justify-content: space-between; margin-top: 22px; }
+  .chat-header-actions { align-items: center; justify-content: space-between; margin-top: 14px; }
   .chat-header { display: block; }
-  .runtime-badge { margin-top: 22px; }
-  .ask-form { margin-top: 32px; padding: 15px; box-shadow: 5px 5px 0 rgba(27, 33, 30, 0.1); }
-  .form-footer { align-items: stretch; flex-direction: column; }
-  .form-footer button { width: 100%; }
+  .runtime-badge { margin-top: 14px; }
+  .chat-pane .section-kicker { margin-bottom: 12px; }
+  .chat-pane .current-session-label { margin-top: 10px; }
+  .chat-header-actions { margin-top: 10px; }
+  .runtime-badge { margin-top: 10px; }
+  .chat-header--compact h1 { font-size: clamp(30px, 10vw, 42px); }
+  .chat-history { margin-top: 12px; padding-bottom: 16px; }
+  .chat-pane > .ask-form { margin-top: 8px; padding: 8px 10px 7px; box-shadow: none; }
+  .chat-pane > .ask-form textarea { min-height: 68px; max-height: 156px; font-size: 18px; }
+  .chat-pane > .ask-form .form-footer { align-items: center; flex-direction: row; gap: 8px; padding-top: 6px; }
+  .chat-pane > .ask-form .form-footer p { font-size: 7px; }
+  .chat-pane > .ask-form .form-footer button { width: auto; min-width: 104px; padding: 7px 9px; }
   .source-controls { flex-direction: column; }
   .source-controls button { width: 100%; }
   .url-control { align-items: stretch; flex-direction: column; }

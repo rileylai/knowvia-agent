@@ -1383,3 +1383,91 @@ broad 判斷也會把它當作 direct recall。
 ### Scope confirmation
 
 本輪未開始 5.0.3、5.0.4 或 7.0。未加入 provider-native token streaming、WebSocket、GraphQL subscription、new Agent tools、MCP over SSE、retrieval architecture changes、automatic memory、conversation summarization、distributed queue 或 SSE replay／resume。
+
+## 2026-09-07 6.0.2 Independent Chat Pane Scrolling and Bottom Composer UX
+
+### Focused discovery
+
+- 原本 Chat DOM 順序是 `header → ask-form → result-region`，`.chat-layout` 沒有 bounded height，因此長對話會撐高整個 document，composer 也會跟著 page flow 移動。
+- Follow-up 檢查確認 `app-shell` 與 `main` 沒有 `overflow:hidden` ownership；desktop `.sidebar` 使用 `sticky + min-height`，會跟著被長 content 撐高的 grid row 參與 page flow；`.conversation-panel` 也沒有把 pane overflow 封裝起來。這使 body/page 成為實際 root scroll owner，session pane 與 Chat pane 可能互相帶動。
+- Target ownership 為 app shell / main bounded viewport、Global Navigation full-height no-scroll、session pane hidden overflow + `.conversation-list` scroll、Chat pane hidden overflow + `.chat-history` scroll；mobile drawer 仍保留 fixed overlay。
+- Browser 100% zoom follow-up 顯示右側仍有 viewport allocation 問題：hero 在 history 之外且過高，4-row composer 也壓縮 message area，導致 cursor 放在 hero 時不能捲動 conversation。
+
+### Implementation
+
+- Chat pane 改為 bounded flex column。`chat-history` 使用 `flex: 1`、`min-height: 0` 與 `overflow-y: auto`；composer 放在 history 之後並維持 normal flow，不使用 viewport-level fixed positioning。
+- App shell、`main`、`.chat-layout`、`.conversation-panel` 與 `.chat-pane` 補上 bounded height、`min-height: 0` 與 overflow ownership；`.conversation-list` 補上 flex growth，確保 session list 是唯一的 session pane vertical scroll container。
+- Hero header 移入 `.conversation-scroll`，讓 hero、message、citation 共用右側 scroll owner；有 conversation content 時使用 compact header，empty conversation 保留較大的 hero。
+- Composer 改為 `rows=2`，依文字內容 auto-grow，最大高度 156px，超過後由 textarea 自己 vertical scroll；保留原有 submit、IME 與 active-run 行為。
+- Visual token 收斂為 `--ink: #182019`、`--accent: #a8b39a` 與 `--accent-hover: #cbd2c1`；sidebar 改為 solid background，移除 neon gradient、圓形旋轉 `K` icon 與 fluorescent selected state。
+- Chat composer 改為低密度 inline form，隱藏視覺 label、縮短 metadata、縮小 action button、移除 card shadow；placeholder 使用較小字級。
+- 新增 near-bottom 判斷。使用者距離 history 底部 80px 內時，新的 message 或 streamed delta 會跟隨到底部；使用者往上閱讀後保留目前 scroll position。
+- Desktop 保留 conversation sidebar。Mobile 保留 drawer，並在窄 viewport 收斂既有 Chat header、composer spacing 與 textarea 高度，確保 composer 與最後一則 message 不互相遮住。
+- 保留 SSE progressive rendering、execution status、Sources disclosure、Used saved memory、Enter / Shift+Enter、IME safety、active-run disable、session switching、New Chat 與 AbortController behavior。
+
+### Automated evidence
+
+- 新增 `ChatLayout.test.tsx`：app shell / Global Navigation / session list / Chat history scroll ownership、hero state、hero scroll ownership、bounded composer visual sizing / auto-grow、restrained sidebar token 與 text-only brand、near-bottom auto-follow、上讀保留位置與 mobile drawer interaction：`6 passed`。
+- Frontend full suite：`60 passed`。
+- Frontend production build 與 `git diff --check`：PASS。
+- Existing React `ConversationSidebar` list key warning 仍存在，但未造成測試失敗。
+
+### Manual verification
+
+- Local browser structural probe：mobile viewport 的 document 沒有額外 page overflow，conversation scroll area 有獨立 scroll range，composer 為 normal flow 並與 Chat pane bottom 對齊；fresh load 後最後 assistant message 在 history 可見範圍內。
+- 2026-09-07 browser manual verification PASS（desktop 100% zoom）：Global Navigation 固定 full-height；Conversation session list 與 Chat conversation 可獨立 scroll；compact bottom composer 保持在 Chat pane 底部；不需要 browser zoom out。
+- Knowledge 與 Memory 在 desktop 100% zoom 可正常向下 scroll，沒有被 app shell 裁掉。
+
+### Roadmap state
+
+- `6.0=done`。
+- `6.0.1=done`。
+- `6.0.2=done`。
+- `7.0=planned`。
+
+### Scope confirmation
+
+本輪只修改 frontend Chat layout、scroll follow behavior 與 frontend regression tests。未修改 SSE、Agent、Memory、Knowledge、backend contract 或 7.0 evaluation work。
+
+## 2026-09-07 6.0.2 Knowledge Scroll and 6.0.3 Explicit Save Streaming Regression
+
+### Focused discovery
+
+- Knowledge 與 Memory route 共用 `main` 的 bounded hidden overflow，但 `.surface--quiet` 原本只是一般 block，沒有 `height`、`min-height` 與 vertical scroll ownership。`main` 因而在 100% browser zoom 裁掉後續 Indexed Sources，body 也不能接手 scroll。
+- Knowledge source records 仍由 `/api/knowledge/sources` 回傳，資料沒有消失。Memory Inspector 使用同一個 route surface pattern，因此一併納入 regression。
+- Exact request `記住我的公司叫做Knowvia` 會被 `detect_explicit_save_intent` 分類為 `project_context`。Agent 已選取 `save_memory`，orchestrator 也已傳入 trusted `explicit_save_allowed`、content 與 memory type。
+- 失敗發生在 `MemorySaveTool`：provider 傳入合法但不同的 `memory_type=preference`，tool 回傳 `permission_denied`。Agent termination reason 是 `permission_denied`，workflow failure reason 是 `AUTHORIZATION_FAILED`，orchestrator 再包成 `AGENT_RUNTIME_FAILED`，SSE 只送出 `saving_memory` 後的 `error`。`MemoryService`、embedding、persistence 與 final `done` 尚未被執行。
+
+### Implementation
+
+- `.surface--quiet` 現在是 `flex: 1`、`height: 100%`、`min-height: 0`、`overflow-y: auto` 的 route scroll container；Knowledge 與 Memory 都留在 bounded app shell 內，Global Navigation 不受影響。
+- 新增 Knowledge long inventory regression，確認最後一筆 source 仍存在於 route scroll owner；Memory route 同步檢查相同的 computed layout contract。
+- `MemorySaveTool` 保留 provider tool argument schema validation，但 persistence 只使用 trusted explicit-save content/type。provider 的分類誤差不再阻斷原始明確請求，owner、authorization、embedding、duplicate 與 persistence policy 沒有放寬。
+- 新增 exact company statement 的 streaming regression 與 cross-session recall case。普通陳述仍拒絕 save，duplicate 仍回 `already_saved`。
+
+### Automated evidence
+
+- TDD red reproduction：Knowledge route test 的 `.surface--quiet` `flexGrow` 為空；exact save streaming test 在 `saving_memory` 後收到 `error`，且沒有 memory row。
+- TDD green：Knowledge route scroll owner、最後一筆 source、Memory route regression：`7 passed` focused frontend layout tests。
+- Explicit save streaming、MemoryService、Agent runtime、Knowledge/citation/SSE focused backend tests：PASS。
+- Backend suite excluding `tests/test_native_mcp_protocol.py`：`799 passed, 5 skipped`。
+- Native MCP targeted regression 使用 repository `.venv`：`tests/test_native_mcp_protocol.py`，`10 passed`。涵蓋 `initialize`、3 個 allowlisted tools、knowledge / memory calls、unauthorized direct save、owner / explicit-save spoof rejection 與 trusted server-side authorized save。
+- Frontend full suite：`62 passed`。production build 與 `git diff --check`：PASS。
+- 未加入 debug instrumentation，沒有留下 `[DEBUG-...]` log。
+
+### Manual verification
+
+- 2026-09-07 browser manual verification PASS（desktop 100% zoom）：workspace independent scrolling 已確認；Global Navigation full-height；Conversation session list 與 Chat conversation 可獨立 scroll；Knowledge / Memory 可向下 scroll；compact bottom composer 保持在 Chat pane 底部；不需要 browser zoom out。
+- Explicit save 已確認：`記住我的公司叫做Knowvia` → `Saving memory…` → `Memory saved`。
+- Memory Inspector 可看到 persisted memory；New Chat 的 `我的公司叫什麼？` 正確回答 `Knowvia`，顯示 `Used saved memory`，且沒有冒充 enterprise Sources。
+- Duplicate save 行為正常；普通陳述不會自動建立 `LongTermMemory`。
+
+### Roadmap state
+
+- `6.0.2=done`。
+- `6.0.3=done`。
+- `7.0=planned`。
+
+### Scope confirmation
+
+Knowledge scroll 只修改 frontend route layout 與 regression test。Explicit save 只修正既有 Agent/tool path 的 trusted explicit-save handling；未修改 API contract、SSE protocol、Knowledge retrieval、citation authority、Memory Inspector contract 或 7.0。

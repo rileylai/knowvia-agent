@@ -394,17 +394,33 @@ class BoundedAgentRuntime:
         phase = phase_by_tool.get(tool_call.name)
         if phase is not None:
             emit_execution_status(event_sink, phase=phase)  # type: ignore[arg-type]
+        execution_arguments = tool_call.arguments
+        if (
+            tool_call.name == "save_memory"
+            and state.explicit_save_allowed
+            and isinstance(metadata.get("explicit_save_content"), str)
+            and isinstance(metadata.get("explicit_save_memory_type"), str)
+        ):
+            # The backend has already classified and authorized the explicit
+            # request. Keep the provider's tool selection, but use the
+            # trusted arguments so provider classification drift cannot block
+            # the save before MemoryService is reached.
+            execution_arguments = {
+                "memory_type": metadata["explicit_save_memory_type"],
+                "content": metadata["explicit_save_content"],
+            }
         try:
+            tool_context = ToolContext(
+                workflow_id=workflow_id,
+                actor="bounded_agent",
+                owner_id=state.owner_id,
+                metadata=metadata,
+            )
             result = await asyncio.wait_for(
                 self.tool_registry.call_tool(
                     tool_call.name,
-                    context=ToolContext(
-                        workflow_id=workflow_id,
-                        actor="bounded_agent",
-                        owner_id=state.owner_id,
-                        metadata=metadata,
-                    ),
-                    arguments=tool_call.arguments,
+                    context=tool_context,
+                    arguments=execution_arguments,
                 ),
                 timeout=self.tool_timeout_seconds,
             )

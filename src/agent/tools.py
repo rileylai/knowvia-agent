@@ -350,11 +350,9 @@ class MemorySaveTool(AgentToolAdapter):
                 "permission_denied",
                 "Memory save requires an explicit user request.",
             )
-        if parsed.memory_type != explicit_type.strip().lower():
-            return ToolResult.failure(
-                "permission_denied",
-                "The requested memory type does not match the explicit user request.",
-            )
+        # The orchestrator's explicit-save intent is trusted. The provider's
+        # valid tool arguments select the tool shape, but cannot override the
+        # backend-classified type or original user content.
         try:
             result = await self._memory_service.save_memory(
                 owner_id=owner_id,

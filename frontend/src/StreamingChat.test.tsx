@@ -139,6 +139,32 @@ describe("streaming Chat UX", () => {
     expect(screen.queryByText("Run 0")).not.toBeInTheDocument();
   });
 
+  it("renders explicit-save completion from the streaming done payload", async () => {
+    installFetch(() => streamResponse([
+      streamFrame("execution_status", 1, { phase: "saving_memory" }),
+      streamFrame("answer_delta", 2, { text: "已儲存記憶" }),
+      streamFrame("done", 3, {
+        message_id: 22,
+        session_id: 1,
+        title: "記住我的公司叫做Knowvia",
+        updated_at: "2026-09-07T09:04:00Z",
+        workflow_run_id: 79,
+        insufficient_info: false,
+        used_saved_memory: false,
+        memory_saved: true,
+        memory_already_saved: false,
+      }),
+    ]));
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText("Ask about your indexed knowledge.");
+    await user.type(screen.getByLabelText("Question"), "記住我的公司叫做Knowvia");
+    await user.click(screen.getByRole("button", { name: "Ask Knowvia" }));
+
+    expect(await screen.findByText("Memory saved", { selector: ".memory-operation-status" })).toBeVisible();
+    await waitFor(() => expect(screen.getByLabelText("Question")).toBeEnabled());
+  });
+
   it("aborts the old session stream before switching and ignores its later events", async () => {
     let controller: ReadableStreamDefaultController<Uint8Array> | undefined;
     const encoder = new TextEncoder();

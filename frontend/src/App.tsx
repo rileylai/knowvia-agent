@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import {
   createConversation,
@@ -51,6 +51,13 @@ const executionStatusCopy: Record<string, string> = {
   saving_memory: "Saving memory…",
   generating: "Generating answer…",
 };
+
+const CHAT_HISTORY_BOTTOM_THRESHOLD_PX = 80;
+const QUESTION_TEXTAREA_MAX_HEIGHT_PX = 156;
+
+function isNearChatHistoryBottom(element: HTMLElement): boolean {
+  return element.scrollHeight - element.scrollTop - element.clientHeight <= CHAT_HISTORY_BOTTOM_THRESHOLD_PX;
+}
 
 const fileNameCollator = new Intl.Collator(undefined, {
   numeric: true,
@@ -784,6 +791,9 @@ function ChatSurface() {
   const [creatingSession, setCreatingSession] = useState(false);
   const [createRetryAvailable, setCreateRetryAvailable] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const chatHistoryRef = useRef<HTMLDivElement>(null);
+  const questionInputRef = useRef<HTMLTextAreaElement>(null);
+  const shouldFollowChatHistoryRef = useRef(true);
   const isComposing = useRef(false);
   const isSubmitting = useRef(false);
   const activeSessionIdRef = useRef<number | null>(null);
@@ -794,6 +804,7 @@ function ChatSurface() {
   } | null>(null);
 
   const question = activeSessionId === null ? "" : draftsBySessionId[activeSessionId] ?? "";
+  const conversationHasContent = messages.length > 0 || Boolean(streamQuery) || streamState !== "idle";
   const setQuestion = (value: string) => {
     if (activeSessionId === null) {
       return;
@@ -806,6 +817,43 @@ function ChatSurface() {
 
   const showError = (caughtError: unknown, fallback: string) =>
     caughtError instanceof Error ? caughtError.message : fallback;
+
+  const handleChatHistoryScroll = () => {
+    const history = chatHistoryRef.current;
+    if (!history) {
+      return;
+    }
+    shouldFollowChatHistoryRef.current = isNearChatHistoryBottom(history);
+  };
+
+  useEffect(() => {
+    const history = chatHistoryRef.current;
+    if (!history || !shouldFollowChatHistoryRef.current) {
+      return;
+    }
+    history.scrollTop = history.scrollHeight;
+  }, [
+    activeSessionId,
+    error,
+    executionPhase,
+    messages,
+    partialAssistantText,
+    response,
+    streamCitations,
+    streamQuery,
+    streamState,
+  ]);
+
+  useLayoutEffect(() => {
+    const input = questionInputRef.current;
+    if (!input) {
+      return;
+    }
+    input.style.height = "auto";
+    const nextHeight = Math.min(input.scrollHeight, QUESTION_TEXTAREA_MAX_HEIGHT_PX);
+    input.style.height = `${nextHeight}px`;
+    input.style.overflowY = input.scrollHeight > QUESTION_TEXTAREA_MAX_HEIGHT_PX ? "auto" : "hidden";
+  }, [activeSessionId, question]);
 
   const resetStreamState = () => {
     setStreamState("idle");
@@ -897,6 +945,7 @@ function ChatSurface() {
     try {
       const created = await createConversation();
       const summary = conversationSummary(created);
+      shouldFollowChatHistoryRef.current = true;
       setSessions((current) => [summary, ...current.filter((session) => session.id !== created.id)]);
       activeSessionIdRef.current = created.id;
       setActiveSessionId(created.id);
@@ -933,6 +982,7 @@ function ChatSurface() {
     setStreamState("idle");
     try {
       const loaded = await getConversation(sessionId);
+      shouldFollowChatHistoryRef.current = true;
       activeSessionIdRef.current = loaded.id;
       setActiveSessionId(loaded.id);
       setActiveSessionTitle(loaded.title);
@@ -1144,55 +1194,39 @@ function ChatSurface() {
         onSelect={(sessionId) => void handleSessionSelect(sessionId)}
         onClose={() => setMobileDrawerOpen(false)}
       />
-      <section className="surface surface--chat" aria-labelledby="chat-heading">
-        <header className="chat-header">
-          <div>
-            <div className="section-kicker">Knowledge-grounded QA / conversation session</div>
-            <h1 id="chat-heading">Ask what your notes know.</h1>
-            <p className="current-session-label">Current conversation · {activeSessionTitle}</p>
-          </div>
-          <div className="chat-header-actions">
-            <button
-              type="button"
-              className="chat-menu-button"
-              aria-label="Open conversations"
-              onClick={() => setMobileDrawerOpen(true)}
-              disabled={sidebarBusy}
-            >
-              Conversations
-            </button>
-            <div className="runtime-badge"><span aria-hidden="true" />Baseline live</div>
-          </div>
-        </header>
+      <section
+        className={`surface surface--chat chat-pane ${conversationHasContent ? "chat-pane--active" : "chat-pane--empty"}`}
+        aria-labelledby="chat-heading"
+        data-testid="chat-pane"
+      >
+        <div
+          ref={chatHistoryRef}
+          className="conversation-scroll chat-history"
+          role="log"
+          aria-label="Conversation history"
+          onScroll={handleChatHistoryScroll}
+        >
+          <header className={`chat-header ${conversationHasContent ? "chat-header--compact" : "chat-header--hero"}`}>
+            <div>
+              <div className="section-kicker">Knowledge-grounded QA / conversation session</div>
+              <h1 id="chat-heading">Ask what your notes know.</h1>
+              <p className="current-session-label">Current conversation · {activeSessionTitle}</p>
+            </div>
+            <div className="chat-header-actions">
+              <button
+                type="button"
+                className="chat-menu-button"
+                aria-label="Open conversations"
+                onClick={() => setMobileDrawerOpen(true)}
+                disabled={sidebarBusy}
+              >
+                Conversations
+              </button>
+              <div className="runtime-badge"><span aria-hidden="true" />Baseline live</div>
+            </div>
+          </header>
 
-        <form className="ask-form" onSubmit={handleSubmit}>
-          <label htmlFor="question">Question</label>
-          <textarea
-            id="question"
-            name="question"
-            value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-            onKeyDown={handleQuestionKeyDown}
-            onCompositionStart={() => {
-              isComposing.current = true;
-            }}
-            onCompositionEnd={() => {
-              isComposing.current = false;
-            }}
-            placeholder="Ask about evidence already indexed in Knowledge…"
-            rows={4}
-            disabled={controlsDisabled}
-          />
-          <div className="form-footer">
-            <p>Same-session context · Recent history bounded · Grounded evidence</p>
-            <button type="submit" disabled={controlsDisabled || !question.trim()}>
-              <span>Ask Knowvia</span>
-              <span aria-hidden="true">↗</span>
-            </button>
-          </div>
-        </form>
-
-        <div className="result-region" aria-live="polite">
+          <div className="result-region" aria-live="polite">
           {sessionLoading && (
             <div className="loading-state" role="status">
               <span className="loading-orbit" aria-hidden="true" />
@@ -1270,7 +1304,36 @@ function ChatSurface() {
               )}
             </article>
           )}
+          </div>
         </div>
+
+        <form className="ask-form" aria-label="Question composer" onSubmit={handleSubmit}>
+          <label htmlFor="question">Question</label>
+          <textarea
+            ref={questionInputRef}
+            id="question"
+            name="question"
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            onKeyDown={handleQuestionKeyDown}
+            onCompositionStart={() => {
+              isComposing.current = true;
+            }}
+            onCompositionEnd={() => {
+              isComposing.current = false;
+            }}
+            placeholder="Ask about your knowledge…"
+            rows={2}
+            disabled={controlsDisabled}
+          />
+          <div className="form-footer">
+            <p>Same session · Grounded evidence</p>
+            <button type="submit" disabled={controlsDisabled || !question.trim()}>
+              <span>Ask Knowvia</span>
+              <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </form>
       </section>
     </div>
   );
@@ -1370,10 +1433,9 @@ export default function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand-lockup">
-          <div className="brand-mark" aria-hidden="true">K</div>
           <div>
             <strong>Knowvia Agent</strong>
-            <span>Knowledge workspace</span>
+            <span>KNOWLEDGE WORKSPACE</span>
           </div>
         </div>
 
@@ -1399,7 +1461,7 @@ export default function App() {
         </div>
       </aside>
 
-      <main>
+      <main className={activeSurface === "chat" ? "main main--chat" : "main"}>
         <div className="top-rule">
           <span>Enterprise knowledge, traceable by design</span>
           <span>Local / QA baseline</span>

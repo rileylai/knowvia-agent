@@ -438,6 +438,44 @@ def test_explicit_save_tool_reuses_backend_save_policy() -> None:
     assert memory_service.saved[0]["owner_id"] == "owner-a"
 
 
+def test_explicit_save_recovers_from_provider_memory_type_drift() -> None:
+    runtime, _, memory_service = _runtime(
+        responses=[
+            _call(
+                "save_memory",
+                {
+                    "memory_type": "company",
+                    "content": "provider supplied content",
+                },
+            ),
+            LLMResponse(
+                provider="scripted",
+                model="scripted-1",
+                output_text="Memory saved",
+            ),
+        ]
+    )
+
+    result = asyncio.run(
+        runtime.run(
+            query="記住我的公司叫做Knowvia",
+            session_id=7,
+            owner_id="owner-a",
+            provider_name="scripted",
+            model="scripted-1",
+            request_workflow_id="wf-agent-7",
+            explicit_save_allowed=True,
+            explicit_save_content="我的公司叫做Knowvia",
+            explicit_save_memory_type="project_context",
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert result.memory_status == "saved"
+    assert memory_service.saved[0]["memory_type"] == "project_context"
+    assert memory_service.saved[0]["content"] == "我的公司叫做Knowvia"
+
+
 def test_tool_timeout_terminates_without_retry() -> None:
     router, provider = _provider_router([_call("search_memory", {"query": "slow"})])
     memory_service = SlowMemoryService()
