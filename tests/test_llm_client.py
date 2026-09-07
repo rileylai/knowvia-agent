@@ -11,7 +11,7 @@ from src.providers import (
     OpenAIClient,
     ProviderRouter,
 )
-from src.agent.models import ContextRequirementDecision
+from src.agent.models import ContextRequirementDecision, ReferenceBindingDecision
 
 
 def test_openai_client_returns_llm_response_with_mock_transport() -> None:
@@ -170,7 +170,6 @@ def test_openai_client_sends_and_parses_context_requirement_structured_output() 
                         "role": "assistant",
                         "content": (
                             '{"needs_knowledge":true,"needs_memory":true,'
-                            '"conversation_dependency":"none",'
                             '"contextual_facets":[{"id":"c1",'
                             '"text":"company size"}],"memory_query":null}'
                         ),
@@ -194,7 +193,6 @@ def test_openai_client_sends_and_parses_context_requirement_structured_output() 
     assert response.structured_output == {
         "needs_knowledge": True,
         "needs_memory": True,
-        "conversation_dependency": "none",
         "contextual_facets": [{"id": "c1", "text": "company size"}],
         "memory_query": None,
     }
@@ -225,6 +223,54 @@ def test_openai_client_rejects_invalid_context_requirement_structured_output() -
 
     with pytest.raises(LLMClientError):
         asyncio.run(client.generate(request))
+
+
+def test_openai_client_sends_and_parses_reference_binding_structured_output() -> None:
+    captured_payload: Dict[str, Any] = {}
+
+    def fake_transport(
+        url: str,
+        headers: Dict[str, str],
+        payload: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        _ = url, headers
+        captured_payload.update(payload)
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "role": "assistant",
+                        "content": (
+                            '{"reference_bindings":[{"current_span":"the second one",'
+                            '"source_message_id":41,"source_span":"Tool Boundaries"}]}'
+                        ),
+                    },
+                    "finish_reason": "stop",
+                }
+            ]
+        }
+
+    client = OpenAIClient(api_key="test-key", transport=fake_transport)
+    request = LLMRequest(
+        model="gpt-4o-mini",
+        messages=[LLMMessage(role="user", content="What about the second one?")],
+        response_format=ReferenceBindingDecision.response_format(),
+    )
+
+    response = asyncio.run(client.generate(request))
+
+    assert captured_payload["response_format"]["json_schema"]["name"] == (
+        "reference_binding_decision"
+    )
+    assert response.structured_output == {
+        "reference_bindings": [
+            {
+                "current_span": "the second one",
+                "source_message_id": 41,
+                "source_span": "Tool Boundaries",
+            }
+        ]
+    }
 
 
 def test_openai_client_serializes_follow_up_tool_messages_for_api_wire_format() -> None:

@@ -95,9 +95,9 @@ User message
 Agent 可以在一次 run 中 chaining allowed tools，但初始最多 3 次 tool calls。
 Backend 在每一步檢查 timeout、argument、permission、context budget 與 termination。
 
-### Target: 5.0.3.3 Context Authority Consolidation
+### Current: 5.0.3.3 Context Authority Consolidation
 
-這是下一個 planned implementation slice 的 frozen workflow。Explicit save、conversation
+這是已完成 implementation 的 current workflow。Explicit save、conversation
 recall、conversation transform 與 direct Memory compatibility 先走既有 dedicated routes；其餘
 substantive request 走 structured path：
 
@@ -115,8 +115,10 @@ User message
        exact current message + validated bindings + fresh Knowledge + fresh Memory
 ```
 
-Bounded raw conversation history 只在 `Reference Binding` 可見。Self-contained request 的
-`reference_bindings` 為空，current user message 保持 exact identity。Target path 不產生
+Bounded raw conversation history 只在 `Reference Binding` 可見；resolver 使用的 internal history
+至少保留 `message_id`、`sequence_number`、`role` 與 `content`，並由 backend 先完成 session/owner
+scope。Self-contained request 的 `reference_bindings` 為空，current user message 保持 exact identity。
+Current path 不產生
 `conversation_dependency`、`reference_status`、`resolved_task` 或 free-form query rewrite。
 Backend 驗證 `current_span`、同 session 且 owner-visible 的 `source_message_id`、source
 message 內的 `source_span`、valid role 與最多 2 個 bindings。
@@ -152,19 +154,17 @@ substantive task 執行 `search_knowledge`，再將每個 facet `text` 原樣作
 tool calls；required tools 超過 budget 時 fail closed。純 Knowledge factual question 不強制
 Memory，direct memory-only recall 保留既有 `memory_query` routing，也不強制 Knowledge。
 
-Selector 可使用 bounded conversation history 理解 reference 與 task intent，但 previous
-assistant answer 不具 Knowledge authority，previous assistant 提到的 saved fact 也不取代
-當次 LongTermMemory retrieval。新的 substantive request 即使與前一輪完全相同，也依當次
-需求重新選擇並取得 authority；只有既有 bounded conversational transform 才使用 previous
-answer 作 transformation target。
+Reference Binding provider 可使用 bounded resolver-visible history 理解 reference；selector 只
+接 exact current message 與 backend-validated bindings。Previous assistant answer 不具 Knowledge
+authority，previous assistant 提到的 saved fact 也不取代當次 LongTermMemory retrieval。新的
+substantive request 即使與前一輪完全相同，也依當次需求重新選擇並取得 authority；只有既有
+bounded conversational transform 才使用 previous answer 作 transformation target。
 
-Selector 同時產生 `conversation_dependency`：self-contained substantive task 使用 `none`，
-reference 需要 preceding turn 才能理解時使用 `required`。Retrieval 完成後，runtime 在
-`none` 時只以 current task、Knowledge evidence 與 saved-memory context 組裝 final provider
-request；`required` 時最多加入同 session 最近一個 completed user/assistant pair，標記為
-`CONVERSATION_REFERENCE_CONTEXT`。Previous conversation 只供 reference interpretation，不是
-Knowledge、Memory、sufficiency 或 citation authority。selector 仍使用完整 bounded history，
-conversation transform 也仍以 previous assistant answer 為 target。Knowledge 是
+Runtime 固定以 exact current message、validated bindings、fresh Knowledge evidence 與
+fresh saved-memory context 組裝 structured substantive final provider request，不再加入
+previous user/assistant transcript 或 `CONVERSATION_REFERENCE_CONTEXT`。Previous conversation
+只透過 validated binding 參與 reference interpretation，不是 Knowledge、Memory、sufficiency
+或 citation authority。Knowledge 是
 enterprise claim 與 citation 的唯一 authority；Memory 只能作 optional personalization
 context。部分或全部 contextual Memory miss 時，只要已接受 Knowledge evidence，final
 provider 仍可產生 Knowledge-only answer；Memory 不得取代缺少的 required Knowledge。

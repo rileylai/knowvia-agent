@@ -9,6 +9,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    StrictInt,
     StrictBool,
     StrictStr,
     field_validator,
@@ -17,10 +18,14 @@ from pydantic import (
 
 
 CONTEXT_REQUIREMENT_DECISION_SCHEMA_NAME = "context_requirement_decision"
+REFERENCE_BINDING_DECISION_SCHEMA_NAME = "reference_binding_decision"
 MAX_CONTEXT_MEMORY_QUERY_CHARS = 500
 MAX_CONTEXTUAL_FACETS = 2
 MAX_CONTEXTUAL_FACET_ID_CHARS = 32
 MAX_CONTEXTUAL_FACET_TEXT_CHARS = 120
+MAX_REFERENCE_BINDINGS = 2
+MAX_REFERENCE_CURRENT_SPAN_CHARS = 200
+MAX_REFERENCE_SOURCE_SPAN_CHARS = 500
 CONTEXTUAL_FACET_RETRIEVAL_MARKERS = frozenset(
     {"corpus", "knowledge", "memory", "retrieval", "saved", "search", "source", "tool"}
 )
@@ -66,13 +71,6 @@ class ContextualFacet(BaseModel):
         return normalized
 
 
-class ConversationDependency(str, Enum):
-    """Whether final synthesis needs a completed prior conversation turn."""
-
-    NONE = "none"
-    REQUIRED = "required"
-
-
 class ContextRequirementDecision(BaseModel):
     """The bounded context authorities required for one agent task."""
 
@@ -80,7 +78,6 @@ class ContextRequirementDecision(BaseModel):
 
     needs_knowledge: StrictBool
     needs_memory: StrictBool
-    conversation_dependency: ConversationDependency
     contextual_facets: List[ContextualFacet] = Field(
         default_factory=list,
         max_length=MAX_CONTEXTUAL_FACETS,
@@ -134,7 +131,6 @@ class ContextRequirementDecision(BaseModel):
         schema["required"] = [
             "needs_knowledge",
             "needs_memory",
-            "conversation_dependency",
             "contextual_facets",
             "memory_query",
         ]
@@ -143,6 +139,52 @@ class ContextRequirementDecision(BaseModel):
             "type": "json_schema",
             "json_schema": {
                 "name": CONTEXT_REQUIREMENT_DECISION_SCHEMA_NAME,
+                "strict": True,
+                "schema": schema,
+            },
+        }
+
+
+class ReferenceBinding(BaseModel):
+    """A bounded textual reference proposed by the resolver."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    current_span: StrictStr = Field(
+        min_length=1,
+        max_length=MAX_REFERENCE_CURRENT_SPAN_CHARS,
+    )
+    source_message_id: StrictInt = Field(gt=0)
+    source_span: StrictStr = Field(
+        min_length=1,
+        max_length=MAX_REFERENCE_SOURCE_SPAN_CHARS,
+    )
+
+    @field_validator("current_span", "source_span")
+    @classmethod
+    def span_must_be_single_line(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("reference spans must not be blank")
+        if "\n" in value or "\r" in value:
+            raise ValueError("reference spans must be single-line")
+        return value
+
+
+class ReferenceBindingDecision(BaseModel):
+    """The resolver's only semantic output for a substantive request."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    reference_bindings: List[ReferenceBinding] = Field(max_length=MAX_REFERENCE_BINDINGS)
+
+    @classmethod
+    def response_format(cls) -> Dict[str, Any]:
+        schema = cls.model_json_schema()
+        schema["required"] = ["reference_bindings"]
+        return {
+            "type": "json_schema",
+            "json_schema": {
+                "name": REFERENCE_BINDING_DECISION_SCHEMA_NAME,
                 "strict": True,
                 "schema": schema,
             },
@@ -190,6 +232,7 @@ class AgentState:
     provider_termination_type: Optional[str] = None
     provider_termination_types: List[str] = field(default_factory=list)
     tool_names_used: List[str] = field(default_factory=list)
+    reference_bindings: List[ReferenceBinding] = field(default_factory=list)
     deterministic_memory_fallback_used: bool = False
     memory_retrieval_mode: Optional[str] = None
     memory_type_filter: Optional[str] = None

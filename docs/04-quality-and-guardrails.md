@@ -115,9 +115,9 @@ mixed flow 降低既有 relevance floors，也不得 dump all memories。Knowled
 metadata；Memory 只以 `Used saved memory` 表示，兩者 authority 不得混合。
 
 Context requirement routing 使用 typed `ContextRequirementDecision`，只允許
-`needs_knowledge`、`needs_memory`、`conversation_dependency`、bounded `contextual_facets` 與
-direct recall 用的 `memory_query`。`conversation_dependency` 是 required enum，只允許 `none`
-與 `required`，不可用 default 代替 provider 欄位。Mixed task 的 facets 上限為 2，facet text 必須是 bounded、single-line 的
+`needs_knowledge`、`needs_memory`、bounded `contextual_facets` 與 direct recall 用的
+`memory_query`。Reference binding 已在 selector 前完成；structured selector 不接 raw
+conversation history，也不產生 `conversation_dependency`。Mixed task 的 facets 上限為 2，facet text 必須是 bounded、single-line 的
 atomic context dependency；每個 facet 會直接成為一個 contextual Memory query。Backend 先
 schema validate，再 deterministic 執行 required capability；unknown field、錯誤型別、空
 facet、超過上限、空 direct memory query 與 provider failure 都 fail closed。Provider 不具
@@ -142,17 +142,16 @@ authority；若 decision 要求 Knowledge，Backend 必須先取得當次 Knowle
 無 evidence 時才可進入 `insufficient_info`。既有 conversational transform 仍可只使用
 previous answer，不在本輪擴張 transform classifier。
 
-Structured substantive final synthesis 在 `conversation_dependency=none` 時不帶入 previous
-conversation；`required` 時只帶入 backend deterministic 選出的最近 completed user/assistant
-pair，並以 `CONVERSATION_REFERENCE_CONTEXT` 標記。Previous conversation 只供 reference 或
-intent interpretation，不會成為 Knowledge、Memory、citation 或 sufficiency authority。Final
-provider 仍只依 current task、accepted Knowledge、當次 retrieved Memory 與必要 reference
-context 產生答案。相同 substantive query 重送時也使用 fresh authority。這項 backend isolation
-不套用到 selector、conversation recall 或 transform path。
+Structured substantive final synthesis 固定只接 exact current user message、validated reference
+bindings、accepted Knowledge 與當次 retrieved Memory；不接 previous user/assistant transcript，
+也不再注入 `CONVERSATION_REFERENCE_CONTEXT`。Binding 只作 textual referent interpretation 與
+deterministic retrieval query enrichment，不會成為 Knowledge、Memory、citation 或 sufficiency
+authority。相同 substantive query 重送時也使用 fresh authority。這項 backend isolation 不套用到
+conversation recall 或 transform dedicated path。
 
-### 5.0.3.3 target authority boundary
+### 5.0.3.3 current authority boundary
 
-以下 boundary 是下一個 planned implementation slice 的 frozen target。Incidental raw conversation
+以下 boundary 是 D030 frozen architecture 的 current implementation。Incidental raw conversation
 history 只能出現在 bounded `Reference Binding` boundary；後續 Context Requirement Selection、
 Knowledge/Memory retrieval 與 final substantive synthesis 都不得直接接收 raw conversation
 transcript。
@@ -173,7 +172,7 @@ User message
 Reference validation 只確認 textual referent 存在於 owner-visible、同 session、bounded history
 中的合法 message，不確認 enterprise fact truth。Binding 可作 reference interpretation 與
 retrieval query enrichment，但不能成為 Knowledge evidence、citation、Memory authority、accepted
-Knowledge count 或 answer-sufficiency signal，也不能 rescue missing Knowledge。Target representation
+Knowledge count 或 answer-sufficiency signal，也不能 rescue missing Knowledge。Current representation
 不引入 `conversation_dependency`、`reference_status`、`resolved_task` 或 free-form query rewrite；
 self-contained request 保留 exact current user message，使用空的 `reference_bindings`。
 

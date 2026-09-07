@@ -28,6 +28,7 @@ from src.conversation_context import (
     DEFAULT_CONVERSATION_MESSAGE_LIMIT,
     DEFAULT_CONVERSATION_TOKEN_BUDGET,
     ConversationContextMessage,
+    ReferenceResolverMessage,
     assemble_conversation_context,
 )
 
@@ -310,7 +311,12 @@ class ConversationOrchestrator:
         prior_messages = recent_messages[:-1]
         context = assemble_conversation_context(
             history=[
-                ConversationContextMessage(role=message.role, content=message.content)
+                ConversationContextMessage(
+                    role=message.role,
+                    content=message.content,
+                    message_id=int(message.id),
+                    sequence_number=message.sequence_number,
+                )
                 for message in prior_messages
             ],
             current_question=normalized_query,
@@ -319,11 +325,19 @@ class ConversationOrchestrator:
         )
         history_message_count = len(context.messages)
         history_roles = [message.role for message in context.messages]
+        reference_resolver_history = [
+            ReferenceResolverMessage(
+                message_id=message.message_id,
+                sequence_number=message.sequence_number,
+                role=message.role,
+                content=message.content,
+            )
+            for message in context.messages[:-1]
+            if message.message_id is not None and message.sequence_number is not None
+        ]
 
         recall_kind = classify_conversation_recall(normalized_query)
         transform_kind = classify_conversation_transform(normalized_query)
-        substantive_conversation_context = None
-        substantive_conversation_reference_context = None
         if recall_kind is not None:
             conversation_context = "\n\n".join(
                 f"[{message.role}] {message.content}"
@@ -340,10 +354,6 @@ class ConversationOrchestrator:
                 conversation_context = None
         else:
             conversation_context = context.rendered_text
-            substantive_conversation_context = context.rendered_user_text
-            substantive_conversation_reference_context = (
-                context.rendered_latest_completed_turn
-            )
 
         if transform_kind is not None and conversation_context is None:
             qa_result = QAResult(
@@ -376,12 +386,8 @@ class ConversationOrchestrator:
                     model=model,
                     request_workflow_id=request_workflow_id,
                     conversation_context=conversation_context,
-                    substantive_conversation_context=(
-                        substantive_conversation_context
-                    ),
-                    substantive_conversation_reference_context=(
-                        substantive_conversation_reference_context
-                    ),
+                    reference_resolver_history=reference_resolver_history,
+                    current_sequence_number=recent_messages[-1].sequence_number,
                     history_message_count=history_message_count,
                     history_roles=history_roles,
                     conversation_transform=transform_kind is not None,

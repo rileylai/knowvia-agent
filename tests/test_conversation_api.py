@@ -115,6 +115,13 @@ class HistorySensitiveStructuredProvider(LLMProvider):
     async def generate(self, request: LLMRequest) -> LLMResponse:
         self.requests.append(request)
         if request.response_format is not None:
+            if request.response_format["json_schema"]["name"] == "reference_binding_decision":
+                return LLMResponse(
+                    provider=self.name,
+                    model=request.model,
+                    output_text="",
+                    structured_output={"reference_bindings": []},
+                )
             return LLMResponse(
                 provider=self.name,
                 model=request.model,
@@ -127,7 +134,6 @@ class HistorySensitiveStructuredProvider(LLMProvider):
                         {"id": "c2", "text": "development preferences"},
                     ],
                     "memory_query": None,
-                    "conversation_dependency": "none",
                 },
             )
         final_user_message = next(
@@ -805,11 +811,13 @@ def test_structured_substantive_api_repeats_with_isolated_final_authority() -> N
         ]
         assert all(response.json()["citations"] for response in responses)
         assert all(response.json()["used_saved_memory"] for response in responses)
-        assert len(provider.requests) == 6
-        selector_requests = provider.requests[0::2]
-        final_requests = provider.requests[1::2]
-        assert "[assistant]" in selector_requests[1].messages[1].content
-        assert "[assistant]" in selector_requests[2].messages[1].content
+        assert len(provider.requests) == 9
+        selector_requests = provider.requests[1::3]
+        final_requests = provider.requests[2::3]
+        assert all(
+            "[assistant]" not in request.messages[1].content
+            for request in selector_requests
+        )
         assert all(
             "[assistant]" not in request.messages[1].content
             for request in final_requests

@@ -14,6 +14,16 @@ DEFAULT_CONVERSATION_TITLE = "New conversation"
 class ConversationContextMessage:
     role: str
     content: str
+    message_id: Optional[int] = None
+    sequence_number: Optional[int] = None
+
+
+@dataclass(frozen=True)
+class ReferenceResolverMessage:
+    message_id: int
+    sequence_number: int
+    role: str
+    content: str
 
 
 @dataclass(frozen=True)
@@ -26,41 +36,6 @@ class ConversationContext:
         return "\n\n".join(
             f"[{message.role}] {message.content}" for message in self.messages
         )
-
-    @property
-    def rendered_user_text(self) -> str:
-        """Render user-side context without carrying assistant answers as authority."""
-
-        return "\n\n".join(
-            f"[user] {message.content}"
-            for message in self.messages
-            if message.role == "user"
-        )
-
-    @property
-    def rendered_latest_completed_turn(self) -> Optional[str]:
-        """Render only the most recent completed user/assistant pair.
-
-        The current user message is excluded. A trailing user-only message is
-        treated as pending, so a failed or interrupted turn cannot become a
-        referential authority for the next response.
-        """
-
-        prior_messages = self.messages
-        if prior_messages and prior_messages[-1].role == "user":
-            prior_messages = prior_messages[:-1]
-        for index in range(len(prior_messages) - 2, -1, -1):
-            user_message = prior_messages[index]
-            assistant_message = prior_messages[index + 1]
-            if user_message.role == "user" and assistant_message.role == "assistant":
-                return "\n\n".join(
-                    (
-                        f"[user] {user_message.content}",
-                        f"[assistant] {assistant_message.content}",
-                    )
-                )
-        return None
-
 
 def estimate_conversation_tokens(content: str) -> int:
     """Use a deterministic bounded estimate without adding a tokenizer dependency."""

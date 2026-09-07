@@ -1896,7 +1896,7 @@ dependencies 或 frontend。
 
 ### Manual verification
 
-- `5.0.3.2.6`：`Not yet manually verified.`
+- `5.0.3.2.6`：Manual verification attempted; acceptance not passed. Findings are consolidated by 5.0.3.3.
 - 待 browser 驗證 Knowledge-only、Memory-only、mixed contextual、同一 session 重送三次 mixed
   query，以及 contextual facet 沒有 saved Memory 時仍能產生 Knowledge-only answer。
 
@@ -1947,7 +1947,7 @@ dependencies 或 frontend。
 
 ### Manual verification
 
-- `5.0.3.2.7`：`Not yet manually verified.`
+- `5.0.3.2.7`：Manual verification attempted; acceptance not passed. Findings are consolidated by 5.0.3.3.
 - Fresh New Chat 連續三次送出相同 mixed query。每輪應依序顯示 Knowledge、Memory 與 generating
   status，產生含 Sources、`Used saved memory`、company size 與 development preferences 的答案；
   第二、三輪不得出現 `insufficient_info` 或 Request failed。
@@ -1988,7 +1988,7 @@ dependencies 或 frontend。
 
 ### Manual verification
 
-- `5.0.3.2.8`：`Not yet manually verified.`
+- `5.0.3.2.8`：Manual verification attempted; acceptance not passed. Findings are consolidated by 5.0.3.3.
 - Browser guide：Fresh New Chat 連續四次 mixed query；再驗證 Knowledge-only、Memory-only、
   successful-answer transform；最後以 `What about the second one?` 驗證 recent completed pair
   boundary。Expected SSE 仍只有 existing Knowledge、Memory、Generating、done phases。
@@ -2027,3 +2027,53 @@ dependencies 或 frontend。
 ### Scope confirmation
 
 本輪為 documentation-only。未修改 runtime、tests、eval、dependencies、migration、frontend、Docker 或 config；未執行 live provider、Notion 或 private source access；未 commit、push、merge、stash、reset 或 clean。
+
+## 2026-09-08 5.0.3.3 Context Authority Consolidation Implementation
+
+### Implementation
+
+- 完成 D030 frozen topology：structured substantive request 先經 `Reference Binding`，raw
+  bounded same-session history 只在此 boundary 可見；selector、retrieval 與 final synthesis
+  不再接收 raw conversation transcript。
+- 新增 bounded typed `ReferenceBinding` / `ReferenceBindingDecision` contract。Provider 只提出
+  `reference_bindings`；backend 持有 exact current user message，並 deterministic 驗證 current span、
+  source message identity、role、history window、source span 與最多 2 個 bindings。
+- Resolver-visible internal message 保留 `message_id`、`sequence_number`、`role`、`content`；session
+  與 owner authorization 由 backend scope 負責。Validated binding 只可作 reference interpretation
+  與 deterministic retrieval enrichment，不具 Knowledge、Memory、citation 或 sufficiency authority。
+- Structured selector contract 移除 `conversation_dependency`；保留 `needs_knowledge`、
+  `needs_memory`、`contextual_facets` 與 `memory_query`。Final structured context 固定使用 exact
+  current message、validated bindings、fresh Knowledge 與 fresh Memory。
+- 保留 explicit save、conversation recall、conversation transform、direct Memory compatibility、
+  ContextualFacet max 2、per-facet Memory retrieval、partial/all Memory miss degradation、max 3 tool
+  calls、SSE public lifecycle 與現有 sufficiency/sentinel behavior。
+
+### Automated verification
+
+- Reference binding focused suite：`13 passed`。
+- Context, API, conversation, LLM wire 與 authority focused suite：`161 passed`。
+- Agent Golden Set：`29/29`；`tests/test_agent_eval.py`：`2 passed`。
+- Backend full suite：`889 passed, 6 skipped`。
+- Frontend regression：`62 passed`；production build：PASS。
+- Python `compileall` 與 `git diff --check`：PASS。
+- `uv run` isolated environment 曾因缺少 `mcp` module collection fail；改用 repository `.venv`
+  入口後完成上述驗證，未修改 dependency 或納入此 slice。
+
+### Manual verification
+
+- `5.0.3.3`：`Not yet manually verified.` Status 維持 `manual_verification`。
+- Browser guide：Fresh New Chat 中連續 10 次送出相同 mixed query，要求 10/10 completed、0 Request
+  failed、0 `provider_contract_error`、0 unexpected `insufficient_info`，每次都有 Sources、需要時有
+  `Used saved memory`，並確認每次重新取得 fresh Knowledge / Memory authority。
+- 另驗證 Knowledge-only、Memory-only、referential follow-up 與成功回答後的 `用中文說` transform；
+  SSE 只應顯示既有 public lifecycle，不顯示 bindings、source message ids 或 raw history。
+- `5.0.3.2.6`、`5.0.3.2.7`、`5.0.3.2.8`：Manual verification attempted; acceptance not passed.
+  Findings are consolidated by 5.0.3.3.
+
+### Roadmap state
+
+- `5.0.3.3=manual_verification`，implementation 與 automated verification complete；不標記 done。
+- Parent `5.0.3.2` 與 `.6/.7/.8` 維持 `manual_verification`；`5.0.3.1=planned`、`5.0.4=deferred`、
+  `7.0=manual_verification`。
+- Post-`.3` 的 Evidence Readiness、Final Synthesis Contract Hardening、Selector Authority Slimming
+  與 Live Semantic Stability Gate 仍為 planned，未開始。

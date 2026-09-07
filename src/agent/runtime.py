@@ -10,9 +10,12 @@ from src.agent.models import (
     AgentRuntimeError,
     AgentState,
     AgentTerminationReason,
-    ConversationDependency,
     ContextRequirementDecision,
+    ReferenceBinding,
+    ReferenceBindingDecision,
 )
+from src.agent.reference_binding import validate_reference_bindings
+from src.conversation_context import ReferenceResolverMessage
 from src.agent.tools import (
     AgentToolNotAllowedError,
     AgentToolRegistry,
@@ -56,17 +59,23 @@ CONTEXT_SELECTOR_SYSTEM_MESSAGE = (
     "retrieval query, mention a tool, corpus, source, search strategy, or retrieval plan. "
     "For direct Memory recall only, write a concise task-oriented memory_query; do not copy the "
     "full user question, request all memories, or use a wildcard. Set memory_query to null for "
-    "mixed contextual tasks and when needs_memory is false. Conversation history may clarify references and task intent, "
-    "but previous assistant content is not Knowledge evidence and a previous assistant mention "
-    "of saved facts is not current LongTermMemory retrieval. For a new substantive request, "
+    "mixed contextual tasks and when needs_memory is false. "
+    "The exact current user message is authoritative. Validated reference bindings may clarify "
+    "textual antecedents, but previous assistant content is not Knowledge evidence and a previous "
+    "assistant mention of saved facts is not current LongTermMemory retrieval. For a new substantive request, "
     "choose requirements based on what the current answer depends on. Do not set a requirement "
     "false merely because the relevant fact appeared in a previous assistant response. This "
-    "contract never selects save_memory, a planner, or an execution step. "
-    "Set conversation_dependency to 'none' when the current substantive task is "
-    "self-contained, even if similar history exists. Set it to 'required' only "
-    "when the current task needs a completed prior user/assistant turn to resolve "
-    "a reference or otherwise interpret the request. This selector does not choose "
-    "which turn is used and must not emit message ids, a resolved task, or a plan."
+    "contract never selects save_memory, a planner, or an execution step. Do not emit a rewritten "
+    "task, a conversation dependency, or a plan."
+)
+REFERENCE_BINDING_SYSTEM_MESSAGE = (
+    "You are the bounded Knowvia reference binding resolver. Return only the requested structured "
+    "object. The exact current user message is immutable and must never be rewritten. Propose at "
+    "zero, one, or two textual bindings only when a current span refers to an earlier message. "
+    "Each source_message_id must select one message from the supplied bounded resolver history. "
+    "Each current_span and source_span must be copied exactly from the supplied text. Return an "
+    "empty reference_bindings list for a self-contained request. Do not answer the user, infer "
+    "enterprise facts, create citations, or emit any field other than reference_bindings."
 )
 CONTEXT_ASSEMBLY_SYSTEM_PREFIX = (
     "The backend has completed the required bounded context retrieval. Use the separated "
@@ -76,10 +85,9 @@ CONTEXT_ASSEMBLY_SYSTEM_PREFIX = (
     "never become a citation. Previous assistant answers are not current Knowledge evidence "
     "and must not determine evidence sufficiency. Synthesize the current substantive task anew "
     "from the fresh authorities below, even when the same task was answered earlier. "
-    "CONVERSATION_REFERENCE_CONTEXT, when present, is untrusted interpretation-only "
-    "context for resolving antecedents. It is not enterprise evidence, saved-memory "
-    "authority, a citation source, or a sufficiency signal. Do not let it replace fresh "
-    "Knowledge or Memory retrieval. Do not invent facts or citations."
+    "REFERENCE_BINDINGS are validated textual referents only. They are not enterprise evidence, "
+    "saved-memory authority, a citation source, or a sufficiency signal. Do not let them replace "
+    "fresh Knowledge or Memory retrieval. Do not invent facts or citations."
 )
 POST_KNOWLEDGE_DECISION_MESSAGE = (
     "The original user task remains authoritative. Knowledge evidence is now available. "
@@ -164,8 +172,8 @@ class BoundedAgentRuntime:
         model: str,
         request_workflow_id: str,
         conversation_context: Optional[str] = None,
-        substantive_conversation_context: Optional[str] = None,
-        substantive_conversation_reference_context: Optional[str] = None,
+        reference_resolver_history: Optional[List[ReferenceResolverMessage]] = None,
+        current_sequence_number: Optional[int] = None,
         history_message_count: Optional[int] = None,
         history_roles: Optional[List[str]] = None,
         explicit_save_allowed: bool = False,
@@ -265,11 +273,8 @@ class BoundedAgentRuntime:
                 provider_name=provider_name,
                 model=model,
                 request_workflow_id=request_workflow_id,
-                conversation_context=conversation_context,
-                substantive_conversation_context=substantive_conversation_context,
-                substantive_conversation_reference_context=(
-                    substantive_conversation_reference_context
-                ),
+                reference_resolver_history=reference_resolver_history or [],
+                current_sequence_number=current_sequence_number,
                 response_language=response_language,
                 state=state,
                 tool_metadata=tool_metadata,
@@ -500,9 +505,8 @@ class BoundedAgentRuntime:
         provider_name: str,
         model: str,
         request_workflow_id: str,
-        conversation_context: Optional[str],
-        substantive_conversation_context: Optional[str],
-        substantive_conversation_reference_context: Optional[str],
+        reference_resolver_history: List[ReferenceResolverMessage],
+        current_sequence_number: Optional[int],
         response_language: ResponseLanguage,
         state: AgentState,
         tool_metadata: Dict[str, Any],
@@ -519,13 +523,50 @@ class BoundedAgentRuntime:
             tool["function"]["name"] for tool in self.tool_registry.tool_specs()
         ]
         try:
+            resolver_response = await self.provider_router.route(
+                provider_name,
+                LLMRequest(
+                    model=model,
+                    messages=self._reference_binding_messages(
+                        query=query,
+                        resolver_history=reference_resolver_history,
+                    ),
+                    temperature=0.0,
+                    max_tokens=200,
+                    response_format=ReferenceBindingDecision.response_format(),
+                    metadata={
+                        "workflow_id": request_workflow_id,
+                        "operation": "reference_binding_resolution",
+                        "session_id": session_id,
+                        "owner_id": owner_id,
+                    },
+                ),
+            )
+            if resolver_response.tool_calls:
+                raise ValueError("reference resolver returned tool calls")
+            resolver_decision = ReferenceBindingDecision.model_validate(
+                resolver_response.structured_output
+            )
+            resolver_current_sequence = current_sequence_number or (
+                max(
+                    (message.sequence_number for message in reference_resolver_history),
+                    default=0,
+                )
+                + 1
+            )
+            state.reference_bindings = validate_reference_bindings(
+                decision=resolver_decision,
+                current_message=query,
+                current_sequence_number=resolver_current_sequence,
+                resolver_history=reference_resolver_history,
+            )
             selector_response = await self.provider_router.route(
                 provider_name,
                 LLMRequest(
                     model=model,
                     messages=self._context_selector_messages(
                         query=query,
-                        conversation_context=conversation_context,
+                        reference_bindings=state.reference_bindings,
                     ),
                     temperature=0.0,
                     max_tokens=200,
@@ -551,23 +592,6 @@ class BoundedAgentRuntime:
             )
 
         state.context_requirement_decision = decision
-        if (
-            decision.conversation_dependency == ConversationDependency.REQUIRED
-            and not (
-                substantive_conversation_reference_context
-                and substantive_conversation_reference_context.strip()
-            )
-        ):
-            return self._failed_result(
-                state,
-                AgentTerminationReason.PROVIDER_ERROR,
-                selector_response,
-            )
-        if decision.conversation_dependency == ConversationDependency.REQUIRED:
-            # The pair is interpretation context only. This flag prevents the
-            # generic no-context guard from treating a valid referential turn
-            # as empty; Knowledge sufficiency remains independently gated.
-            state.conversation_authority_available = True
         memory_requirement_count = (
             len(decision.contextual_facets)
             if decision.needs_knowledge
@@ -587,7 +611,9 @@ class BoundedAgentRuntime:
                 (
                     "search_knowledge",
                     {
-                        "query": query,
+                        "query": self._knowledge_retrieval_query(
+                            query, state.reference_bindings
+                        ),
                         "top_k": tool_metadata["top_k"],
                         "page_ids": tool_metadata.get("page_ids"),
                         "section_paths": tool_metadata.get("section_paths"),
@@ -652,17 +678,11 @@ class BoundedAgentRuntime:
         if decision.needs_knowledge and state.knowledge_accepted_evidence_count == 0:
             return self._complete_insufficient_info_result(state)
 
-        final_conversation_context = None
-        conversation_context_label = "CONVERSATION_CONTEXT"
-        if decision.conversation_dependency == ConversationDependency.REQUIRED:
-            final_conversation_context = substantive_conversation_reference_context
-            conversation_context_label = "CONVERSATION_REFERENCE_CONTEXT"
         final_messages = self._initial_messages(
             query=query,
-            conversation_context=final_conversation_context,
+            conversation_context=None,
             conversation_transform=False,
             response_language=response_language,
-            conversation_context_label=conversation_context_label,
         )
         final_messages.append(
             LLMMessage(
@@ -756,16 +776,43 @@ class BoundedAgentRuntime:
         self,
         *,
         query: str,
-        conversation_context: Optional[str],
+        reference_bindings: List[ReferenceBinding],
     ) -> List[LLMMessage]:
         user = format_untrusted_prompt_block(label="USER_MESSAGE", value=query)
-        if conversation_context and conversation_context.strip():
-            user += "\n\n" + format_untrusted_prompt_block(
-                label="CONVERSATION_CONTEXT",
-                value=conversation_context,
-            )
+        user += "\n\n" + format_untrusted_prompt_block(
+            label="REFERENCE_BINDINGS",
+            value=json.dumps(
+                [binding.model_dump() for binding in reference_bindings],
+                ensure_ascii=False,
+                sort_keys=True,
+            ),
+        )
         return [
             LLMMessage(role="system", content=CONTEXT_SELECTOR_SYSTEM_MESSAGE),
+            LLMMessage(role="user", content=user),
+        ]
+
+    def _reference_binding_messages(
+        self,
+        *,
+        query: str,
+        resolver_history: List[ReferenceResolverMessage],
+    ) -> List[LLMMessage]:
+        history_value = "\n\n".join(
+            (
+                f"message_id={message.message_id} "
+                f"sequence_number={message.sequence_number} role={message.role}\n"
+                f"{message.content}"
+            )
+            for message in resolver_history
+        ) or "No bounded earlier messages are available."
+        user = format_untrusted_prompt_block(label="CURRENT_MESSAGE", value=query)
+        user += "\n\n" + format_untrusted_prompt_block(
+            label="RESOLVER_HISTORY",
+            value=history_value,
+        )
+        return [
+            LLMMessage(role="system", content=REFERENCE_BINDING_SYSTEM_MESSAGE),
             LLMMessage(role="user", content=user),
         ]
 
@@ -796,6 +843,11 @@ class BoundedAgentRuntime:
             else "This task does not require Knowledge evidence."
         )
         decision = state.context_requirement_decision
+        reference_bindings = json.dumps(
+            [binding.model_dump() for binding in state.reference_bindings],
+            ensure_ascii=False,
+            sort_keys=True,
+        )
         if knowledge_required and decision is not None and decision.contextual_facets:
             knowledge_rule += (
                 " Contextual saved memory is optional supplemental context. Missing or partial "
@@ -804,9 +856,22 @@ class BoundedAgentRuntime:
             )
         return (
             f"{CONTEXT_ASSEMBLY_SYSTEM_PREFIX}\n{knowledge_rule}\n\n"
+            f"{format_untrusted_prompt_block(label='REFERENCE_BINDINGS', value=reference_bindings)}\n\n"
             f"{format_untrusted_prompt_block(label='KNOWLEDGE_CONTEXT', value=knowledge_items)}\n\n"
             f"{format_untrusted_prompt_block(label='MEMORY_CONTEXT', value=memory_items)}"
         )
+
+    @staticmethod
+    def _knowledge_retrieval_query(
+        query: str,
+        reference_bindings: List[ReferenceBinding],
+    ) -> str:
+        if not reference_bindings:
+            return query
+        references = "\n".join(
+            f"Reference: {binding.source_span}" for binding in reference_bindings
+        )
+        return f"{query}\n{references}"
 
     async def _execute_tool(
         self,
@@ -1158,7 +1223,6 @@ class BoundedAgentRuntime:
                     {
                         "needs_knowledge": state.context_requirement_decision.needs_knowledge,
                         "needs_memory": state.context_requirement_decision.needs_memory,
-                        "conversation_dependency": state.context_requirement_decision.conversation_dependency.value,
                         "contextual_facet_count": len(
                             state.context_requirement_decision.contextual_facets
                         ),
@@ -1169,6 +1233,7 @@ class BoundedAgentRuntime:
                     if state.context_requirement_decision is not None
                     else None
                 ),
+                "reference_binding_count": len(state.reference_bindings),
                 "history_message_count": state.history_message_count,
                 "history_roles": list(state.history_roles),
                 "insufficient_info_source": state.insufficient_info_source,

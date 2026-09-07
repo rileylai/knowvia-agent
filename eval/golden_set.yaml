@@ -131,7 +131,7 @@ scenarios:
     expected_memory_use: true
     max_tool_calls: 3
 
-  - id: standalone-conversation-dependency-none
+  - id: standalone-reference-binding-empty
     category: context_requirement
     setup:
       fixture: atlas
@@ -145,14 +145,15 @@ scenarios:
       - no previous user or assistant history in final synthesis
       - no insufficient_info or provider contract error across the standalone replay
     verification:
-      - structured selector returns conversation_dependency none
+      - reference resolver returns empty bindings
+      - structured selector receives no raw conversation history
       - Knowledge and both contextual Memory dependencies execute on every turn
       - final synthesis excludes prior conversation history
     expected_citation_kind: pdf
     expected_memory_use: true
     max_tool_calls: 3
 
-  - id: repeated-standalone-dependency-none
+  - id: repeated-standalone-reference-binding-empty
     category: context_requirement
     setup:
       fixture: atlas
@@ -166,27 +167,28 @@ scenarios:
       - no history contamination in final synthesis
       - no request failure or insufficient_info sentinel
     verification:
-      - conversation_dependency none is selected four times
+      - reference resolver returns empty bindings four times
+      - selector and final receive no raw conversation history
       - fresh Knowledge and Memory retrieval runs four times
       - every turn completes
     expected_citation_kind: pdf
     expected_memory_use: true
     max_tool_calls: 3
 
-  - id: referential-substantive-dependency-required
+  - id: referential-substantive-reference-binding
     category: context_requirement
     setup:
       fixture: atlas
       evidence: pdf
     user_input: What about the second one?
-    expected_behavior: A referential substantive task receives only the most recent completed turn as interpretation context.
+    expected_behavior: A referential substantive task receives only a backend-validated textual binding.
     forbidden_behavior:
       - no older conversation history in final synthesis
       - conversation reference is not a Knowledge citation source
     verification:
-      - structured selector returns conversation_dependency required
-      - final synthesis contains CONVERSATION_REFERENCE_CONTEXT
-      - only the immediately preceding completed user/assistant pair is included
+      - reference resolver returns a valid binding
+      - selector and final receive the typed binding without raw history
+      - retrieval uses the validated source span as deterministic enrichment
     expected_citation_kind: pdf
     expected_memory_use: false
     max_tool_calls: 3

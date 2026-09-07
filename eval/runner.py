@@ -18,6 +18,7 @@ from src.repositories.memory_repository import LongTermMemorySnapshot
 from src.services.execution_events import iter_answer_deltas
 from src.conversation_context import (
     ConversationContextMessage,
+    ReferenceResolverMessage,
     assemble_conversation_context,
 )
 from src.mcp.server import NativeMCPServer
@@ -36,11 +37,13 @@ class ScriptedProvider(LLMProvider):
         responses: Sequence[LLMResponse],
         *,
         structured_output: bool = False,
+        reference_bindings: Optional[Dict[str, Any]] = None,
     ) -> None:
         self._responses = list(copy.deepcopy(list(responses)))
         self.requests: List[LLMRequest] = []
         self.scripted_tool_names: List[str] = []
         self.supports_structured_output = structured_output
+        self.reference_bindings = reference_bindings or {"reference_bindings": []}
 
     @property
     def name(self) -> str:
@@ -48,6 +51,17 @@ class ScriptedProvider(LLMProvider):
 
     async def generate(self, request: LLMRequest) -> LLMResponse:
         self.requests.append(request)
+        if (
+            request.response_format is not None
+            and request.response_format["json_schema"]["name"]
+            == "reference_binding_decision"
+        ):
+            return LLMResponse(
+                provider=self.name,
+                model=request.model,
+                output_text="",
+                structured_output=copy.deepcopy(self.reference_bindings),
+            )
         if not self._responses:
             raise RuntimeError("script exhausted")
         response = self._responses.pop(0)
@@ -230,42 +244,48 @@ def _run_agent_scenario(scenario: GoldenScenario) -> Dict[str, Any]:
             scenario.id.startswith("context-requirement-")
             or scenario.id.startswith("contextual-facet-")
             or scenario.id in {
-                "standalone-conversation-dependency-none",
-                "repeated-standalone-dependency-none",
-                "referential-substantive-dependency-required",
+                "standalone-reference-binding-empty",
+                "repeated-standalone-reference-binding-empty",
+                "referential-substantive-reference-binding",
             }
             or knowledge_gate_scenario
         ),
     )
     runtime = _runtime(provider, retriever, memory_service)
     explicit_save = setup.get("explicit_save")
-    conversation_context = None
-    substantive_conversation_context = None
-    substantive_conversation_reference_context = None
-    if scenario.id == "standalone-conversation-dependency-none":
-        conversation_context = (
-            "[user] Previous substantive question\n\n"
-            "[assistant] Previous grounded answer.\n\n"
-            f"[user] {scenario.user_input}"
-        )
-        substantive_conversation_context = "[user] Previous substantive question"
-    elif scenario.id == "referential-substantive-dependency-required":
-        conversation_context = (
-            "[user] Older task\n\n[assistant] Older answer.\n\n"
-            "[user] Which practices should we compare?\n\n"
-            "[assistant] The second option is controlled rollout.\n\n"
-            f"[user] {scenario.user_input}"
-        )
-        substantive_conversation_context = (
-            "[user] Older task\n\n[assistant] Older answer.\n\n"
-            "[user] Which practices should we compare?"
-        )
-        substantive_conversation_reference_context = (
-            "[user] Which practices should we compare?\n\n"
-            "[assistant] The second option is controlled rollout."
-        )
+    reference_bindings = None
+    resolver_history: List[ReferenceResolverMessage] = []
+    if scenario.id == "referential-substantive-reference-binding":
+        reference_bindings = {
+            "reference_bindings": [
+                {
+                    "current_span": "the second one",
+                    "source_message_id": 41,
+                    "source_span": "Tool Boundaries",
+                }
+            ]
+        }
+        resolver_history = [
+            ReferenceResolverMessage(
+                message_id=40,
+                sequence_number=1,
+                role="user",
+                content="Which practices should we compare?",
+            ),
+            ReferenceResolverMessage(
+                message_id=41,
+                sequence_number=2,
+                role="assistant",
+                content="1. Deterministic Control Flow\n2. Tool Boundaries",
+            ),
+        ]
+    provider.reference_bindings = reference_bindings or {"reference_bindings": []}
 
-    def run_once(index: int, *, history: Optional[str] = None) -> Any:
+    def run_once(
+        index: int,
+        *,
+        resolver_visible_history: Optional[List[ReferenceResolverMessage]] = None,
+    ) -> Any:
         return asyncio.run(
             runtime.run(
                 query=scenario.user_input,
@@ -274,11 +294,12 @@ def _run_agent_scenario(scenario: GoldenScenario) -> Dict[str, Any]:
                 provider_name=provider.name,
                 model="eval-scripted-1",
                 request_workflow_id=f"eval-{scenario.id}-{index}",
-                conversation_context=history if history is not None else conversation_context,
-                substantive_conversation_context=substantive_conversation_context,
-                substantive_conversation_reference_context=(
-                    substantive_conversation_reference_context
+                reference_resolver_history=(
+                    resolver_visible_history
+                    if resolver_visible_history is not None
+                    else resolver_history
                 ),
+                current_sequence_number=3 if resolver_history else None,
                 explicit_save_allowed=isinstance(explicit_save, dict),
                 explicit_save_content=(
                     explicit_save.get("content") if isinstance(explicit_save, dict) else None
@@ -290,16 +311,21 @@ def _run_agent_scenario(scenario: GoldenScenario) -> Dict[str, Any]:
         )
 
     results = []
-    if scenario.id == "repeated-standalone-dependency-none":
+    if scenario.id == "repeated-standalone-reference-binding-empty":
         for index in range(4):
-            history = "\n\n".join(
-                (
-                    *(f"[user] Prior substantive question {turn}" for turn in range(index)),
-                    *(f"[assistant] Prior grounded answer {turn}" for turn in range(index)),
-                    f"[user] {scenario.user_input}",
+            results.append(
+                run_once(
+                    index,
+                    resolver_visible_history=[
+                        ReferenceResolverMessage(
+                            message_id=100 + index,
+                            sequence_number=1,
+                            role="assistant",
+                            content="Incidental prior answer.",
+                        )
+                    ],
                 )
             )
-            results.append(run_once(index, history=history))
     else:
         results.append(run_once(0))
     result = results[-1]
@@ -344,10 +370,11 @@ def _run_agent_scenario(scenario: GoldenScenario) -> Dict[str, Any]:
         ),
     ]
     if scenario.id in {
-        "standalone-conversation-dependency-none",
-        "repeated-standalone-dependency-none",
+        "standalone-reference-binding-empty",
+        "repeated-standalone-reference-binding-empty",
     }:
-        final_requests = provider.requests[1::2]
+        selector_requests = provider.requests[1::3]
+        final_requests = provider.requests[2::3]
         checks.extend(
             [
                 _check(
@@ -364,16 +391,17 @@ def _run_agent_scenario(scenario: GoldenScenario) -> Dict[str, Any]:
                     bool(
                         provider.requests
                         and provider.requests[0].response_format
-                        and "conversation_dependency"
+                        and "reference_bindings"
                         in provider.requests[0].response_format["json_schema"]["schema"]["required"]
+                        and "conversation_dependency"
+                        not in provider.requests[1].response_format["json_schema"]["schema"]["required"]
                     ),
-                    "selector_dependency_field",
-                    "required",
+                    "binding_selector_schema",
+                    "reference binding schema only",
                 ),
                 _check(
                     all(
-                        "Prior substantive" not in request.messages[1].content
-                        and "Prior grounded" not in request.messages[1].content
+                        "Incidental prior answer" not in request.messages[1].content
                         for request in final_requests
                     ),
                     "final_history_absent",
@@ -391,22 +419,23 @@ def _run_agent_scenario(scenario: GoldenScenario) -> Dict[str, Any]:
                 ),
             ]
         )
-    if scenario.id == "referential-substantive-dependency-required":
+    if scenario.id == "referential-substantive-reference-binding":
         final_request = provider.requests[-1]
-        final_content = final_request.messages[1].content
+        final_content = "\n".join(message.content for message in final_request.messages)
         checks.extend(
             [
                 _check(
-                    "CONVERSATION_REFERENCE_CONTEXT" in final_content,
-                    "reference_context_label",
+                    "REFERENCE_BINDINGS" in final_content
+                    and "Tool Boundaries" in final_content,
+                    "validated_reference_binding",
                     "present",
                 ),
                 _check(
-                    "Which practices should we compare?" in final_content
-                    and "The second option is controlled rollout." in final_content
-                    and "Older task" not in final_content,
-                    "most_recent_completed_turn_only",
-                    "recent pair only",
+                    "1. Deterministic Control Flow" not in final_content
+                    and "2. Tool Boundaries" not in final_content
+                    and "CONVERSATION_REFERENCE_CONTEXT" not in final_content,
+                    "raw_reference_history_absent",
+                    "absent",
                 ),
             ]
         )
@@ -465,7 +494,7 @@ def _run_agent_scenario(scenario: GoldenScenario) -> Dict[str, Any]:
         checks.extend(
             [
                 _check(
-                    len(provider.requests) == 1,
+                    len(provider.requests) == 2,
                     "final_synthesis_not_called",
                     str(len(provider.requests)),
                 ),
@@ -682,13 +711,12 @@ def _runtime(
 def _provider_script(scenario: GoldenScenario) -> List[LLMResponse]:
     setup = scenario.setup
     if scenario.id in {
-        "standalone-conversation-dependency-none",
-        "repeated-standalone-dependency-none",
+        "standalone-reference-binding-empty",
+        "repeated-standalone-reference-binding-empty",
     }:
         decision = {
             "needs_knowledge": True,
             "needs_memory": True,
-            "conversation_dependency": "none",
             "contextual_facets": [
                 {"id": "c1", "text": "company size"},
                 {"id": "c2", "text": "development preferences"},
@@ -709,7 +737,7 @@ def _provider_script(scenario: GoldenScenario) -> List[LLMResponse]:
                 _final("The bounded standalone answer is grounded."),
             ]
         ]
-    if scenario.id == "referential-substantive-dependency-required":
+    if scenario.id == "referential-substantive-reference-binding":
         return [
             LLMResponse(
                 provider="eval-scripted",
@@ -720,7 +748,6 @@ def _provider_script(scenario: GoldenScenario) -> List[LLMResponse]:
                     "needs_memory": False,
                     "contextual_facets": [],
                     "memory_query": None,
-                    "conversation_dependency": "required",
                 },
             ),
             _final("The referential answer is grounded."),
@@ -729,7 +756,6 @@ def _provider_script(scenario: GoldenScenario) -> List[LLMResponse]:
         decision = {
             "needs_knowledge": True,
             "needs_memory": True,
-            "conversation_dependency": "none",
             "contextual_facets": [
                 {"id": "c1", "text": "company size"},
                 {"id": "c2", "text": "development preferences"},
@@ -748,7 +774,6 @@ def _provider_script(scenario: GoldenScenario) -> List[LLMResponse]:
         decision = {
             "needs_knowledge": scenario.id != "context-requirement-memory-only",
             "needs_memory": scenario.id != "context-requirement-knowledge-only",
-            "conversation_dependency": "none",
             "memory_query": (
                 "company size and development preferences relevant to prioritization"
                 if scenario.id != "context-requirement-knowledge-only"
@@ -790,7 +815,6 @@ def _provider_script(scenario: GoldenScenario) -> List[LLMResponse]:
                 structured_output={
                     "needs_knowledge": True,
                     "needs_memory": False,
-                    "conversation_dependency": "none",
                     "memory_query": None,
                 },
             ),

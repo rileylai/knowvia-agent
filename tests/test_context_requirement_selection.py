@@ -14,7 +14,6 @@ from sqlalchemy.pool import StaticPool
 from src.agent import (
     AgentTerminationReason,
     BoundedAgentRuntime,
-    ConversationDependency,
     ContextualFacet,
     ContextRequirementDecision,
     build_agent_tool_registry,
@@ -22,6 +21,7 @@ from src.agent import (
 from src.providers import LLMProvider, LLMRequest, LLMResponse, ProviderRouter
 from src.rag import RetrievalResult, RetrievedChunk
 from src.repositories.memory_repository import LongTermMemorySnapshot
+from src.conversation_context import ReferenceResolverMessage
 from src.db.base import Base
 from src.db.models import WorkflowRun
 from src.services.workflow_run_service import WorkflowRunService
@@ -47,10 +47,17 @@ class StructuredDecisionProvider(LLMProvider):
     async def generate(self, request: LLMRequest) -> LLMResponse:
         self.requests.append(request)
         if request.response_format is not None:
+            schema_name = request.response_format["json_schema"]["name"]
+            if schema_name == "reference_binding_decision":
+                return LLMResponse(
+                    provider=self.name,
+                    model=request.model,
+                    output_text="",
+                    structured_output={"reference_bindings": []},
+                )
             if not self.decisions:
                 raise RuntimeError("structured decision exhausted")
             decision = dict(self.decisions.pop(0))
-            decision.setdefault("conversation_dependency", "none")
             return LLMResponse(
                 provider=self.name,
                 model=request.model,
@@ -78,6 +85,14 @@ class HistorySensitiveStructuredProvider(LLMProvider):
     async def generate(self, request: LLMRequest) -> LLMResponse:
         self.requests.append(request)
         if request.response_format is not None:
+            schema_name = request.response_format["json_schema"]["name"]
+            if schema_name == "reference_binding_decision":
+                return LLMResponse(
+                    provider=self.name,
+                    model=request.model,
+                    output_text="",
+                    structured_output={"reference_bindings": []},
+                )
             return LLMResponse(
                 provider=self.name,
                 model=request.model,
@@ -90,7 +105,6 @@ class HistorySensitiveStructuredProvider(LLMProvider):
                         {"id": "c2", "text": "development preferences"},
                     ],
                     "memory_query": None,
-                    "conversation_dependency": "none",
                 },
             )
         final_user_message = request.messages[1].content
@@ -106,37 +120,42 @@ class HistorySensitiveStructuredProvider(LLMProvider):
         )
 
 
-class ConversationDependencyProvider(LLMProvider):
+class ReferenceBindingProvider(LLMProvider):
     supports_tool_calling = True
     supports_structured_output = True
 
-    def __init__(self, dependencies: List[str], *, final_output: str = "final text") -> None:
-        self.dependencies = list(dependencies)
+    def __init__(
+        self,
+        *,
+        reference_bindings: List[Dict[str, Any]],
+        decision: Dict[str, Any],
+        final_output: str = "The fresh authorities support this answer.",
+    ) -> None:
+        self.reference_bindings = reference_bindings
+        self.decision = decision
         self.final_output = final_output
         self.requests: List[LLMRequest] = []
+        self.structured_outputs: List[Dict[str, Any]] = []
 
     @property
     def name(self) -> str:
-        return "conversation-dependency-scripted"
+        return "reference-binding-scripted"
 
     async def generate(self, request: LLMRequest) -> LLMResponse:
         self.requests.append(request)
         if request.response_format is not None:
-            dependency = self.dependencies.pop(0)
+            schema_name = request.response_format["json_schema"]["name"]
+            output = (
+                {"reference_bindings": self.reference_bindings}
+                if schema_name == "reference_binding_decision"
+                else dict(self.decision)
+            )
+            self.structured_outputs.append(output)
             return LLMResponse(
                 provider=self.name,
                 model=request.model,
                 output_text="",
-                structured_output={
-                    "needs_knowledge": True,
-                    "needs_memory": True,
-                    "contextual_facets": [
-                        {"id": "c1", "text": "company size"},
-                        {"id": "c2", "text": "development preferences"},
-                    ],
-                    "memory_query": None,
-                    "conversation_dependency": dependency,
-                },
+                structured_output=output,
             )
         return LLMResponse(
             provider=self.name,
@@ -287,8 +306,8 @@ def _run(
     *,
     provider_name: str = "structured-scripted",
     conversation_context: Optional[str] = None,
-    substantive_conversation_context: Optional[str] = None,
-    substantive_conversation_reference_context: Optional[str] = None,
+    reference_resolver_history: Optional[List[Any]] = None,
+    current_sequence_number: Optional[int] = None,
     history_message_count: Optional[int] = None,
     history_roles: Optional[List[str]] = None,
 ) -> Any:
@@ -301,10 +320,8 @@ def _run(
             model="fixture-1",
             request_workflow_id="wf-context-selection",
             conversation_context=conversation_context,
-            substantive_conversation_context=substantive_conversation_context,
-            substantive_conversation_reference_context=(
-                substantive_conversation_reference_context
-            ),
+            reference_resolver_history=reference_resolver_history,
+            current_sequence_number=current_sequence_number,
             history_message_count=history_message_count,
             history_roles=history_roles,
         )
@@ -329,7 +346,6 @@ def test_context_requirement_decision_validates_bounded_contract() -> None:
             ContextualFacet(id="c1", text="company size"),
             ContextualFacet(id="c2", text="development preferences"),
         ],
-        conversation_dependency=ConversationDependency.NONE,
     )
 
     assert decision.model_dump() == {
@@ -340,7 +356,6 @@ def test_context_requirement_decision_validates_bounded_contract() -> None:
             {"id": "c2", "text": "development preferences"},
         ],
         "memory_query": None,
-        "conversation_dependency": "none",
     }
     assert "steps" not in ContextRequirementDecision.model_json_schema()["properties"]
 
@@ -354,73 +369,14 @@ def test_context_requirement_decision_rejects_malformed_memory_requirement() -> 
         )
 
 
-@pytest.mark.parametrize(
-    "payload",
-    [
-        {
-            "needs_knowledge": True,
-            "needs_memory": False,
-            "contextual_facets": [],
-            "memory_query": None,
-        },
-        {
-            "needs_knowledge": True,
-            "needs_memory": False,
-            "contextual_facets": [],
-            "memory_query": None,
-            "conversation_dependency": None,
-        },
-        {
-            "needs_knowledge": True,
-            "needs_memory": False,
-            "contextual_facets": [],
-            "memory_query": None,
-            "conversation_dependency": True,
-        },
-        {
-            "needs_knowledge": True,
-            "needs_memory": False,
-            "contextual_facets": [],
-            "memory_query": None,
-            "conversation_dependency": "optional",
-        },
-        {
-            "needs_knowledge": True,
-            "needs_memory": False,
-            "contextual_facets": [],
-            "memory_query": None,
-            "conversation_dependency": "none",
-            "extra": "forbidden",
-        },
-    ],
-)
-def test_context_requirement_decision_requires_strict_conversation_dependency(
-    payload: Dict[str, Any],
-) -> None:
-    with pytest.raises(ValidationError):
-        ContextRequirementDecision.model_validate(payload)
-
-
-def test_context_requirement_decision_accepts_both_conversation_dependencies() -> None:
-    for value in ("none", "required"):
-        decision = ContextRequirementDecision.model_validate(
-            {
-                "needs_knowledge": True,
-                "needs_memory": False,
-                "contextual_facets": [],
-                "memory_query": None,
-                "conversation_dependency": value,
-            }
-        )
-        assert decision.conversation_dependency.value == value
-
+def test_context_requirement_decision_rejects_conversation_dependency_and_unknown_fields() -> None:
     with pytest.raises(ValidationError):
         ContextRequirementDecision.model_validate(
             {
                 "needs_knowledge": True,
                 "needs_memory": False,
                 "memory_query": None,
-                "unexpected": "planner-shaped output",
+                "conversation_dependency": "none",
             }
         )
 
@@ -433,7 +389,6 @@ def test_context_requirement_decision_accepts_bounded_contextual_facets() -> Non
             ContextualFacet(id="c1", text="company size"),
             ContextualFacet(id="c2", text="development preferences"),
         ],
-        conversation_dependency=ConversationDependency.NONE,
     )
 
     assert decision.model_dump() == {
@@ -444,7 +399,6 @@ def test_context_requirement_decision_accepts_bounded_contextual_facets() -> Non
             {"id": "c2", "text": "development preferences"},
         ],
         "memory_query": None,
-        "conversation_dependency": "none",
     }
     assert "contextual_facets" in ContextRequirementDecision.model_json_schema()[
         "properties"
@@ -455,7 +409,6 @@ def test_context_requirement_decision_accepts_bounded_contextual_facets() -> Non
         "needs_memory",
         "contextual_facets",
         "memory_query",
-        "conversation_dependency",
     }
     assert "default" not in wire_schema["properties"]["memory_query"]
 
@@ -498,7 +451,6 @@ def test_contextual_facets_reject_unbounded_or_non_atomic_shapes() -> None:
             needs_memory=True,
             contextual_facets=[ContextualFacet(id="c1", text="company size")],
             memory_query="company context",
-            conversation_dependency=ConversationDependency.NONE,
         )
 
 
@@ -623,11 +575,13 @@ def test_context_selector_marks_previous_answer_as_non_authority() -> None:
     )
 
     assert result.status == "succeeded"
-    selector_system = provider.requests[0].messages[0].content
-    assert "Conversation history may clarify references and task intent" in selector_system
+    selector_request = provider.requests[1]
+    selector_system = selector_request.messages[0].content
+    assert "The exact current user message is authoritative" in selector_system
     assert "previous assistant content is not Knowledge evidence" in selector_system
     assert "previous assistant mention of saved facts is not current LongTermMemory retrieval" in selector_system
     assert "Do not set a requirement false merely because the relevant fact appeared in a previous assistant response" in selector_system
+    assert "[assistant]" not in selector_request.messages[1].content
 
 
 def test_repeated_substantive_query_reacquires_both_authorities() -> None:
@@ -681,9 +635,12 @@ def test_repeated_substantive_query_reacquires_both_authorities() -> None:
     assert len(memory_service.search_calls) == 3
     assert [request.response_format is not None for request in provider.requests] == [
         True,
-        False,
         True,
         False,
+        True,
+        True,
+        False,
+        True,
         True,
         False,
     ]
@@ -721,12 +678,6 @@ def test_repeated_substantive_final_synthesis_excludes_previous_assistant() -> N
             f"[user] {query}\n\n[assistant] The second grounded answer."
         ),
     ]
-    substantive_contexts = [
-        None,
-        f"[user] {query}",
-        f"[user] {query}\n\n[user] {query}",
-    ]
-
     results = [
         asyncio.run(
             runtime.run(
@@ -737,11 +688,10 @@ def test_repeated_substantive_final_synthesis_excludes_previous_assistant() -> N
                 model="fixture-1",
                 request_workflow_id=f"wf-authority-isolation-{index}",
                 conversation_context=context,
-                substantive_conversation_context=substantive_context,
             )
         )
-        for index, (context, substantive_context) in enumerate(
-            zip(contexts, substantive_contexts),
+        for index, context in enumerate(
+            contexts,
             start=1,
         )
     ]
@@ -755,10 +705,9 @@ def test_repeated_substantive_final_synthesis_excludes_previous_assistant() -> N
     assert all(result.tool_calls_used == 3 for result in results)
     assert len(retriever.calls) == 3
     assert len(memory_service.search_calls) == 6
-    selector_requests = provider.requests[0::2]
-    final_requests = provider.requests[1::2]
-    assert "[assistant]" in selector_requests[1].messages[1].content
-    assert "[assistant]" in selector_requests[2].messages[1].content
+    selector_requests = provider.requests[1::3]
+    final_requests = provider.requests[2::3]
+    assert all("[assistant]" not in request.messages[1].content for request in selector_requests)
     assert all("[assistant]" not in request.messages[1].content for request in final_requests)
     assert all(query in request.messages[1].content for request in final_requests)
     assert final_requests[1].messages[1].content.count(query) == 1
@@ -797,10 +746,11 @@ def test_structured_knowledge_only_executes_knowledge_once_without_memory() -> N
     assert memory_service.search_calls == []
     assert result.citations and result.citations[0].source_kind == "pdf"
     assert result.used_saved_memory is False
-    assert len(provider.requests) == 2
-    assert provider.requests[0].response_format is not None
-    assert provider.requests[1].tools is None
-    assert provider.requests[1].response_format is None
+    assert len(provider.requests) == 3
+    assert provider.requests[0].response_format["json_schema"]["name"] == "reference_binding_decision"
+    assert provider.requests[1].response_format["json_schema"]["name"] == "context_requirement_decision"
+    assert provider.requests[2].tools is None
+    assert provider.requests[2].response_format is None
 
 
 def test_structured_memory_only_executes_memory_once_without_knowledge() -> None:
@@ -942,7 +892,7 @@ def test_structured_decision_fails_closed_before_any_tool_on_malformed_output() 
     assert result.termination_reason == AgentTerminationReason.PROVIDER_ERROR
     assert retriever.calls == []
     assert memory_service.search_calls == []
-    assert len(provider.requests) == 1
+    assert len(provider.requests) == 2
 
 
 def test_mixed_required_context_fails_closed_when_tool_budget_is_one() -> None:
@@ -966,7 +916,7 @@ def test_mixed_required_context_fails_closed_when_tool_budget_is_one() -> None:
     assert result.termination_reason == AgentTerminationReason.MAX_TOOL_CALLS
     assert retriever.calls == []
     assert memory_service.search_calls == []
-    assert len(provider.requests) == 1
+    assert len(provider.requests) == 2
 
 
 def test_structured_context_execution_emits_each_search_and_one_generation() -> None:
@@ -1037,7 +987,6 @@ def test_workflow_metadata_projects_bounded_context_execution_without_content() 
     assert metadata["context_requirement"] == {
         "needs_knowledge": True,
         "needs_memory": True,
-        "conversation_dependency": "none",
         "contextual_facet_count": 1,
         "memory_query_present": False,
     }
@@ -1131,7 +1080,7 @@ def test_insufficient_info_source_distinguishes_backend_guard_and_provider_senti
     assert guarded_result.insufficient_info is True
     assert guarded_result.provider is None
     assert guarded_result.used_saved_memory is False
-    assert len(guard_provider.requests) == 1
+    assert len(guard_provider.requests) == 2
     assert guarded_metadata["insufficient_info_source"] == "knowledge_required_but_missing"
 
     sentinel_provider = StructuredDecisionProvider(
@@ -1224,7 +1173,7 @@ def test_knowledge_gate_short_circuits_final_provider_when_no_evidence_is_accept
     assert result.insufficient_info is True
     assert result.citations == []
     assert result.provider is None
-    assert len(provider.requests) == 1
+    assert len(provider.requests) == 2
     assert metadata["knowledge_candidate_count"] == 2
     assert metadata["knowledge_accepted_evidence_count"] == 0
     assert metadata["knowledge_context_count"] == 0
@@ -1267,8 +1216,23 @@ def test_accepted_knowledge_and_memory_provider_sentinel_is_contract_failure() -
     assert workflow.failure_reason == "LLM_OUTPUT_INVALID"
 
 
-def test_standalone_dependency_none_omits_all_prior_conversation_for_four_turns() -> None:
-    provider = ConversationDependencyProvider(["none"] * 4)
+def test_repeated_self_contained_request_keeps_selector_and_final_free_of_raw_history() -> None:
+    query = (
+        "Considering our company size and development preferences, "
+        "which practices from the indexed PDF should we prioritize?"
+    )
+    provider = ReferenceBindingProvider(
+        reference_bindings=[],
+        decision={
+            "needs_knowledge": True,
+            "needs_memory": True,
+            "contextual_facets": [
+                {"id": "c1", "text": "company size"},
+                {"id": "c2", "text": "development preferences"},
+            ],
+            "memory_query": None,
+        },
+    )
     router = ProviderRouter()
     router.register_provider(provider)
     retriever = FixtureRetriever()
@@ -1284,125 +1248,137 @@ def test_standalone_dependency_none_omits_all_prior_conversation_for_four_turns(
         ),
         max_tool_calls=3,
     )
-    query = (
-        "Considering our company size and development preferences, "
-        "which practices from the indexed PDF should we prioritize?"
-    )
 
     for index in range(4):
-        prior_history = "\n\n".join(
-            item
-            for item in (
-                "\n\n".join(
-                    f"[user] prior substantive {turn}" for turn in range(index)
-                ),
-                "[assistant] Prior grounded answer.",
-                f"[user] {query}",
-            )
-            if item
-        )
-        user_side_context = "\n\n".join(
-            f"[user] {value}"
-            for value in [*(f"prior substantive {turn}" for turn in range(index)), query]
-        )
         result = _run(
             runtime,
             query,
             provider_name=provider.name,
-            conversation_context=prior_history,
-            substantive_conversation_context=user_side_context,
+            reference_resolver_history=[
+                ReferenceResolverMessage(
+                    message_id=10 + index,
+                    sequence_number=1 + index,
+                    role="assistant",
+                    content="Incidental previous answer must stay resolver-only.",
+                )
+            ],
+            current_sequence_number=2 + index,
         )
-
         assert result.status == "succeeded"
         assert result.insufficient_info is False
 
-    selector_requests = provider.requests[0::2]
-    final_requests = provider.requests[1::2]
-    assert "[assistant] Prior grounded answer." in selector_requests[-1].messages[1].content
-    assert all(
-        "prior substantive" not in request.messages[1].content
-        and "[assistant] Prior grounded answer." not in request.messages[1].content
-        for request in final_requests
-    )
+    resolver_requests = provider.requests[0::3]
+    selector_requests = provider.requests[1::3]
+    final_requests = provider.requests[2::3]
+    assert len(resolver_requests) == len(selector_requests) == len(final_requests) == 4
+    assert provider.structured_outputs[0::2] == [
+        {"reference_bindings": []}
+    ] * 4
+    assert all(query in request.messages[1].content for request in selector_requests)
     assert all(query in request.messages[1].content for request in final_requests)
+    assert all("Incidental previous answer" not in request.messages[1].content for request in selector_requests)
+    assert all("Incidental previous answer" not in request.messages[1].content for request in final_requests)
+    assert all("[assistant]" not in request.messages[1].content for request in selector_requests)
+    assert all("[assistant]" not in request.messages[1].content for request in final_requests)
     assert len(retriever.calls) == 4
     assert len(memory_service.search_calls) == 8
 
 
-def test_required_dependency_uses_only_most_recent_completed_turn() -> None:
-    provider = ConversationDependencyProvider(["required"])
-    runtime, _, _ = _runtime(provider)
-    query = "What about the second one?"
-    result = _run(
-        runtime,
-        query,
-        provider_name=provider.name,
-        conversation_context=(
-            "[user] older task\n\n"
-            "[assistant] Older answer.\n\n"
-            "[user] Which practices should we compare?\n\n"
-            "[assistant] The second option is controlled rollout.\n\n"
-            f"[user] {query}"
-        ),
-        substantive_conversation_context=(
-            "[user] older task\n\n"
-            "[user] Which practices should we compare?\n\n"
-            f"[user] {query}"
-        ),
-        substantive_conversation_reference_context=(
-            "[user] Which practices should we compare?\n\n"
-            "[assistant] The second option is controlled rollout."
-        ),
+def test_referential_request_uses_only_backend_validated_binding_for_context_and_retrieval() -> None:
+    provider = ReferenceBindingProvider(
+        reference_bindings=[
+            {
+                "current_span": "the second one",
+                "source_message_id": 41,
+                "source_span": "Tool Boundaries",
+            }
+        ],
+        decision={
+            "needs_knowledge": True,
+            "needs_memory": False,
+            "contextual_facets": [],
+            "memory_query": None,
+        },
     )
-
-    assert result.status == "succeeded"
-    final_request = provider.requests[-1]
-    assert "CONVERSATION_REFERENCE_CONTEXT" in final_request.messages[1].content
-    assert "Which practices should we compare?" in final_request.messages[1].content
-    assert "The second option is controlled rollout." in final_request.messages[1].content
-    assert "older task" not in final_request.messages[1].content
-    assert "CONVERSATION_CONTEXT" not in final_request.messages[1].content
-
-
-def test_required_dependency_without_completed_turn_fails_closed() -> None:
-    provider = ConversationDependencyProvider(["required"])
-    runtime, _, _ = _runtime(provider)
+    runtime, retriever, _ = _runtime(provider, chunks=[_chunk()])
+    history = [
+        ReferenceResolverMessage(
+            message_id=40,
+            sequence_number=1,
+            role="user",
+            content="Which practices should we compare?",
+        ),
+        ReferenceResolverMessage(
+            message_id=41,
+            sequence_number=2,
+            role="assistant",
+            content="1. Deterministic Control Flow\n2. Tool Boundaries",
+        ),
+    ]
 
     result = _run(
         runtime,
         "What about the second one?",
         provider_name=provider.name,
-        conversation_context="[user] failed pending task",
-        substantive_conversation_reference_context=None,
+        reference_resolver_history=history,
+        current_sequence_number=3,
     )
 
-    assert result.status == "failed"
-    assert result.termination_reason == AgentTerminationReason.PROVIDER_ERROR
-    assert len(provider.requests) == 1
+    assert result.status == "succeeded"
+    assert result.insufficient_info is False
+    assert retriever.calls[0]["query_text"] == (
+        "What about the second one?\nReference: Tool Boundaries"
+    )
+    selector_request = provider.requests[1]
+    final_request = provider.requests[2]
+    assert "What about the second one?" in selector_request.messages[1].content
+    assert "Tool Boundaries" in selector_request.messages[1].content
+    assert "Deterministic Control Flow" not in selector_request.messages[1].content
+    assert "1. Deterministic Control Flow" not in final_request.messages[1].content
+    assert "2. Tool Boundaries" not in final_request.messages[1].content
+    assert '"current_span": "the second one"' in final_request.messages[-1].content
+    assert "CONVERSATION_REFERENCE_CONTEXT" not in "\n".join(
+        message.content for message in final_request.messages
+    )
 
 
-def test_required_reference_cannot_rescue_missing_knowledge() -> None:
-    provider = ConversationDependencyProvider(["required"])
+def test_validated_reference_binding_cannot_rescue_missing_knowledge() -> None:
+    provider = ReferenceBindingProvider(
+        reference_bindings=[
+            {
+                "current_span": "the second one",
+                "source_message_id": 41,
+                "source_span": "Tool Boundaries",
+            }
+        ],
+        decision={
+            "needs_knowledge": True,
+            "needs_memory": False,
+            "contextual_facets": [],
+            "memory_query": None,
+        },
+    )
     runtime, retriever, memory_service = _runtime(provider, chunks=[])
 
     result = _run(
         runtime,
         "What about the second one?",
         provider_name=provider.name,
-        conversation_context=(
-            "[user] Which practices should we compare?\n\n"
-            "[assistant] The second option is controlled rollout.\n\n"
-            "[user] What about the second one?"
-        ),
-        substantive_conversation_reference_context=(
-            "[user] Which practices should we compare?\n\n"
-            "[assistant] The second option is controlled rollout."
-        ),
+        reference_resolver_history=[
+            ReferenceResolverMessage(
+                message_id=41,
+                sequence_number=2,
+                role="assistant",
+                content="Tool Boundaries",
+            )
+        ],
+        current_sequence_number=3,
     )
 
     assert result.status == "succeeded"
     assert result.insufficient_info is True
     assert result.citations == []
+    assert result.used_saved_memory is False
     assert len(retriever.calls) == 1
-    assert len(memory_service.search_calls) == 2
-    assert len(provider.requests) == 1
+    assert memory_service.search_calls == []
+    assert len(provider.requests) == 2

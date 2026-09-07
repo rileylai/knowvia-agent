@@ -20,7 +20,7 @@ Knowvia 將 fragmented enterprise knowledge 與 bounded conversational context �
 - PostgreSQL + pgvector semantic retrieval，保留 lexical fallback
 - backend-owned citations 與 source provenance
 - knowledge eligibility 與 relevance acceptance gate
-- evidence 不足時的 deterministic `insufficient_info` behavior
+- required Knowledge 無 accepted evidence 時由 backend fail closed
 
 ### Conversation
 
@@ -58,7 +58,9 @@ Knowvia 將 fragmented enterprise knowledge 與 bounded conversational context �
 
 ## 架構
 
-目前 runtime 的主要資料與控制流如下。`.3` 的 Context Authority Consolidation 是下一個 planned implementation slice，尚未放入這張 current architecture 圖。
+目前 runtime 的主要資料與控制流如下。`.3` 的 Context Authority Consolidation 已實作；其 current
+authority boundary 與細部 provider contract 請見 [architecture](docs/01-architecture.md) 與
+[data and contracts](docs/02-data-and-contracts.md)。
 
 ```mermaid
 flowchart LR
@@ -198,7 +200,7 @@ npm --prefix frontend test
 npm --prefix frontend run build
 ```
 
-Golden Set 使用 deterministic scripted provider 與 local fixtures，不需要 live provider、live Notion 或 private source。它是目前的 controlled regression surface，不代表 generic production evaluation framework。正式 browser acceptance 尚未完成的 slice 會在 `dev_state/DAILY_LOG.md` 保留 `Not yet manually verified.`。
+Golden Set 使用 deterministic scripted provider 與 local fixtures，不需要 live provider、live Notion 或 private source。它是目前的 controlled regression surface，不代表 generic production evaluation framework。尚待 browser acceptance 的 slice 會在 `dev_state/DAILY_LOG.md` 記錄嘗試結果與 findings。
 
 ## Demo
 
@@ -228,7 +230,7 @@ Knowledge source
 
 ### 目前工程焦點
 
-`5.0.3.3 Context Authority Consolidation` 是 `planned` 的 next implementation slice。目標是把 incidental conversation history 限制在 bounded reference resolution，再將 validated reference bindings 與 exact current user message 傳入 substantive retrieval 與 synthesis。Runtime implementation 尚未開始。
+`5.0.3.3 Context Authority Consolidation` 已完成 implementation 與 automated verification，現為 `manual_verification`。Incidental conversation history 僅在 bounded reference resolution 可見；substantive retrieval 與 synthesis 使用 validated reference bindings、exact current user message 與 fresh authority context。
 
 ### 後續規劃
 
@@ -245,7 +247,7 @@ Knowledge source
 - Same-session conversational transform hardening
 - remote MCP、RBAC redesign 與 provider-native streaming
 
-`7.0 Evaluation and Demo Hardening` 目前是 `manual_verification`。Final closure 需要等待 `5.0.3.3` stability，以及後續 approved memory/context follow-ups 完成並重新驗證。
+`7.0 Evaluation and Demo Hardening` 目前是 `manual_verification`。Final closure waits for `5.0.3.3` stability and the approved memory/context follow-ups required for final closure, followed by evaluation and Demo Story rerun.
 
 ## 非目標與設計約束
 

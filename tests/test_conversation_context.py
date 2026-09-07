@@ -69,48 +69,22 @@ def test_assemble_conversation_context_with_one_message_limit_keeps_only_current
     assert [message.content for message in result.messages] == ["current question"]
 
 
-def test_rendered_user_text_keeps_user_context_and_excludes_assistant_answers() -> None:
+def test_assemble_conversation_context_preserves_identity_for_bounded_resolver_scope() -> None:
     result = assemble_conversation_context(
         history=[
-            ConversationContextMessage(role="user", content="prior question"),
-            ConversationContextMessage(role="assistant", content="prior answer"),
-        ],
-        current_question="current question",
-        max_messages=6,
-        token_budget=100,
-    )
-
-    assert result.rendered_user_text == (
-        "[user] prior question\n\n[user] current question"
-    )
-    assert "prior answer" not in result.rendered_user_text
-
-
-def test_rendered_latest_completed_turn_skips_failed_pending_user() -> None:
-    result = assemble_conversation_context(
-        history=[
-            ConversationContextMessage(role="user", content="older question"),
-            ConversationContextMessage(role="assistant", content="older answer"),
-            ConversationContextMessage(role="user", content="failed pending question"),
+            ConversationContextMessage(
+                role="assistant",
+                content="prior answer",
+                message_id=41,
+                sequence_number=2,
+            )
         ],
         current_question="What about the second one?",
         max_messages=6,
         token_budget=100,
     )
 
-    assert result.rendered_latest_completed_turn == (
-        "[user] older question\n\n[assistant] older answer"
-    )
-
-
-def test_rendered_latest_completed_turn_is_empty_without_completed_pair() -> None:
-    result = assemble_conversation_context(
-        history=[
-            ConversationContextMessage(role="user", content="failed pending question"),
-        ],
-        current_question="What about the second one?",
-        max_messages=6,
-        token_budget=100,
-    )
-
-    assert result.rendered_latest_completed_turn is None
+    assert result.messages[0].message_id == 41
+    assert result.messages[0].sequence_number == 2
+    assert result.messages[-1].message_id is None
+    assert result.messages[-1].content == "What about the second one?"

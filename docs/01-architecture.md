@@ -107,9 +107,9 @@ User message
 write permission、memory policy、citation 與 termination。LLM 不得自行取得新
 權限或改寫 Agent state。
 
-## Context Authority Consolidation（5.0.3.3 target）
+## Context Authority Consolidation（5.0.3.3 current implementation）
 
-以下是已 freeze、尚未實作的 replacement architecture。核心原則是：LLM 只做 bounded
+以下是已 freeze 並完成 implementation 的 replacement architecture。核心原則是：LLM 只做 bounded
 semantic interpretation；validation、authority、capability、topology、retrieval execution、
 citation、persistence 與 termination 由 backend 擁有。
 
@@ -154,12 +154,11 @@ exact current message
 NO incidental raw conversation history
 ```
 
-`Reference Binding` 的 target representation 只保留 current message 中的 referent 與同 session
-source message locator：
+`Reference Binding` provider output 只提出 current message 中的 referent 與同 session source
+message locator；exact current user input 由 backend 持有，不由 provider 回傳或 rewrite：
 
 ```json
 {
-  "current_message": "What about the second one?",
   "reference_bindings": [
     {
       "current_span": "the second one",
@@ -170,15 +169,16 @@ source message locator：
 }
 ```
 
-Self-contained request 使用 exact current user message，`reference_bindings` 為空，不做自然語言
-query rewrite。Incidental raw conversation history 只在 bounded reference-resolution boundary
-可見；它不會成為 Knowledge evidence、Memory authority、citation 或 sufficiency signal。這項
-限制不套用到明確要求 conversation recall 或 transform 的 dedicated path。
+Self-contained request 使用 backend 持有的 exact current user message，`reference_bindings` 為空，
+不做自然語言 query rewrite。Incidental raw conversation history 只在 bounded
+reference-resolution boundary 可見；它不會成為 Knowledge evidence、Memory authority、citation
+或 sufficiency signal。這項限制不套用到明確要求 conversation recall 或 transform 的 dedicated path。
 
-5.0.3.3 會以 backend-validatable bindings 取代 current selector 的
-`conversation_dependency` representation，但本輪不宣稱 `needs_knowledge`、`needs_memory` 或
-`memory_query` 已移除。`ContextualFacet` 上限 2、Knowledge/Memory 分離、partial/all Memory
-miss degradation 與 max 3 tool calls 保持不變。
+5.0.3.3 已以 backend-validatable bindings 取代 structured selector 的
+`conversation_dependency` representation。Current selector 仍保留 `needs_knowledge`、
+`needs_memory`、`contextual_facets` 與 `memory_query`；本輪不做 Selector Authority Slimming。
+`ContextualFacet` 上限 2、Knowledge/Memory 分離、partial/all Memory miss degradation 與 max 3
+tool calls 保持不變。
 
 ## MCP boundary
 
@@ -201,19 +201,21 @@ explicit-save policy 都由既有 tool adapter、Retrieval Service 或 Memory Se
 
 ## Context assembly
 
-本節描述 current implementation；上方的 Context Authority Consolidation 是 5.0.3.3 的
-planned target，尚未取代目前 runtime。
+本節描述 current implementation。Dedicated conversation recall、conversation transform 與
+direct Memory compatibility 保留各自的 history handling；structured substantive path 則依
+上方的 Context Authority Consolidation topology 執行。
 
 Context Assembly 分開處理三種資料：
 
-1. session 最近 6 則 messages，受 token budget 限制。
+1. dedicated route 或 bounded reference resolver 所需的 session messages，受 token budget 限制。
 2. Knowledge evidence，附 source provenance 與 backend citation metadata。
 3. LongTermMemory，標示為 saved memory，不當作 enterprise document citation。
 
 KnowledgeChunk 與 LongTermMemory 不能共用 retrieval corpus。
 
-3.0 的 current path 仍由 backend 載入同一 session 的 bounded history，將最近 6 則
-messages 與 token budget 傳入 request。Tool-capable provider 會進入 bounded Agent loop；
+Dedicated recall/transform path 仍由 backend 載入同一 session 的 bounded history；structured
+substantive path 僅將 identity-bearing bounded history 傳給 Reference Binding provider，後續
+selector、retrieval 與 final provider 不接收 raw transcript。Tool-capable provider 會進入 bounded Agent loop；
 不支援 tool calling 的既有 provider fixture 保留原本 QA fallback。Session、message、
 title、`updated_at` 與 assistant citation metadata 由 backend persistence 管理。SSE
 使用同一 orchestrator 與 persistence path，不改變 Agent policy。

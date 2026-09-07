@@ -4,9 +4,14 @@ from src.agent.models import (
     AgentRuntimeError,
     AgentState,
     AgentTerminationReason,
-    ConversationDependency,
     ContextualFacet,
     ContextRequirementDecision,
+    ReferenceBinding,
+    ReferenceBindingDecision,
+)
+from src.agent.reference_binding import (
+    ReferenceBindingValidationError,
+    validate_reference_bindings,
 )
 from src.agent.runtime import BoundedAgentRuntime
 from src.agent.tools import (
@@ -25,9 +30,12 @@ __all__ = [
     "AgentRuntimeError",
     "AgentState",
     "AgentTerminationReason",
-    "ConversationDependency",
     "ContextualFacet",
     "ContextRequirementDecision",
+    "ReferenceBinding",
+    "ReferenceBindingDecision",
+    "ReferenceBindingValidationError",
+    "validate_reference_bindings",
     "AgentToolRegistry",
     "BoundedAgentRuntime",
     "KnowledgeSearchTool",
