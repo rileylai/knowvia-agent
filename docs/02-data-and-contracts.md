@@ -225,6 +225,8 @@ Mixed Knowledge + Memory task 必須使用 1 至 2 個 `contextual_facets`；每
 `id` 與 concise、atomic 的 `text`，不得包含 tool name、corpus location、search strategy 或
 retrieval plan。Mixed task 的 `memory_query` 固定為 `null`。Direct memory-only recall 為維持
 既有 routing，仍可使用最多 500 characters 的 `memory_query`，且不帶 contextual facets。
+`ContextualFacet` 代表 required retrieval attempts，不代表 mandatory answer-readiness requirements；
+partial 或 zero Memory hit 不會自動否定已接受的 Knowledge evidence。
 Malformed decision、extra field、空 facet 或超過 facet 上限直接 fail closed，不用 keyword 或
 regex 重新猜測。
 
@@ -251,7 +253,61 @@ Direct recall 只取 final best-1，broad 與 contextual recall 維持 bounded m
 disclosure 仍分開。Provider 不具 structured output capability 時，保留既有 bounded tool loop
 作為相容 fallback。
 
-下一個 `5.0.3.1` slice 將把目前少量 normalization foundation generalize 為 bounded
+## 5.0.3.3 target：Reference Binding contract
+
+以下 contract 是下一個 planned implementation slice 的 frozen target，不是 current runtime
+contract。Current selector 仍使用 `needs_knowledge`、`needs_memory`、`contextual_facets`、
+`memory_query` 與 `conversation_dependency`；`.3` 只規劃以 validated reference bindings 取代
+`conversation_dependency` 對 incidental conversation history 的表示，不在本輪宣稱 selector
+authority 已完成 slimming。
+
+Structured substantive path 的 target representation 是：
+
+```json
+{
+  "current_message": "What about the second one?",
+  "reference_bindings": [
+    {
+      "current_span": "the second one",
+      "source_message_id": "...",
+      "source_span": "Deterministic Control Flow"
+    }
+  ]
+}
+```
+
+Self-contained task 必須保留 exact current user message，並使用：
+
+```json
+{
+  "current_message": "Explain the indexed control flow.",
+  "reference_bindings": []
+}
+```
+
+不得加入 `conversation_dependency`、`reference_status`、`resolved_task` 或 free-form query
+rewrite 作為新的 target contract。`current_message` 是 identity-preserving representation；
+reference resolution 只能補充 bindings，不得重寫 current task。
+
+Backend 只接受通過以下檢查的 binding：
+
+- `current_span` 必須存在於 current user message。
+- `source_message_id` 必須存在於同一 session，且 owner-visible、位於 bounded resolver-visible history，並具有有效 role。
+- `source_span` 必須存在於 source message content。
+- binding count 受 bounded contract 限制，初始上限為 2。
+
+通過 validation 只證明 conversation 中存在 textual referent，不證明 enterprise fact truth。Binding
+可作 reference interpretation 與 retrieval query enrichment，但不能成為 Knowledge evidence、
+Knowledge citation、Memory authority、accepted Knowledge count 或 answer-sufficiency signal，
+也不能 rescue missing Knowledge。
+
+Target flow 依序是 Reference Binding、backend validation、Task Representation、Context
+Requirement Selection、Context Acquisition 與 final substantive synthesis。Raw bounded
+conversation history 只在 Reference Binding 可見；後續 selector、retrieval 與 final synthesis
+只接 exact current message、validated bindings 與 fresh authority context。Explicit conversation
+recall、conversation transform 與 direct Memory compatibility 維持 dedicated paths。
+
+Planned `5.0.3.1` slice 將把目前少量 normalization foundation generalize 為 bounded
 structured semantic canonicalization，並規劃 query-side semantic normalization 只在 no-hit
 或 low-confidence fallback 使用。Direct recall 維持 final best-1，broad recall 維持 bounded
 multi-result；不降低現有 global relevance floors。

@@ -1999,3 +1999,31 @@ dependencies 或 frontend。
 - `5.0.3.2.8=manual_verification`，implementation 與 automated verification complete。
 - `5.0.3.2.6=manual_verification`、`5.0.3.2.7=manual_verification`、parent `5.0.3.2=manual_verification`。
 - `5.0.3.1=planned`，`5.0.4=deferred`；本輪未開始兩者 implementation。
+
+## 2026-09-07 Documentation-only Context Authority Consolidation Freeze
+
+### Planning result
+
+- Final architecture inspection completed；本輪不重新進行 architecture diagnosis，也不再設計 `.9/.10/.11` patch。
+- `5.0.3.3 Context Authority Consolidation` spec 已 freeze，狀態設為 `planned`，並列為下一個正式 implementation slice。
+- Frozen target 將 incidental raw conversation history 限制在 bounded `Reference Binding` boundary；後續 substantive context selection、retrieval 與 final synthesis 只接 exact current user message、validated reference bindings 與 fresh authority context。
+- Reference Binding contract 不引入 `conversation_dependency`、`reference_status`、`resolved_task` 或 free-form query rewrite。Explicit conversation recall、conversation transform 與 direct Memory compatibility 維持 dedicated paths。
+- Current selector fields `needs_knowledge`、`needs_memory`、`contextual_facets` 與 `memory_query` 維持 current implementation；`.3` 不宣稱 Selector Authority Slimming 已完成。
+- `ContextualFacet` 上限 2、Knowledge/Memory 分離、partial/all Memory miss graceful degradation、max 3 tool calls 與 current pre-final sufficiency behavior 維持不變。
+
+### Roadmap and follow-ups
+
+- `5.0.3=done`；`5.0.3.2`、`5.0.3.2.6`、`5.0.3.2.7`、`5.0.3.2.8` remain `manual_verification`。
+- `.6/.7/.8` 是 diagnostic iterations，其 findings 由 `5.0.3.3` consolidation。
+- 四個 post-`.3` planned directions 已記錄：Evidence Readiness、Final Synthesis Contract Hardening、Selector Authority Slimming、Live Semantic Stability Gate。
+- `5.0.3.1=planned`、`5.0.4=deferred`、`7.0=manual_verification`；7.0 final closure 等待 `5.0.3.3` stability 與後續 approved memory/context follow-ups。
+
+### Documentation
+
+- Root `README.md` 已重寫為 third-party repository onboarding overview，區分 implemented、current engineering focus、planned follow-ups 與 deferred scope。
+- 同步 `docs/01-architecture.md`、`docs/02-data-and-contracts.md`、`docs/03-workflows.md` 與 `docs/04-quality-and-guardrails.md` 的 `.3` target wording。
+- Review existing D027、D028 與相關 decisions 後，新增最小 D030，正式記錄 incidental history confinement 與 backend-validatable reference binding principle。
+
+### Scope confirmation
+
+本輪為 documentation-only。未修改 runtime、tests、eval、dependencies、migration、frontend、Docker 或 config；未執行 live provider、Notion 或 private source access；未 commit、push、merge、stash、reset 或 clean。

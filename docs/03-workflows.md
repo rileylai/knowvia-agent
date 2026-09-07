@@ -95,6 +95,39 @@ User message
 Agent 可以在一次 run 中 chaining allowed tools，但初始最多 3 次 tool calls。
 Backend 在每一步檢查 timeout、argument、permission、context budget 與 termination。
 
+### Target: 5.0.3.3 Context Authority Consolidation
+
+這是下一個 planned implementation slice 的 frozen workflow。Explicit save、conversation
+recall、conversation transform 與 direct Memory compatibility 先走既有 dedicated routes；其餘
+substantive request 走 structured path：
+
+```text
+User message
+  -> Reference Binding
+  -> backend validates reference_bindings
+  -> Task Representation
+       exact current user message + validated reference bindings
+  -> Context Requirement Selection
+  -> Context Acquisition
+       Knowledge + contextual Memory
+  -> current pre-final sufficiency behavior
+  -> final substantive synthesis
+       exact current message + validated bindings + fresh Knowledge + fresh Memory
+```
+
+Bounded raw conversation history 只在 `Reference Binding` 可見。Self-contained request 的
+`reference_bindings` 為空，current user message 保持 exact identity。Target path 不產生
+`conversation_dependency`、`reference_status`、`resolved_task` 或 free-form query rewrite。
+Backend 驗證 `current_span`、同 session 且 owner-visible 的 `source_message_id`、source
+message 內的 `source_span`、valid role 與最多 2 個 bindings。
+
+Validated binding 只證明 conversation 中存在 textual referent，可作 reference interpretation
+與 retrieval query enrichment；它不能成為 Knowledge evidence、Memory authority、citation、
+accepted Knowledge count 或 answer-sufficiency signal，也不能 rescue missing Knowledge。
+Context Requirement Selection、後續 retrieval 與 final synthesis 都不接 incidental raw
+conversation transcript。這項 restriction 不套用到明確要求 conversation evidence 的 recall
+或 transform dedicated path。
+
 ### Current
 
 目前已有 synchronous `/api/qa`，以及以 `ConversationSession`、`ConversationMessage`

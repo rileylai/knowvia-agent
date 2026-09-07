@@ -97,7 +97,7 @@ automatic consolidation、memory graph、importance ranking 或 temporal ranking
 
 Memory 可另外保存 bounded `retrieval_text` 作為 semantic search representation。它只能在
 explicit-save authorization 通過後產生，不能改寫 user-authoritative `content`，也不能取得
-persistence authority。下一個 representation slice 的 canonicalization 不得新增 fact、改
+persistence authority。Planned `5.0.3.1` representation slice 的 canonicalization 不得新增 fact、改
 entity/value 或猜 unknown acronym；產生失敗時，embedding 回退使用原始 `content`。
 Memory search 可接受自然 user query，不要求 query 包含 `memory`、`remember` 或 `saved`。
 
@@ -105,7 +105,7 @@ Query-side semantic normalization 只作 no-hit 或 low-confidence fallback。Re
 先取 top-k，再套用既有 relevance gate；direct recall 只回傳 final best-1，broad recall 維持
 bounded multi-result。既有 global relevance floors 不因單一案例降低，也不建立大型 hard-coded
 synonym dictionary。English/Chinese cross-language recall 與 unrelated-memory fail-closed
-behavior 是下一個 slice 的 regression contract。
+behavior 是 `5.0.3.1` follow-up 的 regression contract。
 
 當 saved company/project context 能 materially improve current Knowledge task 時，bounded
 Agent 可以同一 run 使用 `search_knowledge` 與 `search_memory`。Contextual memory search
@@ -124,10 +124,12 @@ facet、超過上限、空 direct memory query 與 provider failure 都 fail clo
 structured output capability 時，既有 bounded tool loop 仍可作相容 fallback，但不以 regex
 或 keyword 代替 selector。
 
-Accepted Knowledge evidence 是 mixed task 的 sufficiency authority。Contextual Memory 是
-optional supplemental context；部分或全部 facet 沒有 relevant hit 時，仍可用 accepted
-Knowledge 產生 Knowledge-only answer，不得因此回傳 request failure。若 required Knowledge
-缺失，Memory hit 也不能 rescue，結果仍是 `insufficient_info` 與 zero citations。
+Current pre-final guard 以 accepted Knowledge evidence 作為 required Knowledge 的 deterministic
+gate。Contextual Memory 是 optional supplemental context；部分或全部 facet 沒有 relevant hit
+時，仍可用 accepted Knowledge 產生 Knowledge-only answer，不得因此回傳 request failure。若
+required Knowledge 缺失，Memory hit 也不能 rescue，結果仍是 `insufficient_info` 與 zero
+citations。Whole-answer semantic sufficiency 目前仍是 `HYBRID`，尚未由單一 backend verifier
+完整接管。
 
 Regression 必須同時驗證 decision flags、實際 tool execution、owner scope、tool count 與
 final context authority。測試只記錄 bounded decision labels、tool names、availability 與
@@ -147,6 +149,45 @@ intent interpretation，不會成為 Knowledge、Memory、citation 或 sufficien
 provider 仍只依 current task、accepted Knowledge、當次 retrieved Memory 與必要 reference
 context 產生答案。相同 substantive query 重送時也使用 fresh authority。這項 backend isolation
 不套用到 selector、conversation recall 或 transform path。
+
+### 5.0.3.3 target authority boundary
+
+以下 boundary 是下一個 planned implementation slice 的 frozen target。Incidental raw conversation
+history 只能出現在 bounded `Reference Binding` boundary；後續 Context Requirement Selection、
+Knowledge/Memory retrieval 與 final substantive synthesis 都不得直接接收 raw conversation
+transcript。
+
+```text
+User message
+  -> Reference Binding
+       raw bounded conversation history visible only here
+  -> reference_bindings = [] / [...]
+  -> backend validation
+  -> exact current user message + validated bindings
+  -> Context Requirement Selection without raw history
+  -> Knowledge + contextual Memory acquisition
+  -> current pre-final sufficiency behavior unchanged
+  -> final synthesis with exact message, bindings, fresh Knowledge and fresh Memory
+```
+
+Reference validation 只確認 textual referent 存在於 owner-visible、同 session、bounded history
+中的合法 message，不確認 enterprise fact truth。Binding 可作 reference interpretation 與
+retrieval query enrichment，但不能成為 Knowledge evidence、citation、Memory authority、accepted
+Knowledge count 或 answer-sufficiency signal，也不能 rescue missing Knowledge。Target representation
+不引入 `conversation_dependency`、`reference_status`、`resolved_task` 或 free-form query rewrite；
+self-contained request 保留 exact current user message，使用空的 `reference_bindings`。
+
+### Evidence Readiness：post-5.0.3.3 follow-up
+
+Current `knowledge_relevance_floor=0.30` 只表示 chunk relevance acceptance，不表示 whole-answer
+sufficiency。Current runtime behavior 是：Knowledge required 且 accepted Knowledge 為 0 時，
+backend deterministic 回傳 `insufficient_info`；accepted Knowledge 大於 0 時，交給 final
+provider，而 provider 仍可能輸出 `INSUFFICIENT_INFO`，此時會成為 `provider_contract_error`。
+這個 semantic sufficiency authority 目前是 `HYBRID`。
+
+Evidence Readiness 會在 `.3` 完成後另行定義 answer-readiness authority、bounded coverage/readiness
+contract 與 fail-closed policy。本輪不設計 verifier，也不把 retrieval acceptance 寫成 whole-answer
+readiness。
 
 SSE 只公開實際執行的 tool phase 與一次 final `generating` status。Provider 在 Knowledge
 result 後的 internal continuation decision 不另外顯示 `generating`，避免 mixed flow 出現

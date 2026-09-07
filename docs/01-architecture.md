@@ -107,6 +107,79 @@ User message
 write permission、memory policy、citation 與 termination。LLM 不得自行取得新
 權限或改寫 Agent state。
 
+## Context Authority Consolidation（5.0.3.3 target）
+
+以下是已 freeze、尚未實作的 replacement architecture。核心原則是：LLM 只做 bounded
+semantic interpretation；validation、authority、capability、topology、retrieval execution、
+citation、persistence 與 termination 由 backend 擁有。
+
+```text
+User message
+     │
+     ├──────── existing dedicated routes
+     │         - explicit save
+     │         - conversation recall
+     │         - conversation transform
+     │         - direct Memory compatibility
+     │
+     ▼
+Structured substantive path
+     ▼
+Reference Binding
+raw bounded conversation history visible ONLY here
+     ▼
+reference_bindings = [] / [...]
+     ▼
+Backend validates bindings
+     ▼
+Task Representation
+= exact current user message
++ validated reference bindings
+NO rewritten resolved_task
+     ▼
+Context Requirement Selection
+NO raw conversation history
+     ▼
+Context Acquisition
+Knowledge + contextual Memory
+     ▼
+Current pre-final sufficiency behavior
+UNCHANGED in 5.0.3.3
+     ▼
+Final substantive synthesis
+exact current message
++ validated bindings
++ fresh Knowledge
++ fresh Memory
+NO incidental raw conversation history
+```
+
+`Reference Binding` 的 target representation 只保留 current message 中的 referent 與同 session
+source message locator：
+
+```json
+{
+  "current_message": "What about the second one?",
+  "reference_bindings": [
+    {
+      "current_span": "the second one",
+      "source_message_id": "...",
+      "source_span": "Deterministic Control Flow"
+    }
+  ]
+}
+```
+
+Self-contained request 使用 exact current user message，`reference_bindings` 為空，不做自然語言
+query rewrite。Incidental raw conversation history 只在 bounded reference-resolution boundary
+可見；它不會成為 Knowledge evidence、Memory authority、citation 或 sufficiency signal。這項
+限制不套用到明確要求 conversation recall 或 transform 的 dedicated path。
+
+5.0.3.3 會以 backend-validatable bindings 取代 current selector 的
+`conversation_dependency` representation，但本輪不宣稱 `needs_knowledge`、`needs_memory` 或
+`memory_query` 已移除。`ContextualFacet` 上限 2、Knowledge/Memory 分離、partial/all Memory
+miss degradation 與 max 3 tool calls 保持不變。
+
 ## MCP boundary
 
 Native MCP server 只負責 protocol mapping。Local runtime 使用 official Python MCP
@@ -127,6 +200,9 @@ explicit-save policy 都由既有 tool adapter、Retrieval Service 或 Memory Se
 負責。MCP arguments 不能提供 authoritative `owner_id` 或 save authorization。
 
 ## Context assembly
+
+本節描述 current implementation；上方的 Context Authority Consolidation 是 5.0.3.3 的
+planned target，尚未取代目前 runtime。
 
 Context Assembly 分開處理三種資料：
 
