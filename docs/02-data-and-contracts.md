@@ -247,6 +247,45 @@ Direct recall 只取 final best-1，broad 與 contextual recall 維持 bounded m
 disclosure 仍分開。Provider 不具 structured output capability 時，保留既有 bounded tool loop
 作為相容 fallback。
 
+## `EvidenceReadinessDecision`（8.4 planned contract）
+
+這是 8.4 凍結的 target contract，尚未加入 current runtime。它只回答 final synthesis 是否
+可以安全開始，不保存 answer requirements，也不描述 retrieval plan：
+
+```python
+class EvidenceReadinessDecision(BaseModel):
+    ready: StrictBool
+
+    model_config = ConfigDict(extra="forbid")
+```
+
+等價 JSON：
+
+```json
+{
+  "ready": true
+}
+```
+
+Readiness provider 的輸入只包括 exact current substantive task、validated reference bindings、
+accepted Knowledge evidence，以及 bounded source metadata：`source_kind`、
+`source_display_name`、`locator`。若 task 有 Memory-side dependency，backend 可以提供 bounded
+dependency indication；Memory content 不作為 Knowledge evidence 傳入。
+
+Provider output 不得加入 `missing_requirements`、`confidence`、`reasoning`、evidence IDs、
+citation IDs、facets、query、retrieval instructions、tool calls、ranking 或 planner state。
+Diagnostic information 若未來需要，另放 evaluation-only surface，不擴充 production contract。
+
+`ready=false` 由 backend deterministic 轉成 `insufficient_info=true` 與 zero citations，並
+跳過 final synthesis。`ready=true` 才允許 final provider 使用同一批 accepted Knowledge evidence、
+合法的 supplemental Memory、validated bindings 與 exact current task。Malformed output、extra
+field、wrong type、timeout 或 provider error 不是 semantic insufficient，而是既有 provider/
+contract failure semantics。
+
+`EvidenceReadinessDecision` 不延伸 `ContextRequirementDecision`。後者的
+`contextual_facets` 仍只代表 contextual Memory retrieval dependencies，不是 Knowledge answer
+coverage requirements。
+
 ## 5.0.3.3 current：Reference Binding contract
 
 以下 contract 是 D030 frozen architecture 的 current runtime contract。Current selector 使用

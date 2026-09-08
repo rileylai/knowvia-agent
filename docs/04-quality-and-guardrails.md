@@ -178,17 +178,74 @@ Knowledge count 或 answer-sufficiency signal，也不能 rescue missing Knowled
 不引入 `conversation_dependency`、`reference_status`、`resolved_task` 或 free-form query rewrite；
 self-contained request 保留 exact current user message，使用空的 `reference_bindings`。
 
-### Evidence Readiness：post-5.0.3.3 follow-up
+### Evidence Readiness：8.4 frozen target contract
 
 Current `knowledge_relevance_floor=0.30` 只表示 chunk relevance acceptance，不表示 whole-answer
-sufficiency。Current runtime behavior 是：Knowledge required 且 accepted Knowledge 為 0 時，
-backend deterministic 回傳 `insufficient_info`；accepted Knowledge 大於 0 時，交給 final
-provider，而 provider 仍可能輸出 `INSUFFICIENT_INFO`，此時會成為 `provider_contract_error`。
-這個 semantic sufficiency authority 目前是 `HYBRID`。
+sufficiency。Current runtime 在 Knowledge required 且 accepted Knowledge 為 0 時，會由 backend
+deterministic 回傳 `insufficient_info`；accepted Knowledge 大於 0 時，仍可能交給 final provider
+自行判斷 sufficiency。Current semantic sufficiency authority 是 `HYBRID`。
 
-Evidence Readiness 會在 `.3` 完成後另行定義 answer-readiness authority、bounded coverage/readiness
-contract 與 fail-closed policy。本輪不設計 verifier，也不把 retrieval acceptance 寫成 whole-answer
-readiness。
+8.4 凍結的 target topology 是：
+
+```text
+Accepted Knowledge Evidence
+  -> Evidence Readiness
+  -> backend gate
+  -> Final Synthesis
+```
+
+正式 terminology：
+
+- `Retrieval Candidate` 是尚未取得 evidence authority 的 raw ranked candidate。
+- `Accepted Knowledge Evidence` 是通過 owner、eligibility 與 relevance acceptance gate，可成為 Knowledge context 與 backend citation authority 的 evidence。
+- `Evidence Readiness` 判斷 accepted Knowledge evidence 是否 collectively 足以支撐 current substantive task 所需的 material Knowledge claims。
+- `Final Synthesis` 只使用已確認 ready 的 authority context 組織答案。
+
+因此，`accepted_evidence_count > 0` 不等於 `answer ready`。
+
+v1 production contract 只有：
+
+```json
+{
+  "ready": true
+}
+```
+
+Readiness provider 只接 exact current substantive task、validated reference bindings、accepted
+Knowledge evidence 與 bounded source metadata。它不接 incidental raw transcript、previous
+assistant answer、rejected Knowledge chunks、raw candidate pool 或 LongTermMemory content 作為
+Knowledge evidence。`contextual_facets` 仍只表示 separately-authorized Memory dependencies，
+不表示 Knowledge answer requirements。若 mixed task 需要辨識 Memory-side dependency，provider 最多
+取得 bounded `needs_memory` indication 與既有 facet labels，不取得 Memory content。
+
+Backend 擁有 input construction、schema validation、Knowledge/Memory authority separation、gate、
+citations、insufficient-info behavior、final topology、provider failure handling 與 termination。
+Provider 不得 retrieve more、改變 top-k/threshold、rewrite query、要求 retry、建立 citation 或
+使用 Memory 填補缺少的 Knowledge。
+
+`ready=false` 時，backend 回傳 `insufficient_info=true` 與 `citations=[]`，且不呼叫 final
+synthesis。若 required Knowledge 的 accepted evidence 為零，沿用 existing zero-evidence gate，
+可直接回傳 insufficient result，不必呼叫 readiness provider。不得 retry retrieval、增加 top-k、
+改寫 query、搜尋 Memory 作替代或呼叫另一個 tool。
+
+`ready=true` 時，final provider 才能使用同一批 accepted Knowledge evidence、既有 authorized
+supplemental Memory、validated bindings 與 exact current task。Citations 仍只由 backend 從
+accepted Knowledge metadata 建立。
+
+Readiness timeout、provider error、malformed structured output、wrong type、extra field 或
+invalid schema 都是 runtime/provider failure，不是 semantic `insufficient_info`。沿用既有
+`PROVIDER_ERROR` / `LLM_PROVIDER_ERROR` 或 `PROVIDER_CONTRACT_ERROR` / `LLM_OUTPUT_INVALID`
+mapping，不新增 `EVIDENCE_READINESS_FAILED`。
+
+Future implementation 應讓 final synthesis 只負責 grounded answer wording；ready 後若 final
+provider 仍回傳 legacy `INSUFFICIENT_INFO`，應視為 provider contract violation，而不是重新改判
+`insufficient_info`。本輪不修改 prompt；`qa_answer_v4` 留給 implementation slice。
+
+8.4 implementation 的 regression contract 至少包括：zero accepted evidence、sufficient single
+evidence、complete multi-evidence、partial multi-evidence、related-but-incomplete evidence、
+rv-009、rv-027、rv-029、Memory 不得 rescue Knowledge、mixed Knowledge + Memory、malformed output、
+provider timeout/error、ready citations、not-ready zero citations，以及 final synthesis 不再擁有
+semantic sufficiency authority。
 
 SSE 只公開實際執行的 tool phase 與一次 final `generating` status。Provider 在 Knowledge
 result 後的 internal continuation decision 不另外顯示 `generating`，避免 mixed flow 出現

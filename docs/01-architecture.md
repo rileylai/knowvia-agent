@@ -184,6 +184,53 @@ tool calls 保持不變。
 actual-provider stability probe 與 browser acceptance deferred。這項 stability work 不列為
 目前主線，`7.0 Evaluation and Demo Hardening` 是下一個唯一主線 priority。
 
+## Evidence Readiness target（8.4 planned）
+
+8.4 是 documentation-only contract freeze。以下是 target architecture，不代表 current
+runtime 已完成 implementation。Current production retrieval freeze 維持不變：
+`PyPDFParserClient / pypdf`、`chunk_max_chars=1200`、`overlap=0`、
+`text-embedding-3-small / 1536`、pgvector cosine、`knowledge_relevance_floor=0.30` 與
+production `top_k=5`。
+
+Structured substantive target flow：
+
+```text
+Current User Task
+  -> Reference Binding
+  -> Context Requirement Selection
+  -> Knowledge / Memory Context Acquisition
+  -> Accepted Knowledge Evidence
+  -> Evidence Readiness
+  -> Backend Gate
+  -> Final Synthesis
+```
+
+`Evidence Readiness` 只判斷 accepted Knowledge evidence 是否 collectively 足以支撐 current
+substantive task 所需的 material Knowledge claims。`accepted_evidence_count > 0` 不等於
+`answer ready`。Readiness 位於 accepted Knowledge evidence 與 final synthesis 之間，不新增
+second Agent、planner、coverage graph、reranker、query rewrite、multi-query、retrieval retry、
+BM25、RRF 或 knowledge graph。
+
+v1 的 production contract 只有：
+
+```json
+{
+  "ready": true
+}
+```
+
+Provider 只做 schema-validated semantic readiness judgment。Backend 建立輸入、驗證 schema、
+分離 Knowledge 與 Memory authority、執行 gate、產生 citations、處理 insufficient info 與
+provider failure，並決定是否進入 final synthesis。`ready=false` 時不呼叫 final synthesis；
+provider/runtime failure 不轉成 `insufficient_info`。
+
+Memory 只能提供 authorized supplemental context。LongTermMemory 不會成為 Knowledge evidence，
+也不能 rescue missing Knowledge。`contextual_facets` 仍只表示 Memory retrieval dependencies，
+不改寫成 Knowledge answer requirements。
+
+Dedicated explicit save、conversation recall 與 conversation transform paths 不使用這個
+Knowledge readiness gate。此 section 凍結 target contract，不修改 current implementation。
+
 ## MCP boundary
 
 Native MCP server 只負責 protocol mapping。Local runtime 使用 official Python MCP
