@@ -300,3 +300,20 @@ uv run --no-env-file --frozen python -m eval.run_agent_eval \
 Core scenario 全部通過才算 regression pass。Report 只包含 scenario id、category、
 bounded check name、結果與失敗原因，不輸出 prompt、raw provider response、source
 chunk 或 embedding。
+
+## 8.x Retrieval Quality Benchmark
+
+`Agent Contract Golden Set` 與 `Retrieval Quality Benchmark` 是兩個不同的 evidence
+surface：
+
+| Surface | Evidence | 不證明什麼 |
+| --- | --- | --- |
+| Agent Contract Golden Set | `eval/golden_set.yaml` 的 deterministic fixtures，驗證 routing、authority、citation、safety、MCP 與 SSE contract。 | 不證明 real PDF parser/chunker/embedding/pgvector 的 ranking quality。 |
+| Retrieval Quality Benchmark | Frozen real PDFs，經 current parser、page-aware chunker、current embedding 與 isolated pgvector indexing；runner 只執行 retrieval，gold 使用 source/page/evidence anchors。 | 不代表 final LLM answer quality，也不授權在 baseline 前調整 retrieval behavior。 |
+
+8.1 pilot 固定三份 PDF 與 15 個 cases，明確報告 macro-by-case Recall@1/3/5、MRR、
+full-case success、source/page coverage 與 negative rejection。Per-case report 保留 evidence
+group hits，供 anchor review 使用；不另設與 Recall 重複的 anchor coverage primary metric。
+Diagnostics 只保留 bounded rank、locator、score、retrieval mode 與 failure label，不保存全文、
+embedding、向量、raw provider response 或 secrets。Pilot 完成並經人工 review 前，不能把
+`29/29` Agent Golden Set PASS 解讀成 retrieval quality PASS。

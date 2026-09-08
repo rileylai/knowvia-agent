@@ -1,0 +1,355 @@
+benchmark_id: knowvia-retrieval-pilot
+version: "8.2"
+
+# Frozen 8.2 positive-quality declaration. Current implementation inspection
+# must match it before any controlled experiment runs.
+contract:
+  chunk_max_chars: 1200
+  chunk_overlap_chars: 0
+  page_aware: true
+  embedding_model: text-embedding-3-small
+  embedding_dimensions: 1536
+  similarity: cosine
+  candidate_pool_max: 20
+  relevance_floor: 0.30
+  top_k: [1, 3, 5]
+
+# Frozen input identity. The benchmark stores no extracted PDF text or vectors.
+corpus:
+  - source_id: production_agents
+    filename: Best Practices for Building AI Agents That Work in Production.pdf
+    sha256: c88c995d6d6deb5d350f12621cabc9dbfa2323047491ad66771989f58100f074
+    page_count: 14
+  - source_id: chatgpt_tasks_week3
+    filename: ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf
+    sha256: eec40e93d8adb8755f89378dc9778a9219786b4f4b466e696a6aa8e1f54b2591
+    page_count: 17
+  - source_id: google_agent_patterns
+    filename: Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf
+    sha256: c22fe67748782b2dfe8bff364a9ea3fa852a0eba9da22f100cbe43cd73cbba36
+    page_count: 21
+
+cases:
+  - id: rv-001
+    category: single_document_factual
+    query: What does the production-agent article say most production-agent behavior runs through?
+    answerable: true
+    evidence_groups:
+      - group_id: production-control-implementation
+        locations:
+          - source_id: production_agents
+            pages: [2]
+            anchors: ["conventional, deterministic code"]
+
+  - id: rv-002
+    category: single_document_factual
+    query: What field does the Week 3 prototype use as the database partition key for hourly jobs?
+    answerable: true
+    evidence_groups:
+      - group_id: hourly-partition-key
+        locations:
+          - source_id: chatgpt_tasks_week3
+            pages: [10]
+            anchors: ["time_bucket"]
+
+  - id: rv-003
+    category: single_document_factual
+    query: How should a scheduled local time be stored so daylight-saving changes can be handled?
+    answerable: true
+    evidence_groups:
+      - group_id: scheduled-time-representation
+        locations:
+          - source_id: chatgpt_tasks_week3
+            pages: [12]
+            anchors: ["本地時 間 + timezone ID"]
+
+  - id: rv-004
+    category: semantic_paraphrase
+    query: Which part of a dependable agent decides when the model runs and when the loop ends?
+    answerable: true
+    evidence_groups:
+      - group_id: deterministic-control-flow
+        locations:
+          - source_id: production_agents
+            pages: [7]
+            anchors: ["control flow belongs to the deterministic code"]
+
+  - id: rv-005
+    category: semantic_paraphrase
+    query: Which workflow sends one specialized agent's output directly into the next agent?
+    answerable: true
+    evidence_groups:
+      - group_id: sequential-agent-input
+        locations:
+          - source_id: google_agent_patterns
+            pages: [4]
+            anchors: ["output from one agent serves as the direct input for the next agent"]
+
+  - id: rv-006
+    category: semantic_paraphrase
+    query: Which pattern pauses at a checkpoint so a person can review the agent's work?
+    answerable: true
+    evidence_groups:
+      - group_id: human-review-checkpoint
+        locations:
+          - source_id: google_agent_patterns
+            pages: [14]
+            anchors: ["calls an external system to wait for a person to review its work"]
+
+  - id: rv-007
+    category: exact_term_identifier
+    query: Why does the prototype use time_bucket as its partition key?
+    answerable: true
+    evidence_groups:
+      - group_id: time-bucket-rationale
+        locations:
+          - source_id: chatgpt_tasks_week3
+            pages: [10]
+            anchors: ["同 小時的 job 放 一 起 -> 查 詢 只 掃 一個 partition"]
+
+  - id: rv-008
+    category: exact_term_identifier
+    query: What does the coordinator pattern do in the Google Cloud design-pattern guide?
+    answerable: true
+    evidence_groups:
+      - group_id: coordinator-definition
+        locations:
+          - source_id: google_agent_patterns
+            pages: [8]
+            anchors: ["central agent, the coordinator, to direct a workflow"]
+
+  - id: rv-009
+    category: multi_evidence
+    query: How does the Week 3 prototype separate due-job discovery from worker execution and address repeated execution?
+    answerable: true
+    evidence_groups:
+      - group_id: queue-separation
+        match: all
+        locations:
+          - source_id: chatgpt_tasks_week3
+            pages: [6]
+            anchors: ["watcher 只 負 責 掃 db 找 到 期 job 、 worker 只 負 責 執 行"]
+          - source_id: chatgpt_tasks_week3
+            pages: [6]
+            anchors: ["解 耦 : watcher 和 worker 互 不 知道對方"]
+      - group_id: repeat-execution-handling
+        locations:
+          - source_id: chatgpt_tasks_week3
+            pages: [16]
+            anchors: ["idempotent handler"]
+
+  - id: rv-010
+    category: multi_evidence
+    query: Compare the sequential and parallel patterns described by the Google Cloud guide.
+    answerable: true
+    evidence_groups:
+      - group_id: sequential-definition
+        locations:
+          - source_id: google_agent_patterns
+            pages: [4]
+            anchors: ["output from one agent serves as the direct input for the next agent"]
+      - group_id: parallel-definition
+        locations:
+          - source_id: google_agent_patterns
+            pages: [5]
+            anchors: ["multiple specialized subagents perform a task or sub-tasks independently at the same time"]
+
+  - id: rv-011
+    category: cross_source_discrimination
+    query: Which source explains deterministic control flow, and which source describes a human-in-the-loop checkpoint?
+    answerable: true
+    evidence_groups:
+      - group_id: production-control-flow-source
+        locations:
+          - source_id: production_agents
+            pages: [7]
+            anchors: ["control flow belongs to the deterministic code"]
+      - group_id: human-loop-source
+        locations:
+          - source_id: google_agent_patterns
+            pages: [14]
+            anchors: ["human-in-the-loop pattern integrates points for human intervention"]
+
+  - id: rv-012
+    category: cross_source_discrimination
+    query: Which source covers timezone IDs for scheduled jobs, and which source contrasts a coordinator with a hardcoded parallel workflow?
+    answerable: true
+    evidence_groups:
+      - group_id: timezone-source
+        locations:
+          - source_id: chatgpt_tasks_week3
+            pages: [12]
+            anchors: ["Timezone ID = IANA"]
+      - group_id: coordinator-contrast-source
+        locations:
+          - source_id: google_agent_patterns
+            pages: [9]
+            anchors: ["hardcoded workflow"]
+
+  - id: rv-013
+    category: hard_negative
+    query: What RRF configuration does this corpus use for vector retrieval?
+    answerable: false
+    notes: RRF is intentionally absent from the frozen corpus.
+
+  - id: rv-014
+    category: hard_negative
+    query: What exact pgvector index type and HNSW parameters are specified for the Week 3 prototype?
+    answerable: false
+    notes: The corpus does not specify a pgvector index or HNSW parameters.
+
+  - id: rv-015
+    category: hard_negative
+    query: Which page states that the production embedding model is text-embedding-3-small?
+    answerable: false
+    notes: The production embedding model is not stated in these PDFs.
+
+  - id: rv-016
+    category: hard_negative
+    query: What exact maximum number of iterations does the Google Cloud guide specify for its iterative loop pattern?
+    answerable: false
+    notes: Unsupported configuration. The guide discusses maximum iterations as an exit condition but gives no exact count; the near-miss topic is iterative loop termination.
+
+  - id: rv-017
+    category: hard_negative
+    query: How many retry attempts does the Week 3 prototype configure after an LLM timeout?
+    answerable: false
+    notes: Unsupported configuration. Week 3 discusses LLM timeout and retry strategies but does not configure a retry count; the near-miss topic is LLM reliability.
+
+  - id: rv-018
+    category: hard_negative
+    query: What exact throughput does the Week 3 watcher-worker queue sustain in the 500,000 recurring-job scenario?
+    answerable: false
+    notes: Unsupported quantitative fact. Week 3 mentions watcher-worker queues, queue depth, and a 500,000-job scenario but gives no throughput value for that queue.
+
+  - id: rv-019
+    category: hard_negative
+    query: What percentage of the production article's agent control flow is handled by deterministic code rather than the model?
+    answerable: false
+    notes: Unsupported quantitative fact. The production article says control flow belongs to deterministic code but gives no percentage split from model decisions.
+
+  - id: rv-020
+    category: hard_negative
+    query: Which Python MCP framework or SDK does the Week 3 prototype use to implement its MCP server?
+    answerable: false
+    notes: Unsupported implementation detail. Week 3 identifies a Python MCP server but does not name the Python MCP framework or SDK used to implement it.
+
+  - id: rv-021
+    category: hard_negative
+    query: Which database driver does the Week 3 prototype use to access the PostgreSQL job table partitioned by time_bucket?
+    answerable: false
+    notes: Unsupported implementation detail. Week 3 names PostgreSQL and time_bucket but does not name a database driver.
+
+  - id: rv-022
+    category: hard_negative
+    query: What exact cost multiplier does the Google Cloud guide report for parallel agents compared with sequential agents?
+    answerable: false
+    notes: Near-miss concept. The guide compares sequential and parallel patterns on cost and latency but gives no exact cost multiplier.
+
+  - id: rv-023
+    category: semantic_paraphrase
+    query: What governs when a dependable agent consults the model and when its repeated execution finishes?
+    answerable: true
+    evidence_groups:
+      - group_id: dependable-agent-timing
+        locations:
+          - source_id: production_agents
+            pages: [7]
+            anchors: ["control flow belongs to the deterministic code"]
+
+  - id: rv-024
+    category: semantic_paraphrase
+    query: How should a scheduled wall-clock time be represented so a daylight-saving transition does not change its intended local meaning?
+    answerable: true
+    evidence_groups:
+      - group_id: daylight-saving-time-meaning
+        locations:
+          - source_id: chatgpt_tasks_week3
+            pages: [12]
+            anchors: ["本地時 間 + timezone ID"]
+
+  - id: rv-025
+    category: semantic_paraphrase
+    query: What pattern keeps a group of specialized agents running again until a stopping condition is reached?
+    answerable: true
+    evidence_groups:
+      - group_id: loop-pattern-termination
+        locations:
+          - source_id: google_agent_patterns
+            pages: [6]
+            anchors: ["subagents until a specific termination condition is met"]
+
+  - id: rv-026
+    category: semantic_paraphrase
+    query: Where does most of a production agent's behavior live when the model is consulted only at selected points?
+    answerable: true
+    evidence_groups:
+      - group_id: selective-model-use
+        locations:
+          - source_id: production_agents
+            pages: [2]
+            anchors: ["conventional, deterministic code"]
+
+  - id: rv-027
+    category: multi_evidence
+    query: How does the prototype help the model choose an operation, and why is an intermediary placed between the model and the scheduler service?
+    answerable: true
+    evidence_groups:
+      - group_id: tool-selection-by-description
+        locations:
+          - source_id: chatgpt_tasks_week3
+            pages: [7]
+            anchors: ["使 用 者說 的動 詞  → 哪 個  tool 的  description 最 匹 配"]
+      - group_id: mcp-model-backend-decoupling
+        locations:
+          - source_id: chatgpt_tasks_week3
+            pages: [9]
+            anchors: ["MCP 把  LLM 和  backend 解 耦"]
+
+  - id: rv-028
+    category: multi_evidence
+    query: How does the prototype make hourly due-job lookup selective, and what preserves the intended local time when clocks change?
+    answerable: true
+    evidence_groups:
+      - group_id: hourly-due-job-selection
+        locations:
+          - source_id: chatgpt_tasks_week3
+            pages: [10]
+            anchors: ["同 小時的  job 放 一 起  -> 查 詢 只 掃 一個  partition"]
+      - group_id: scheduled-local-time-preservation
+        locations:
+          - source_id: chatgpt_tasks_week3
+            pages: [12]
+            anchors: ["本地時 間 + timezone ID"]
+
+  - id: rv-029
+    category: multi_evidence
+    query: "How do these two designs assign responsibility for deciding what happens next: the dependable-agent design and the coordinator design?"
+    answerable: true
+    evidence_groups:
+      - group_id: dependable-agent-control-owner
+        locations:
+          - source_id: production_agents
+            pages: [7]
+            anchors: ["control flow belongs to the deterministic code"]
+      - group_id: coordinator-workflow-owner
+        locations:
+          - source_id: google_agent_patterns
+            pages: [8]
+            anchors: ["central agent, the coordinator, to direct a workflow"]
+
+  - id: rv-030
+    category: multi_evidence
+    query: How does a coordinator-led workflow differ from one that pauses for a person to approve the work?
+    answerable: true
+    evidence_groups:
+      - group_id: coordinator-led-workflow
+        locations:
+          - source_id: google_agent_patterns
+            pages: [8]
+            anchors: ["central agent, the coordinator, to direct a workflow"]
+      - group_id: person-review-pause
+        locations:
+          - source_id: google_agent_patterns
+            pages: [14]
+            anchors: ["calls an external system to wait for a person to review its work"]

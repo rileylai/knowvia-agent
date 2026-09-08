@@ -1,0 +1,4066 @@
+{
+  "artifact_type": "retrieval_top_k_tradeoff_comparison",
+  "baseline_reproducibility": {
+    "canonical_case_ids_present": true,
+    "expected_failed_positive_case_ids": [
+      "rv-004",
+      "rv-005",
+      "rv-009",
+      "rv-023",
+      "rv-026",
+      "rv-027",
+      "rv-029"
+    ],
+    "expected_metrics": {
+      "full_case_success_at_5": 0.65,
+      "mrr": 0.625,
+      "page_coverage_at_5": 0.75,
+      "recall_at_5": 0.7,
+      "source_recall_at_5": 0.95
+    },
+    "observed_failed_positive_case_ids": [
+      "rv-004",
+      "rv-005",
+      "rv-009",
+      "rv-023",
+      "rv-026",
+      "rv-027",
+      "rv-029"
+    ],
+    "observed_metrics": {
+      "full_case_success_at_5": 0.65,
+      "mrr": 0.625,
+      "page_coverage_at_5": 0.75,
+      "recall_at_5": 0.7,
+      "source_recall_at_5": 0.95
+    },
+    "status": "PASS"
+  },
+  "benchmark_id": "knowvia-retrieval-pilot",
+  "benchmark_sha256": "c8eca9a7d6f4c3acfa0037df966187d89862376db82fcf31f0f35990327cf9c3",
+  "benchmark_version": "8.2",
+  "candidate_decision": {
+    "additional_recovered_case_ids_at_10": [],
+    "decision": "CANDIDATE_TOP_K_8",
+    "production_change": false,
+    "reason": "k=8 captures all observed positive full-case gains; k=10 adds no recovered positive case or group/full-case recall.",
+    "recovered_case_ids_at_8": [
+      "rv-004",
+      "rv-005",
+      "rv-023"
+    ]
+  },
+  "case_level_deltas": {
+    "10": [
+      {
+        "case_id": "rv-001",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 4,
+        "group_hits": {
+          "production-control-implementation": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.550239,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 11",
+            "page": 11,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.525198,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.498615,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 2",
+            "page": 2,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.462543,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 1",
+            "page": 1,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.459537,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.458697,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 18",
+            "page": 18,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.457148,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.453118,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 17",
+            "page": 17,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.446094,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 19",
+            "page": 19,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.441161,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-002",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 1,
+        "group_hits": {
+          "hourly-partition-key": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.449207,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 1",
+            "page": 1,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.427228,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.383999,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 17",
+            "page": 17,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.378826,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.355715,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 16",
+            "page": 16,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.340243,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 14",
+            "page": 14,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.340194,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.335106,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.33437,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.333847,
+            "source_id": "chatgpt_tasks_week3"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-003",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 1,
+        "group_hits": {
+          "scheduled-time-representation": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.506299,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.302009,
+            "source_id": "chatgpt_tasks_week3"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-004",
+        "classification": "RECOVERED",
+        "completion_rank": 8,
+        "group_hits": {
+          "deterministic-control-flow": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.619704,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.608814,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.577698,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.577377,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.572675,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.567775,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.555901,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.546004,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.53261,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.52912,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-005",
+        "classification": "RECOVERED",
+        "completion_rank": 7,
+        "group_hits": {
+          "sequential-agent-input": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 19",
+            "page": 19,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.544492,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.542703,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 17",
+            "page": 17,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.503728,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.500775,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.499237,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.498418,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.496875,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 16",
+            "page": 16,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.493119,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 11",
+            "page": 11,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.488146,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 16",
+            "page": 16,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.484754,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-006",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 1,
+        "group_hits": {
+          "human-review-checkpoint": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 14",
+            "page": 14,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.601163,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 18",
+            "page": 18,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.580131,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.547235,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.542736,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.5103,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.499992,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.49657,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.491486,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.484562,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.472443,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-007",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 1,
+        "group_hits": {
+          "time-bucket-rationale": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.544677,
+            "source_id": "chatgpt_tasks_week3"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-008",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 2,
+        "group_hits": {
+          "coordinator-definition": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.557869,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.522,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 2",
+            "page": 2,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.510851,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.489535,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 19",
+            "page": 19,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.457029,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 20",
+            "page": 20,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.455478,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 17",
+            "page": 17,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.436519,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 1",
+            "page": 1,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.434403,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.422971,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 16",
+            "page": 16,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.406457,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-009",
+        "classification": "UNCHANGED_FAIL",
+        "completion_rank": null,
+        "group_hits": {
+          "queue-separation": true,
+          "repeat-execution-handling": false
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.51113,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.49465,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.474962,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.47065,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.46886,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 1",
+            "page": 1,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.468658,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 17",
+            "page": 17,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.459829,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.452528,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.448509,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.447822,
+            "source_id": "chatgpt_tasks_week3"
+          }
+        ],
+        "passed": false
+      },
+      {
+        "case_id": "rv-010",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 2,
+        "group_hits": {
+          "parallel-definition": true,
+          "sequential-definition": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.590191,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.524456,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 2",
+            "page": 2,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.513595,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.429963,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 20",
+            "page": 20,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.410057,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 19",
+            "page": 19,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.409434,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 1",
+            "page": 1,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.403139,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 16",
+            "page": 16,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.399509,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 18",
+            "page": 18,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.392528,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.390291,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-011",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 2,
+        "group_hits": {
+          "human-loop-source": true,
+          "production-control-flow-source": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 14",
+            "page": 14,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.524144,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.492861,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.486572,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.463348,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.462224,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.451171,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.444493,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.439264,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.427859,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.415451,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-012",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 5,
+        "group_hits": {
+          "coordinator-contrast-source": true,
+          "timezone-source": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.455858,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.411391,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.406926,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.389344,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.366215,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.355203,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.349286,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.347728,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.343969,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 11",
+            "page": 11,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.343859,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-023",
+        "classification": "RECOVERED",
+        "completion_rank": 8,
+        "group_hits": {
+          "dependable-agent-timing": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.642107,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.581907,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.578044,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.574227,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.571632,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.567338,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.556999,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.545267,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.530016,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.521567,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-024",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 1,
+        "group_hits": {
+          "daylight-saving-time-meaning": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.460157,
+            "source_id": "chatgpt_tasks_week3"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-025",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 1,
+        "group_hits": {
+          "loop-pattern-termination": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.60491,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 18",
+            "page": 18,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.593888,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.585369,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.562829,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.556551,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.553442,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.548734,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.53451,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.531532,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.531266,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-026",
+        "classification": "UNCHANGED_FAIL",
+        "completion_rank": null,
+        "group_hits": {
+          "selective-model-use": false
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.596184,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.575172,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.537222,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.535541,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.528047,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.52274,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.518675,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 2",
+            "page": 2,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.514764,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 11",
+            "page": 11,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.512611,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.51116,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": false
+      },
+      {
+        "case_id": "rv-027",
+        "classification": "UNCHANGED_FAIL",
+        "completion_rank": null,
+        "group_hits": {
+          "mcp-model-backend-decoupling": false,
+          "tool-selection-by-description": false
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.503802,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.503341,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.492708,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.472048,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.464798,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 17",
+            "page": 17,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.458274,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.450564,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.446954,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 1",
+            "page": 1,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.434938,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.434022,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": false
+      },
+      {
+        "case_id": "rv-028",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 5,
+        "group_hits": {
+          "hourly-due-job-selection": true,
+          "scheduled-local-time-preservation": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.419771,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.374394,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.373916,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.361169,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.360141,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 1",
+            "page": 1,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.359261,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.358237,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.346956,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 2",
+            "page": 2,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.34118,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.332085,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-029",
+        "classification": "UNCHANGED_FAIL",
+        "completion_rank": null,
+        "group_hits": {
+          "coordinator-workflow-owner": true,
+          "dependable-agent-control-owner": false
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 17",
+            "page": 17,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.593564,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.592626,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.590017,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.571279,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.569126,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 11",
+            "page": 11,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.561964,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.559127,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.529839,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 19",
+            "page": 19,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.528397,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.523289,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": false
+      },
+      {
+        "case_id": "rv-030",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 2,
+        "group_hits": {
+          "coordinator-led-workflow": true,
+          "person-review-pause": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.513933,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 14",
+            "page": 14,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.506303,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.468398,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 16",
+            "page": 16,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.441358,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 15",
+            "page": 15,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.438001,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 19",
+            "page": 19,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.437245,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.416037,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.399482,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 14",
+            "page": 14,
+            "rank": 9,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.38879,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 20,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 10,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.387112,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": true
+      }
+    ],
+    "8": [
+      {
+        "case_id": "rv-001",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 4,
+        "group_hits": {
+          "production-control-implementation": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.550239,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 11",
+            "page": 11,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.525198,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.498615,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 2",
+            "page": 2,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.462543,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 1",
+            "page": 1,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.459537,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.458697,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 18",
+            "page": 18,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.457148,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.453118,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-002",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 1,
+        "group_hits": {
+          "hourly-partition-key": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.449207,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 1",
+            "page": 1,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.427228,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.383999,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 17",
+            "page": 17,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.378826,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.355715,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 16",
+            "page": 16,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.340243,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 14",
+            "page": 14,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.340194,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.335106,
+            "source_id": "chatgpt_tasks_week3"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-003",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 1,
+        "group_hits": {
+          "scheduled-time-representation": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.506299,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.302009,
+            "source_id": "chatgpt_tasks_week3"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-004",
+        "classification": "RECOVERED",
+        "completion_rank": 8,
+        "group_hits": {
+          "deterministic-control-flow": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.619704,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.608814,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.577698,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.577377,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.572675,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.567775,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.555901,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.546004,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-005",
+        "classification": "RECOVERED",
+        "completion_rank": 7,
+        "group_hits": {
+          "sequential-agent-input": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 19",
+            "page": 19,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.544492,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.542703,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 17",
+            "page": 17,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.503728,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.500775,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.499237,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.498418,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.496875,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 16",
+            "page": 16,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.493119,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-006",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 1,
+        "group_hits": {
+          "human-review-checkpoint": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 14",
+            "page": 14,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.601163,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 18",
+            "page": 18,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.580131,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.547235,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.542736,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.5103,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.499992,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.49657,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.491486,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-007",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 1,
+        "group_hits": {
+          "time-bucket-rationale": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.544677,
+            "source_id": "chatgpt_tasks_week3"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-008",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 2,
+        "group_hits": {
+          "coordinator-definition": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.557869,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.522,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 2",
+            "page": 2,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.510851,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.489535,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 19",
+            "page": 19,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.457029,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 20",
+            "page": 20,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.455478,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 17",
+            "page": 17,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.436519,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 1",
+            "page": 1,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.434403,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-009",
+        "classification": "UNCHANGED_FAIL",
+        "completion_rank": null,
+        "group_hits": {
+          "queue-separation": true,
+          "repeat-execution-handling": false
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.51113,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.49465,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.474962,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.47065,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.46886,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 1",
+            "page": 1,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.468658,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 17",
+            "page": 17,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.459829,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.452528,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": false
+      },
+      {
+        "case_id": "rv-010",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 2,
+        "group_hits": {
+          "parallel-definition": true,
+          "sequential-definition": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.590191,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.524456,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 2",
+            "page": 2,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.513595,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.429963,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 20",
+            "page": 20,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.410057,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 19",
+            "page": 19,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.409434,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 1",
+            "page": 1,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.403139,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 16",
+            "page": 16,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.399509,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-011",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 2,
+        "group_hits": {
+          "human-loop-source": true,
+          "production-control-flow-source": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 14",
+            "page": 14,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.524144,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.492861,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.486572,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.463348,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.462224,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.451171,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.444493,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.439264,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-012",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 5,
+        "group_hits": {
+          "coordinator-contrast-source": true,
+          "timezone-source": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.455858,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.411391,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.406926,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.389344,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.366215,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.355203,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.349286,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.347728,
+            "source_id": "chatgpt_tasks_week3"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-023",
+        "classification": "RECOVERED",
+        "completion_rank": 8,
+        "group_hits": {
+          "dependable-agent-timing": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.642107,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.581907,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.578044,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.574227,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.571632,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.567338,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.556999,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.545267,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-024",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 1,
+        "group_hits": {
+          "daylight-saving-time-meaning": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.460157,
+            "source_id": "chatgpt_tasks_week3"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-025",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 1,
+        "group_hits": {
+          "loop-pattern-termination": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.60491,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 18",
+            "page": 18,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.593888,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.585369,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.562829,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.556551,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.553442,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.548734,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.53451,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-026",
+        "classification": "UNCHANGED_FAIL",
+        "completion_rank": null,
+        "group_hits": {
+          "selective-model-use": false
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.596184,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.575172,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.537222,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.535541,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.528047,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.52274,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.518675,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 2",
+            "page": 2,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.514764,
+            "source_id": "google_agent_patterns"
+          }
+        ],
+        "passed": false
+      },
+      {
+        "case_id": "rv-027",
+        "classification": "UNCHANGED_FAIL",
+        "completion_rank": null,
+        "group_hits": {
+          "mcp-model-backend-decoupling": false,
+          "tool-selection-by-description": false
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.503802,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.503341,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.492708,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.472048,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.464798,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 17",
+            "page": 17,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.458274,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.450564,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 7",
+            "page": 7,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.446954,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": false
+      },
+      {
+        "case_id": "rv-028",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 5,
+        "group_hits": {
+          "hourly-due-job-selection": true,
+          "scheduled-local-time-preservation": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.419771,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 5",
+            "page": 5,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.374394,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.373916,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 13",
+            "page": 13,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.361169,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.360141,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 1",
+            "page": 1,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.359261,
+            "source_id": "chatgpt_tasks_week3"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 12",
+            "page": 12,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.358237,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.346956,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "case_id": "rv-029",
+        "classification": "UNCHANGED_FAIL",
+        "completion_rank": null,
+        "group_hits": {
+          "coordinator-workflow-owner": true,
+          "dependable-agent-control-owner": false
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 17",
+            "page": 17,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.593564,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.592626,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.590017,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 4",
+            "page": 4,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.571279,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.569126,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 11",
+            "page": 11,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.561964,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.559127,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 3",
+            "page": 3,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.529839,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": false
+      },
+      {
+        "case_id": "rv-030",
+        "classification": "UNCHANGED_PASS",
+        "completion_rank": 2,
+        "group_hits": {
+          "coordinator-led-workflow": true,
+          "person-review-pause": true
+        },
+        "observations": [
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 8",
+            "page": 8,
+            "rank": 1,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.513933,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 14",
+            "page": 14,
+            "rank": 2,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.506303,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 9",
+            "page": 9,
+            "rank": 3,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.468398,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 16",
+            "page": 16,
+            "rank": 4,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.441358,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 15",
+            "page": 15,
+            "rank": 5,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.438001,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 19",
+            "page": 19,
+            "rank": 6,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.437245,
+            "source_id": "google_agent_patterns"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 10",
+            "page": 10,
+            "rank": 7,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.416037,
+            "source_id": "production_agents"
+          },
+          {
+            "accepted": true,
+            "candidate_count": 16,
+            "locator": "page 6",
+            "page": 6,
+            "rank": 8,
+            "retrieval_mode": "pgvector_exact_cosine",
+            "score": 0.399482,
+            "source_id": "production_agents"
+          }
+        ],
+        "passed": true
+      }
+    ]
+  },
+  "category_metrics_by_top_k": {
+    "10": {
+      "cross_source_discrimination": {
+        "case_count": 2,
+        "completion_ranks": {
+          "rv-011": 2,
+          "rv-012": 5
+        },
+        "full_case_success": 1.0,
+        "group_recall": 1.0,
+        "pass_count": 2,
+        "positive_case_count": 2,
+        "recovered_case_ids": [
+          "rv-011",
+          "rv-012"
+        ]
+      },
+      "exact_term_identifier": {
+        "case_count": 2,
+        "completion_ranks": {
+          "rv-007": 1,
+          "rv-008": 2
+        },
+        "full_case_success": 1.0,
+        "group_recall": 1.0,
+        "pass_count": 2,
+        "positive_case_count": 2,
+        "recovered_case_ids": [
+          "rv-007",
+          "rv-008"
+        ]
+      },
+      "hard_negative": {
+        "case_count": 10,
+        "completion_ranks": {},
+        "full_case_success": 0.0,
+        "group_recall": 0.0,
+        "pass_count": 0,
+        "positive_case_count": 0,
+        "recovered_case_ids": []
+      },
+      "multi_evidence": {
+        "case_count": 6,
+        "completion_ranks": {
+          "rv-009": null,
+          "rv-010": 2,
+          "rv-027": null,
+          "rv-028": 5,
+          "rv-029": null,
+          "rv-030": 2
+        },
+        "full_case_success": 0.5,
+        "group_recall": 0.6666666666666666,
+        "pass_count": 3,
+        "positive_case_count": 6,
+        "recovered_case_ids": [
+          "rv-010",
+          "rv-028",
+          "rv-030"
+        ]
+      },
+      "semantic_paraphrase": {
+        "case_count": 7,
+        "completion_ranks": {
+          "rv-004": 8,
+          "rv-005": 7,
+          "rv-006": 1,
+          "rv-023": 8,
+          "rv-024": 1,
+          "rv-025": 1,
+          "rv-026": null
+        },
+        "full_case_success": 0.8571428571428571,
+        "group_recall": 0.8571428571428571,
+        "pass_count": 6,
+        "positive_case_count": 7,
+        "recovered_case_ids": [
+          "rv-004",
+          "rv-005",
+          "rv-006",
+          "rv-023",
+          "rv-024",
+          "rv-025"
+        ]
+      },
+      "single_document_factual": {
+        "case_count": 3,
+        "completion_ranks": {
+          "rv-001": 4,
+          "rv-002": 1,
+          "rv-003": 1
+        },
+        "full_case_success": 1.0,
+        "group_recall": 1.0,
+        "pass_count": 3,
+        "positive_case_count": 3,
+        "recovered_case_ids": [
+          "rv-001",
+          "rv-002",
+          "rv-003"
+        ]
+      }
+    },
+    "5": {
+      "cross_source_discrimination": {
+        "case_count": 2,
+        "completion_ranks": {
+          "rv-011": 2,
+          "rv-012": 5
+        },
+        "full_case_success": 1.0,
+        "group_recall": 1.0,
+        "pass_count": 2,
+        "positive_case_count": 2,
+        "recovered_case_ids": [
+          "rv-011",
+          "rv-012"
+        ]
+      },
+      "exact_term_identifier": {
+        "case_count": 2,
+        "completion_ranks": {
+          "rv-007": 1,
+          "rv-008": 2
+        },
+        "full_case_success": 1.0,
+        "group_recall": 1.0,
+        "pass_count": 2,
+        "positive_case_count": 2,
+        "recovered_case_ids": [
+          "rv-007",
+          "rv-008"
+        ]
+      },
+      "hard_negative": {
+        "case_count": 10,
+        "completion_ranks": {},
+        "full_case_success": 0.0,
+        "group_recall": 0.0,
+        "pass_count": 0,
+        "positive_case_count": 0,
+        "recovered_case_ids": []
+      },
+      "multi_evidence": {
+        "case_count": 6,
+        "completion_ranks": {
+          "rv-009": null,
+          "rv-010": 2,
+          "rv-027": null,
+          "rv-028": 5,
+          "rv-029": null,
+          "rv-030": 2
+        },
+        "full_case_success": 0.5,
+        "group_recall": 0.6666666666666666,
+        "pass_count": 3,
+        "positive_case_count": 6,
+        "recovered_case_ids": [
+          "rv-010",
+          "rv-028",
+          "rv-030"
+        ]
+      },
+      "semantic_paraphrase": {
+        "case_count": 7,
+        "completion_ranks": {
+          "rv-004": null,
+          "rv-005": null,
+          "rv-006": 1,
+          "rv-023": null,
+          "rv-024": 1,
+          "rv-025": 1,
+          "rv-026": null
+        },
+        "full_case_success": 0.42857142857142855,
+        "group_recall": 0.42857142857142855,
+        "pass_count": 3,
+        "positive_case_count": 7,
+        "recovered_case_ids": [
+          "rv-006",
+          "rv-024",
+          "rv-025"
+        ]
+      },
+      "single_document_factual": {
+        "case_count": 3,
+        "completion_ranks": {
+          "rv-001": 4,
+          "rv-002": 1,
+          "rv-003": 1
+        },
+        "full_case_success": 1.0,
+        "group_recall": 1.0,
+        "pass_count": 3,
+        "positive_case_count": 3,
+        "recovered_case_ids": [
+          "rv-001",
+          "rv-002",
+          "rv-003"
+        ]
+      }
+    },
+    "8": {
+      "cross_source_discrimination": {
+        "case_count": 2,
+        "completion_ranks": {
+          "rv-011": 2,
+          "rv-012": 5
+        },
+        "full_case_success": 1.0,
+        "group_recall": 1.0,
+        "pass_count": 2,
+        "positive_case_count": 2,
+        "recovered_case_ids": [
+          "rv-011",
+          "rv-012"
+        ]
+      },
+      "exact_term_identifier": {
+        "case_count": 2,
+        "completion_ranks": {
+          "rv-007": 1,
+          "rv-008": 2
+        },
+        "full_case_success": 1.0,
+        "group_recall": 1.0,
+        "pass_count": 2,
+        "positive_case_count": 2,
+        "recovered_case_ids": [
+          "rv-007",
+          "rv-008"
+        ]
+      },
+      "hard_negative": {
+        "case_count": 10,
+        "completion_ranks": {},
+        "full_case_success": 0.0,
+        "group_recall": 0.0,
+        "pass_count": 0,
+        "positive_case_count": 0,
+        "recovered_case_ids": []
+      },
+      "multi_evidence": {
+        "case_count": 6,
+        "completion_ranks": {
+          "rv-009": null,
+          "rv-010": 2,
+          "rv-027": null,
+          "rv-028": 5,
+          "rv-029": null,
+          "rv-030": 2
+        },
+        "full_case_success": 0.5,
+        "group_recall": 0.6666666666666666,
+        "pass_count": 3,
+        "positive_case_count": 6,
+        "recovered_case_ids": [
+          "rv-010",
+          "rv-028",
+          "rv-030"
+        ]
+      },
+      "semantic_paraphrase": {
+        "case_count": 7,
+        "completion_ranks": {
+          "rv-004": 8,
+          "rv-005": 7,
+          "rv-006": 1,
+          "rv-023": 8,
+          "rv-024": 1,
+          "rv-025": 1,
+          "rv-026": null
+        },
+        "full_case_success": 0.8571428571428571,
+        "group_recall": 0.8571428571428571,
+        "pass_count": 6,
+        "positive_case_count": 7,
+        "recovered_case_ids": [
+          "rv-004",
+          "rv-005",
+          "rv-006",
+          "rv-023",
+          "rv-024",
+          "rv-025"
+        ]
+      },
+      "single_document_factual": {
+        "case_count": 3,
+        "completion_ranks": {
+          "rv-001": 4,
+          "rv-002": 1,
+          "rv-003": 1
+        },
+        "full_case_success": 1.0,
+        "group_recall": 1.0,
+        "pass_count": 3,
+        "positive_case_count": 3,
+        "recovered_case_ids": [
+          "rv-001",
+          "rv-002",
+          "rv-003"
+        ]
+      }
+    }
+  },
+  "context_volume_by_top_k": {
+    "10": {
+      "negative_average_accepted_chunks": 5.9,
+      "negative_average_retrieved_characters": 4614.4,
+      "positive_average_accepted_chunks": 8.7,
+      "positive_average_retrieved_characters": 7853.15
+    },
+    "5": {
+      "negative_average_accepted_chunks": 3.7,
+      "negative_average_retrieved_characters": 2892.9,
+      "positive_average_accepted_chunks": 4.45,
+      "positive_average_retrieved_characters": 3973.5
+    },
+    "8": {
+      "negative_average_accepted_chunks": 5.3,
+      "negative_average_retrieved_characters": 4147.5,
+      "positive_average_accepted_chunks": 7.0,
+      "positive_average_retrieved_characters": 6247.65
+    }
+  },
+  "controls": {
+    "candidate_pool_formula": "min(top_k * 2, 20)",
+    "canonical_contract_unchanged": [
+      1,
+      3,
+      5
+    ],
+    "final_llm_called": false,
+    "top_k_variants": [
+      5,
+      8,
+      10
+    ]
+  },
+  "negative_safety_by_top_k": {
+    "10": {
+      "average_accepted_evidence_count": 5.9,
+      "case_count": 10,
+      "false_positive_retrieval_rate": 0.9,
+      "maximum_accepted_evidence_count": 10,
+      "negative_rejection_rate": 0.1
+    },
+    "5": {
+      "average_accepted_evidence_count": 3.7,
+      "case_count": 10,
+      "false_positive_retrieval_rate": 0.9,
+      "maximum_accepted_evidence_count": 5,
+      "negative_rejection_rate": 0.1
+    },
+    "8": {
+      "average_accepted_evidence_count": 5.3,
+      "case_count": 10,
+      "false_positive_retrieval_rate": 0.9,
+      "maximum_accepted_evidence_count": 8,
+      "negative_rejection_rate": 0.1
+    }
+  },
+  "operational_cost_by_top_k": {
+    "10": {
+      "average_retrieval_latency_ms": 11.2463,
+      "median_retrieval_latency_ms": 11.1845,
+      "negative_average_retrieval_latency_ms": 10.8149,
+      "positive_average_retrieval_latency_ms": 11.462
+    },
+    "5": {
+      "average_retrieval_latency_ms": 10.337233333333334,
+      "median_retrieval_latency_ms": 11.5305,
+      "negative_average_retrieval_latency_ms": 12.0071,
+      "positive_average_retrieval_latency_ms": 9.5023
+    },
+    "8": {
+      "average_retrieval_latency_ms": 11.290333333333333,
+      "median_retrieval_latency_ms": 11.383,
+      "negative_average_retrieval_latency_ms": 11.408199999999999,
+      "positive_average_retrieval_latency_ms": 11.231399999999999
+    }
+  },
+  "positive_metrics_by_top_k": {
+    "10": {
+      "case_count": 20,
+      "full_case_success_at_requested_top_k": 0.8,
+      "mrr": 0.6446428571428571,
+      "page_coverage_at_requested_top_k": 0.85,
+      "pass_count": 16,
+      "recall_at_requested_top_k": 0.85,
+      "source_recall_at_requested_top_k": 1.0
+    },
+    "5": {
+      "case_count": 20,
+      "full_case_success_at_requested_top_k": 0.65,
+      "mrr": 0.625,
+      "page_coverage_at_requested_top_k": 0.75,
+      "pass_count": 13,
+      "recall_at_requested_top_k": 0.7,
+      "source_recall_at_requested_top_k": 0.95
+    },
+    "8": {
+      "case_count": 20,
+      "full_case_success_at_requested_top_k": 0.8,
+      "mrr": 0.6446428571428571,
+      "page_coverage_at_requested_top_k": 0.85,
+      "pass_count": 16,
+      "recall_at_requested_top_k": 0.85,
+      "source_recall_at_requested_top_k": 0.95
+    }
+  }
+}

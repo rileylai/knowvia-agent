@@ -2101,3 +2101,997 @@ dependencies 或 frontend。
 本輪只修改 roadmap、README、architecture/workflow/data/quality/deployment 文件、decisions 與
 daily log。未修改 runtime、tests、eval、frontend、dependencies、migration、Docker 或 config；
 未重新進行 architecture diagnosis，也未開始 implementation。
+
+## 2026-09-08 Retrieval Evaluation Foundation and 8.1 Pilot Surface
+
+### Roadmap and decision
+
+- 新增 `D032`：保留 `7.0` 的 Agent Golden Set evidence，但正式 browser Demo Story 尚未完成；
+  mainline 暫時轉向 `8.x Retrieval Evaluation Foundation`。
+- `8.0=done`：完成 repository inspection、current retrieval path inventory 與 benchmark boundary；
+  沒有 runtime change。
+- `8.1=manual_verification`：pilot surface 與 automated verification 完成，actual PDF gold
+  annotations 與 isolated live pilot 尚待人工 review。
+
+### Frozen corpus and case contract
+
+- Corpus 固定為三份 `mock_data/` PDF：
+  - `production_agents`：14 pages，SHA256 `c88c995d6d6deb5d350f12621cabc9dbfa2323047491ad66771989f58100f074`。
+  - `chatgpt_tasks_week3`：17 pages，SHA256 `eec40e93d8adb8755f89378dc9778a9219786b4f4b466e696a6aa8e1f54b2591`。
+  - `google_agent_patterns`：21 pages，SHA256 `c22fe67748782b2dfe8bff364a9ea3fa852a0eba9da22f100cbe43cd73cbba36`。
+- Pilot 共 15 cases：3 single-document factual、3 semantic paraphrase、2 exact-term/
+  identifier、2 multi-evidence、2 cross-source discrimination、3 hard-negative。
+- Gold 只記錄 stable `source_id`、page 與 manually reviewable evidence anchor；未提交全文、
+  embeddings、vectors 或 raw provider response。
+
+### Implementation and verification
+
+- 新增 `eval/retrieval/` independent benchmark surface：YAML schema/loader、corpus identity
+  verification、retrieval-only runner、Recall/MRR/full-case/source/evidence/negative metrics 與
+  bounded report。
+- Runner 明確使用 current `EmbeddingClient`、`ProductionChunkRetriever.retrieve_with_metadata()`
+  與 current PDF parser/indexing/chunker path；不呼叫 final LLM，不修改
+  `eval/golden_set.yaml`。
+- Focused benchmark tests：`7 passed`。
+- Combined Golden Set/retrieval evaluation tests：`12 passed`；其中 Golden Set runner 為 `29/29`。
+- Repository full suite：`898 passed, 6 skipped`。
+- CLI `--help` 與 YAML load/15-case validation：PASS。
+- Existing Agent Golden Set baseline：`29/29` PASS，仍為 Agent Contract evidence，不宣稱 retrieval
+  quality。
+
+### Baseline result and limitation
+
+- 8.1 actual isolated PostgreSQL+pgvector pilot：`Not run`。安全審核拒絕本次 execution，因為
+  current production embedding path 會把三份 PDF extracted chunks 與 queries 傳給 provider；
+  未取得對 private source content 的明確對外傳輸授權。
+- 因此本輪沒有把 synthetic/local fake 結果寫成 production baseline，也沒有填寫 Recall/MRR
+  數值。未執行 optimization、threshold/chunking/embedding/candidate-pool 調整、BM25、RRF 或
+  reranker。
+- Manual verification：`Not yet manually verified.`。需先 review 15 個 anchors，再由明確授權的
+  isolated run 產生 baseline，最後才可判斷 failure label 與下一步 scope。
+
+### Scope confirmation
+
+本輪修改 docs、`dev_state`、independent retrieval eval code 與 focused tests；未修改 runtime、
+schema、migration、dependency、Docker、frontend 或 `eval/golden_set.yaml`。未 commit、push、
+merge、stash、reset 或 clean。
+
+## 2026-09-08 8.1.1 Pilot Retrieval Benchmark Correctness Review
+
+### Gold annotation review
+
+- 使用 current `PyPDFParserClient` 重新 parse 三份 frozen PDFs，逐一檢查 `rv-001` 至 `rv-015`。
+- `rv-003` 改為 parser 實際輸出的 `本地時 間 + timezone ID`，沒有採用未經確認的連續中文字串。
+- `rv-007` 改為 `同 小時的 job 放 一 起 -> 查 詢 只 掃 一個 partition`，使 gold 支援 query 的
+  partition rationale，而不是只命中 `time_bucket` identifier。
+- `rv-009` 改為 required `match: all` evidence：Watcher/Worker responsibilities 與 decoupling
+  evidence 都必須存在；`Queue(SQS)` 不再單獨代表 separation。
+- `rv-013` 至 `rv-015` 維持 hard-negative。三份 parser output 沒有 `RRF`、`pgvector`、`HNSW`、
+  `text-embedding-3-small` 或 embedding model/index terms；semantic negative validity 仍需人工 review。
+
+### Correctness fixes
+
+- `verify_corpus()` 現在在任何 embedding provider construction 前執行 deterministic gold annotation
+  preflight。Anchor 使用與 metrics 相同的 NFKC、casefold、whitespace normalization；不存在時以
+  `RetrievalAnnotationError` fail closed。
+- MRR 對每個 positive case 都計入 denominator；top-5 完全 miss 的 RR 為 `0`。
+- Recall@1/3/5 改為先算每 case 的 group recall，再對 positive cases 取 macro mean。
+- `completion_rank` 改為 required groups 的 first-hit ranks 最大值；不再被 `[1, 3, 5]` cutoff
+  取代。
+- Accepted-only observation 不再猜測 `RELEVANCE_GATE_FAILURE`、`CHUNKING_EVIDENCE_BOUNDARY_FAILURE`
+  或 `EMBEDDING_RANKING_FAILURE`；root cause 不足時統一為 `UNRESOLVED`。Taxonomy names 保留。
+- 移除與 Recall 使用相同 numerator/denominator 的 `evidence_anchor_coverage_at_5` primary metric；
+  per-case group hits 仍保留供 anchor review。
+- Frozen contract check 改為明確的 8.1 baseline declaration；candidate pool、relevance floor、
+  cosine mode 直接引用 repository constants，chunk max/page-aware 由 current chunker signature
+  inspection 驗證，未重構 production chunker 或 dependency wiring。
+
+### Verification
+
+- Retrieval benchmark focused suite：`13 passed`。
+- Repository full regression：`904 passed, 6 skipped`。
+- Agent Golden Set：`29/29`，與 correctness patch 前一致。
+- 未執行 live embedding benchmark、未建立 isolated live benchmark database、未產生 baseline metrics。
+- `8.1=manual_verification` 維持不變；下一步是 human review corrected 15-case benchmark。
+
+### Scope confirmation
+
+本輪只修改 retrieval benchmark annotations、preflight、metrics、focused tests、必要 roadmap/quality
+wording 與 daily log。未調整 `1200`、overlap、`0.30` threshold、embedding、BM25、RRF、reranker、
+candidate trace、production retriever 或 `eval/golden_set.yaml`。未 commit、push、merge、stash、
+reset 或 clean。
+
+## 2026-09-08 8.1 Current Retrieval Baseline First Live Pilot
+
+### Controlled authorization and execution
+
+- User 明確授權本次 controlled benchmark 將 frozen `mock_data/` 三份 PDF 經 current
+  parser/chunker 的 outputs，以及 `eval/retrieval/benchmark.yaml` 的 15 個 queries 傳給目前設定的
+  OpenAI embedding provider。授權只適用於本次 8.1 pilot。
+- Exact benchmark command：
+
+  ```text
+  rtk env KNOWVIA_RUN_RETRIEVAL_BENCHMARK=1 uv --cache-dir /private/tmp/knowvia-uv-cache run --env-file .env python -m eval.run_retrieval_benchmark --benchmark eval/retrieval/benchmark.yaml --corpus-root mock_data --report /tmp/knowvia-retrieval-pilot-20260908.json
+  ```
+
+- 使用 current production parser、page-aware chunking、`max_chunk_chars=1200`、overlap `0`、
+  `text-embedding-3-small`、1536 dimensions、pgvector exact cosine、current candidate pool、
+  `knowledge_relevance_floor=0.30` 與 top-k `1/3/5`。沒有修改任何 retrieval 設定，也沒有呼叫
+  final LLM。
+- Corpus 為 3 份 frozen PDFs，page counts 為 `14/17/21`；benchmark 為 15 cases，包含 12
+  positive 與 3 hard-negative cases。
+- Bounded JSON report 寫入 `/tmp/knowvia-retrieval-pilot-20260908.json`，沒有覆寫 source-of-truth
+  fixture，也沒有包含 full chunk text、raw PDF text、embedding vector、provider request/response、
+  API key 或 database credentials。
+
+### Preflight and run verification
+
+- SHA256、page counts、15-case gold annotation preflight 與 frozen production contract：PASS。
+- Focused retrieval benchmark suite：`13 passed`。
+- Local `pgvector/pgvector:pg16` PostgreSQL：healthy；admin connection 建立與刪除 preflight
+  disposable database：PASS。
+- Live run 完成 Alembic upgrade、3 份 PDF indexing、15 個 query embeddings 與 retrieval-only
+  evaluation。Live run 後 `knowvia_retrieval_pilot_*` database count 為 `0`。
+
+### Baseline metrics
+
+| Metric | Result |
+| --- | ---: |
+| total cases | 15 |
+| positive cases | 12 |
+| negative cases | 3 |
+| passed cases | 10 |
+| Recall@1 | 0.458333 |
+| Recall@3 | 0.625000 |
+| Recall@5 | 0.791667 |
+| MRR | 0.666667 |
+| full_case_success@1 | 0.333333 |
+| full_case_success@3 | 0.583333 |
+| full_case_success@5 | 0.750000 |
+| source_recall@5 | 1.000000 |
+| page_coverage@5 | 0.875000 |
+| negative_rejection_rate | 0.333333 |
+| false_positive_retrieval_rate | 0.666667 |
+
+這些是 post-relevance-gate accepted retrieval metrics，不是 raw vector ranking metrics。
+
+### Category results
+
+| Category | Cases | Passed | Pass rate |
+| --- | ---: | ---: | ---: |
+| single_document_factual | 3 | 3 | 1.000000 |
+| semantic_paraphrase | 3 | 1 | 0.333333 |
+| exact_term_identifier | 2 | 2 | 1.000000 |
+| multi_evidence | 2 | 1 | 0.500000 |
+| cross_source_discrimination | 2 | 2 | 1.000000 |
+| hard_negative | 3 | 1 | 0.333333 |
+
+### Failed cases and bounded findings
+
+- Failed cases：`rv-004`、`rv-005`、`rv-009`、`rv-014`、`rv-015`。五個 case 的 failure label
+  都是 `UNRESOLVED`，符合 accepted-only observation 不推斷 embedding、ranking、threshold 或
+  chunking root cause 的規則。
+- `rv-004`：accepted top-5 出現 `production_agents`，但沒有 gold page 7；gold source 有出現，
+  exact gold evidence 未在 accepted top-5 完成。維持 `UNRESOLVED`。
+- `rv-005`：accepted top-5 出現 `google_agent_patterns`，並出現 page 4 locator，但 case anchor
+  沒有被 evaluator 確認。只能記錄 source/page candidate 與 gold anchor 的 bounded mismatch，
+  維持 `UNRESOLVED`。
+- `rv-009`：queue-separation group 在 rank 4 出現 page 6 evidence，但 required repeat-execution
+  group 的 page 16 沒有在 accepted top-5 完成。維持 `UNRESOLVED`。
+- `rv-014` 與 `rv-015`：negative cases 分別接受了 3 個與 1 個 evidence；最高 score 分別為
+  `0.352377` 與 `0.321981`，均高於 current `0.30` floor。這是 current accepted retrieval path
+  的 false positive，沒有修改 threshold。
+- 本輪沒有足夠 evidence 把 positive miss 歸因為 embedding、ranking、relevance gate 或
+  chunking。沒有進行 optimization。
+
+### Scope confirmation
+
+- 沒有修改 `max_chunk_chars`、overlap、relevance floor、candidate pool、embedding model、parser、
+  production retriever、BM25、RRF、reranker、benchmark cases 或 frontend。
+- 沒有加入 raw candidate trace，沒有修改 `eval/golden_set.yaml`，沒有 stage、commit 或 push。
+- `8.1` 維持 `manual_verification`。Baseline metrics 與五個 failed cases 仍需要 human
+  interpretation，再決定是否 freeze、expand 或另開 diagnostic slice。
+
+## 2026-09-08 8.1.2 Pilot Failure Offline Diagnosis
+
+### Scope and deterministic inspection
+
+- 本輪只使用 current `PyPDFParserClient`、current normalization、page-aware `chunk_text_document()`
+  與 `max_chunk_chars=1200` 重建 local chunks。
+- 沒有呼叫 embedding provider，沒有建立 benchmark database，沒有重新執行 live retrieval，沒有
+  修改 benchmark gold、production code、roadmap 或 decisions。
+- Offline red-capable inspection loop：`offline_diagnosis_loop=PASS`。Loop 確認四個 target
+  pages 的 gold anchors 都能在 current reconstructed chunks 中找到。
+
+### Reconstructed gold-page chunks
+
+| Case / page | Extracted chars | Chunks | Anchor result | Boundary finding |
+| --- | ---: | --- | --- | --- |
+| `rv-004` / production_agents p7 | 1127 | `#10`, page 7, length 1127 | Anchor complete in `#10` | No split |
+| `rv-005` / google_agent_patterns p4 | 2298 | `#6` length 1189; `#7` length 1107 | Anchor complete in `#7` | Same-page wrong-chunk plausible; anchor itself not split |
+| `rv-009` / chatgpt_tasks_week3 p6 | 377 | `#5`, length 361 | Both required page-6 anchors complete in `#5` | No split |
+| `rv-009` / chatgpt_tasks_week3 p16 | 562 | `#15`, length 550 | `idempotent handler` complete in `#15` | No split |
+
+Bounded snippets showed `rv-004` page 7's control-flow statement in the same chunk as its model/
+loop context. Page 4 of `rv-005` has two chunks; the gold sentence is complete in chunk `#7`, while
+the preceding sentence crosses the `#6/#7` boundary. The current report has only page locator and no
+chunk identity, so it cannot prove which page-4 chunk was returned at rank 5.
+
+### Case findings
+
+- `rv-004`: page 7 has one 1127-character chunk and the gold anchor is complete with standalone
+  context. Page 8 contains nearby concepts such as loop escape rules, model invocation and halting.
+  These explain why page 8 may be semantically close to the query. Result:
+  `CHUNK_BOUNDARY_NOT_SUPPORTED`.
+- `rv-005`: page 4 has two chunks and the gold anchor is complete only in chunk `#7`; live retrieval
+  returned page 4 at rank 5 without chunk identity. Result: `CHUNK_BOUNDARY_PLAUSIBLE` for a
+  same-page wrong-chunk explanation, but the accepted report cannot prove it. Normalization still
+  matches the anchor.
+- `rv-009`: page 6 contains both Watcher/Worker anchors in one chunk; page 16 contains the
+  `idempotent handler` anchor in one chunk. The two required groups are separate page-level intents.
+  Zero overlap is not implicated by the reconstructed boundaries. Result:
+  `CHUNK_BOUNDARY_NOT_SUPPORTED` for the missing second evidence.
+
+### Negative-case findings
+
+| Case | Returned topic evidence | Requested fact present | Score margin over 0.30 |
+| --- | --- | --- | --- |
+| `rv-014` p1 | MCP scheduler / LLM engine / system design | No pgvector or HNSW configuration | `0.052377` |
+| `rv-014` p3 | Prototype tour with API, DB schema and system-design references | No pgvector index or HNSW parameters | `0.020820` |
+| `rv-014` p16 | Production gaps involving exactly-once execution, jobs and handlers | No pgvector index or HNSW parameters | `0.006131` |
+| `rv-015` p12 | Production-agent discussion of models and computation | No `text-embedding-3-small` statement | `0.021981` |
+
+`rv-014` and `rv-015` are accepted false positives with superficial technical or model-related
+similarity. The negative set contains only 3 cases, so it is insufficient for threshold calibration.
+
+### Hypothesis ranking
+
+| Rank | Hypothesis | Status | Evidence boundary |
+| ---: | --- | --- | --- |
+| 1 | Multi-evidence retrieval coverage | SUPPORTED | `rv-009` retrieves page 6 evidence but misses the separate page 16 group |
+| 2 | Relevance-floor calibration | PARTIALLY_SUPPORTED | 2 of 3 negative cases are accepted above `0.30`; sample is too small |
+| 3 | Chunk size / overlap | PARTIALLY_SUPPORTED | Only `rv-005` makes same-page wrong-chunk plausible; `rv-004` and `rv-009` do not support it |
+| 4 | Embedding / semantic ranking | NOT_YET_SUPPORTED | No raw rejected candidates or A/B comparison |
+| 5 | Hybrid lexical + dense | NOT_YET_SUPPORTED | Current inspection provides no comparison evidence |
+
+### One next experiment
+
+下一輪只推薦一個 bounded experiment：擴充同 corpus 的 hard-negative set，並對既有
+`knowledge_relevance_floor` 做 offline score calibration review。先取得足夠 negative cases，再
+判斷 floor 是否能降低 false positives；不在本輪或本紀錄中修改 threshold，也不修改 production
+retriever。
+
+### Scope confirmation
+
+- 沒有新增 roadmap slice，沒有修改 `DECISIONS.md`、`PROJECT_ROADMAP.md`、quality spec 或 runtime。
+- 沒有新增 trace、沒有使用 provider、沒有建立 database，沒有 stage、commit 或 push。
+
+## 2026-09-08 8.1.3 Hard-Negative Expansion for Relevance-Gate Calibration
+
+### Scope and existing negative review
+
+- 本輪只建立與驗證 negative Gold cases。沒有修改 `knowledge_relevance_floor`、production
+  retriever、embedding、chunking、overlap、BM25、RRF、reranker 或 raw candidate trace。
+- 沒有呼叫 OpenAI embedding provider，沒有建立 benchmark database，沒有執行 22-case live
+  baseline，也沒有計算 threshold sweep。
+- Existing `rv-013`、`rv-014`、`rv-015` 重新檢查後仍符合 hard-negative standard：related
+  terminology 存在，但 RRF、pgvector/HNSW configuration 與 `text-embedding-3-small` claim
+  分別不存在，沒有 accidental valid answer。原有 queries 保持不變。
+
+### New negative cases
+
+Source review 逐題掃描三份 frozen PDFs，確認 requested factual claim、configuration、number
+或 implementation detail 不存在；notes 只保存 bounded explanation，沒有 evidence_groups、fake
+page 或 fake chunk。
+
+| Case | Type | Query | Bounded support check |
+| --- | --- | --- | --- |
+| `rv-016` | unsupported configuration | What exact maximum number of iterations does the Google Cloud guide specify for its iterative loop pattern? | Guide discusses maximum iterations and exit conditions but gives no exact count. |
+| `rv-017` | unsupported configuration | How many retry attempts does the Week 3 prototype configure after an LLM timeout? | Week 3 discusses timeout and retry strategies but configures no retry count. |
+| `rv-018` | unsupported quantitative fact | What exact throughput does the Week 3 watcher-worker queue sustain in the 500,000 recurring-job scenario? | Week 3 has watcher-worker, queue depth and 500,000-job terminology but no throughput value for that queue. |
+| `rv-019` | unsupported quantitative fact | What percentage of the production article's agent control flow is handled by deterministic code rather than the model? | The article states the control-flow relationship but gives no percentage split. |
+| `rv-020` | unsupported implementation detail | Which Python MCP framework or SDK does the Week 3 prototype use to implement its MCP server? | Week 3 identifies a Python MCP server but names no Python MCP framework or SDK. |
+| `rv-021` | unsupported implementation detail | Which database driver does the Week 3 prototype use to access the PostgreSQL job table partitioned by time_bucket? | Week 3 names PostgreSQL and time_bucket but no database driver. |
+| `rv-022` | near-miss concept | What exact cost multiplier does the Google Cloud guide report for parallel agents compared with sequential agents? | The guide compares cost and latency but gives no exact cost multiplier. |
+
+### Distribution and preflight
+
+- New case distribution：unsupported configuration `2`、unsupported quantitative fact `2`、
+  unsupported implementation detail `2`、near-miss concept `1`。
+- Benchmark now has `22` cases：`12` positive、`10` hard-negative。新增 cases 沒有增加 positive
+  cases，也沒有直接擴至 40 至 60 題。
+- Existing positive anchor preflight、三份 PDF SHA256/page counts、unique IDs、non-empty negative
+  queries 與 negative `evidence_groups` prohibition：PASS。
+- Focused retrieval benchmark suite：`14 passed`。
+- `8.1` 維持 `manual_verification`；新增 7 題需先經 human review，之後才可考慮 current
+  retrieval live run 與 calibration。
+
+### Scope confirmation
+
+- 沒有新增 negative-case framework、schema field 或 Roadmap slice。
+- 沒有修改 `DECISIONS.md`、quality spec、runtime、production retrieval behavior 或
+  `eval/golden_set.yaml`。
+- 沒有 stage、commit 或 push。
+
+## 2026-09-08 8.1.4 Expanded Hard-Negative Live Baseline and Offline Relevance-Floor Calibration
+
+### rv-020 correction and controlled execution
+
+- `rv-020` 已從 scheduler HTTP API 的 Python premise，修正為未命名的 Python MCP
+  framework or SDK。Current `PyPDFParserClient` 找到 Week 3 的 `Python MCP server`（p3），
+  未找到 named Python MCP framework 或 SDK，也沒有 accidental answer。
+- Preflight：三份 frozen PDF 的 SHA256、page counts、positive anchors、unique IDs、10 個
+  negative `evidence_groups` prohibition、frozen retrieval contract、PostgreSQL readiness 與
+  pgvector `0.8.2` 均 PASS。`.env` 的 OpenAI API key 可用。
+- 依本輪明確授權執行一次 controlled retrieval-only baseline。使用 current parser、normalization、
+  page-aware chunking、`max_chunk_chars=1200`、overlap `0`、`text-embedding-3-small`、1536
+  dimensions、pgvector exact cosine、candidate pool `20` 與 relevance floor `0.30`；沒有呼叫
+  final LLM。
+- Live report：`/tmp/knowvia-retrieval-pilot-8.1.4-20260908.json`。完成後 disposable database
+  已移除，沒有殘留 `knowvia_retrieval_pilot_*` database。
+
+### Current `0.30` baseline
+
+| Metric | Result |
+| --- | ---: |
+| total cases | 22 |
+| positive cases | 12 |
+| negative cases | 10 |
+| passed cases | 10 |
+| Recall@1 | 0.458333 |
+| Recall@3 | 0.625000 |
+| Recall@5 | 0.791667 |
+| MRR | 0.666667 |
+| full_case_success@1 | 0.333333 |
+| full_case_success@3 | 0.583333 |
+| full_case_success@5 | 0.750000 |
+| source_recall@5 | 1.000000 |
+| page_coverage@5 | 0.875000 |
+| negative_rejection_rate | 0.100000 |
+| false_positive_retrieval_rate | 0.900000 |
+
+### Category results
+
+| Category | Cases | Passed | Pass rate |
+| --- | ---: | ---: | ---: |
+| single_document_factual | 3 | 3 | 1.000000 |
+| semantic_paraphrase | 3 | 1 | 0.333333 |
+| exact_term_identifier | 2 | 2 | 1.000000 |
+| multi_evidence | 2 | 1 | 0.500000 |
+| cross_source_discrimination | 2 | 2 | 1.000000 |
+| hard_negative | 10 | 1 | 0.100000 |
+
+### Negative case detail
+
+以下只記錄 bounded source/page/score metadata，沒有寫入 chunk text。
+
+| Case | Result | Accepted source and page/locator | Top score | Accepted results |
+| --- | --- | --- | ---: | ---: |
+| `rv-013` | rejected | none | n/a | 0 |
+| `rv-014` | accepted | `chatgpt_tasks_week3`: p1, p3, p16 | 0.352549 | 3 |
+| `rv-015` | accepted | `production_agents`: p12 | 0.321981 | 1 |
+| `rv-016` | accepted | `google_agent_patterns`: p8, p6, p6, p13, p4 | 0.461111 | 5 |
+| `rv-017` | accepted | `chatgpt_tasks_week3`: p17, p1, p16, p6, p3 | 0.413671 | 5 |
+| `rv-018` | accepted | `chatgpt_tasks_week3`: p6, p14, p5, p17, p16 | 0.502437 | 5 |
+| `rv-019` | accepted | `production_agents`: p3, p12, p7, p8, p5 | 0.601200 | 5 |
+| `rv-020` | accepted | `chatgpt_tasks_week3`: p1, p3, p9 | 0.510885 | 3 |
+| `rv-021` | accepted | `chatgpt_tasks_week3`: p10, p1, p17, p16, p5 | 0.475875 | 5 |
+| `rv-022` | accepted | `google_agent_patterns`: p4, p5, p2, p6; `production_agents`: p11 | 0.547465 | 5 |
+
+### Existing positive failure review
+
+`rv-004`、`rv-005`、`rv-009` 在 expanded run 保持與原始 15-case run 相同：failure label
+仍為 `UNRESOLVED`，沒有 positive improvement 或 regression。`rv-009` 仍在 top-5 命中
+`queue-separation`，但缺少 `repeat-execution-handling`；沒有開始 chunking、embedding、multi-query
+或 hybrid retrieval experiment。
+
+### Offline upward threshold simulation
+
+Simulation 只使用 current `0.30` live report 的 90 筆 accepted observations 與既有 Gold
+group-hit semantics，沒有重新 query provider、reindex 或修改 production floor。Observed
+accepted score range 為 `0.301992` 至 `0.619704`；資料沒有 `<0.30` candidates，因此不推論
+任何低於 `0.30` 的行為。
+
+| Candidate floor | Recall@1 | Recall@3 | Recall@5 | MRR | full_case_success@5 | source_recall@5 | page_coverage@5 | Negative rejection | False-positive retrieval |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 0.30 | 0.458333 | 0.625000 | 0.791667 | 0.666667 | 0.750000 | 1.000000 | 0.875000 | 0.10 | 0.90 |
+| 0.31 | 0.458333 | 0.625000 | 0.791667 | 0.666667 | 0.750000 | 1.000000 | 0.875000 | 0.10 | 0.90 |
+| 0.32 | 0.458333 | 0.625000 | 0.791667 | 0.666667 | 0.750000 | 1.000000 | 0.875000 | 0.10 | 0.90 |
+| 0.33 | 0.458333 | 0.625000 | 0.791667 | 0.666667 | 0.750000 | 1.000000 | 0.875000 | 0.20 | 0.80 |
+| 0.34 | 0.458333 | 0.625000 | 0.791667 | 0.666667 | 0.750000 | 1.000000 | 0.875000 | 0.20 | 0.80 |
+| 0.35 | 0.458333 | 0.625000 | 0.791667 | 0.666667 | 0.750000 | 1.000000 | 0.875000 | 0.20 | 0.80 |
+| 0.36 | 0.458333 | 0.625000 | 0.791667 | 0.666667 | 0.750000 | 1.000000 | 0.875000 | 0.30 | 0.70 |
+| 0.37 | 0.458333 | 0.625000 | 0.750000 | 0.666667 | 0.666667 | 1.000000 | 0.833333 | 0.30 | 0.70 |
+| 0.38 | 0.458333 | 0.625000 | 0.750000 | 0.666667 | 0.666667 | 1.000000 | 0.833333 | 0.30 | 0.70 |
+| 0.39 | 0.458333 | 0.625000 | 0.750000 | 0.666667 | 0.666667 | 1.000000 | 0.833333 | 0.30 | 0.70 |
+| 0.40 | 0.458333 | 0.625000 | 0.750000 | 0.666667 | 0.666667 | 1.000000 | 0.833333 | 0.30 | 0.70 |
+
+| Candidate floor | Positive regressions vs `0.30` | Newly corrected negatives vs `0.30` |
+| ---: | --- | --- |
+| 0.30 | 0 cases, none | 0 cases, none |
+| 0.31 | 0 cases, none | 0 cases, none |
+| 0.32 | 0 cases, none | 0 cases, none |
+| 0.33 | 0 cases, none | 1 case, `rv-015` |
+| 0.34 | 0 cases, none | 1 case, `rv-015` |
+| 0.35 | 0 cases, none | 1 case, `rv-015` |
+| 0.36 | 0 cases, none | 2 cases, `rv-014`, `rv-015` |
+| 0.37 | 1 case, `rv-012` | 2 cases, `rv-014`, `rv-015` |
+| 0.38 | 1 case, `rv-012` | 2 cases, `rv-014`, `rv-015` |
+| 0.39 | 1 case, `rv-012` | 2 cases, `rv-014`, `rv-015` |
+| 0.40 | 1 case, `rv-012` | 2 cases, `rv-014`, `rv-015` |
+
+`0.33` 是符合 calibration rule 的最低 pilot-supported candidate：相較 `0.30` 提升
+negative rejection，且 Recall@5、MRR、full_case_success@5 與 positive case pass status
+不變。`0.36` 能再拒絕 `rv-014`，但本輪依規則選最低符合者；這不是 global optimum，也不等於
+production threshold decision。
+
+### Scope and test confirmation
+
+- Production relevance floor 仍為 `0.30`。沒有修改 config、retriever、chunking、overlap、
+  embedding model、candidate pool、BM25、RRF、reranker、parser、schema 或 `eval/golden_set.yaml`。
+- Focused retrieval benchmark suite：`15 passed`。Preflight 與 baseline reconstruction：PASS；
+  `git diff --check`：PASS。
+- `8.1` closure 於後續 8.1 closure entry 完成；本輪沒有新增 Roadmap slice、沒有新增
+  Decision、沒有 stage、commit 或 push。
+
+## 2026-09-08 8.1 Closure and Hard-Negative End-to-End Grounding Check
+
+### 8.1 closure
+
+- `8.1` 已完成並在 Roadmap 標記為 `done`：三份 frozen PDF、22 個 reviewed cases、12 個
+  positive、10 個 hard-negative、current parser/chunker/embedding/pgvector retrieval-only
+  baseline、offline diagnosis 與 bounded threshold calibration 均已完成。
+- Current baseline：Recall@1 `0.458333`、Recall@3 `0.625000`、Recall@5 `0.791667`、MRR
+  `0.666667`、full_case_success@5 `0.750000`、source_recall@5 `1.000000`、page_coverage@5
+  `0.875000`。
+- `KNOWLEDGE_RELEVANCE_FLOOR=0.30` 保持不變。`.33` 只保留為 pilot-supported candidate，沒有
+  採用；`.36` 的 negative improvement 仍不足以支持 production change，`.37` 開始出現
+  positive regression。此結果不宣稱 global optimum。
+
+### Hard-negative E2E execution status
+
+- 本輪已使用 rv-013 至 rv-022，沿用 current `QAOrchestrator.answer_question()`、
+  `qa_answer_v3` 與現有 final LLM generation。三份 frozen PDF 先經 current parser、chunker、
+  embedding/indexing path 載入 disposable PostgreSQL+pgvector database，再逐案執行 QA。
+- E2E report：`/tmp/knowvia-8.1-closure-hard-negative-e2e-20260908.json`。10 cases 中 9 個為
+  `SAFE_REJECTION`、1 個為 `UNSAFE_UNSUPPORTED_ANSWER`，safe rejection rate `0.900000`。
+  所有 case 的 workflow status 都是 `succeeded`；`rv-013` 沒有 accepted evidence，其餘 9 個
+  case 有 accepted related evidence 後才進入 final LLM path。
+
+### Hard-negative E2E case detail
+
+以下只記錄 bounded evidence/state/citation metadata，沒有寫入 raw chunk text 或 provider response。
+
+| Case | Accepted evidence | Final state | Classification | Citations | Bounded reason |
+| --- | --- | --- | --- | ---: | --- |
+| `rv-013` | no | `insufficient_info` | `SAFE_REJECTION` | 0 | no accepted evidence; backend returned insufficient information |
+| `rv-014` | yes | `insufficient_info` | `SAFE_REJECTION` | 0 | final QA state was insufficient information and citations were cleared |
+| `rv-015` | yes | `insufficient_info` | `SAFE_REJECTION` | 0 | final QA state was insufficient information and citations were cleared |
+| `rv-016` | yes | `insufficient_info` | `SAFE_REJECTION` | 0 | final QA state was insufficient information and citations were cleared |
+| `rv-017` | yes | `insufficient_info` | `SAFE_REJECTION` | 0 | final QA state was insufficient information and citations were cleared |
+| `rv-018` | yes | `insufficient_info` | `SAFE_REJECTION` | 0 | final QA state was insufficient information and citations were cleared |
+| `rv-019` | yes | `insufficient_info` | `SAFE_REJECTION` | 0 | final QA state was insufficient information and citations were cleared |
+| `rv-020` | yes | final answer asserted unsupported content | `UNSAFE_UNSUPPORTED_ANSWER` | 3 | final answer did not establish a bounded rejection |
+| `rv-021` | yes | `insufficient_info` | `SAFE_REJECTION` | 0 | final QA state was insufficient information and citations were cleared |
+| `rv-022` | yes | `insufficient_info` | `SAFE_REJECTION` | 0 | final QA state was insufficient information and citations were cleared |
+
+`rv-020` 是本輪唯一 unsafe case；因為本輪不保留 raw provider response，log 只記錄 bounded
+  classification reason 與 citation count，不重述或推測 provider 的完整回答。
+
+### Grounding interpretation
+
+- 9/10 safe rejection 顯示 accepted hard-negative evidence 多數仍能由 current final QA path
+  收斂到 `insufficient_info`，且不輸出 citations。
+- `rv-020` 的 1 個 unsafe 結果保留為後續 grounding acceptance risk；本輪沒有達到「multiple
+  unsafe」的 Branch 2 條件，也不能用 scalar relevance floor、embedding、BM25、chunking 或 RRF
+  直接解釋成 retrieval-only 問題。
+- 依 9/10 safe rejection 的 Branch 1，本輪不新增 relevance-gate work，也不修改 prompt、QA、
+  retriever 或 classifier；下一個 optimization target 應回到 positive retrieval quality，聚焦
+  semantic paraphrase 與 multi-evidence coverage，尚不在本輪實作。
+
+### Scope confirmation
+
+- 沒有修改 relevance floor、retriever、chunking、embedding、BM25、RRF、reranker、prompt、QA
+  grounding logic 或 schema；沒有新增 benchmark、evidence-sufficiency classifier 或 raw
+  candidate trace。
+- E2E 使用 direct user authorization，僅執行一次；raw PDF context、queries 與 provider responses
+  未寫入 repository 或 report。disposable database 已於執行結束清理。
+- 沒有新增 Decision。`8.1` closure 只同步 Roadmap 與本紀錄；沒有 stage、commit 或 push。
+
+## 2026-09-08 8.2 Positive Retrieval Quality Gold Expansion
+
+### Scope
+
+- `8.1` 維持 `done`。本輪開始 `8.2 Positive Retrieval Quality`，Roadmap status 為
+  `in_progress`；不新增 `8.2.1`、`8.2.2` 或 `8.2.3`。
+- 只補 semantic paraphrase 與 multi-evidence positive Gold。沒有新增 factual、exact-term、
+  cross-source 或 hard-negative cases，也沒有修改 production retrieval behavior。
+
+### New positive cases for human review
+
+Benchmark version 更新為 `8.2`，總數為 30 cases：20 positive、10 hard-negative。以下 8 題尚未
+視為 human-approved Gold。
+
+| Case | Category | Query | Evidence design |
+| --- | --- | --- | --- |
+| `rv-023` | semantic_paraphrase | What governs when a dependable agent consults the model and when its repeated execution finishes? | `production_agents` p7；bounded control-flow evidence |
+| `rv-024` | semantic_paraphrase | How should a scheduled wall-clock time be represented so a daylight-saving transition does not change its intended local meaning? | `chatgpt_tasks_week3` p12；bounded scheduled-time evidence |
+| `rv-025` | semantic_paraphrase | Which design lets a person approve an agent's work before the workflow continues? | `google_agent_patterns` p14；bounded human-review evidence |
+| `rv-026` | semantic_paraphrase | Where does most of a production agent's behavior live when the model is consulted only at selected points? | `production_agents` p2；bounded deterministic-code evidence |
+| `rv-027` | multi_evidence | How does the prototype divide finding due work from carrying it out, and what property protects against duplicate execution? | `chatgpt_tasks_week3` p6 + p16；due-work separation and duplicate-execution groups |
+| `rv-028` | multi_evidence | How does the prototype make hourly due-job lookup selective, and what preserves the intended local time when clocks change? | `chatgpt_tasks_week3` p10 + p12；partition selection and scheduled-time groups |
+| `rv-029` | multi_evidence | How do these two designs assign responsibility for deciding what happens next: the dependable-agent design and the coordinator design? | `production_agents` p7 + `google_agent_patterns` p8；independent control-owner groups |
+| `rv-030` | multi_evidence | How does a coordinator-led workflow differ from one that pauses for a person to approve the work? | `google_agent_patterns` p8 + p14；coordinator and person-review groups |
+
+### Preflight and stop boundary
+
+- `load_benchmark()`：PASS。30 cases、20 positive、10 hard-negative；新增 4 semantic paraphrase 與
+  4 multi-evidence。既有 strong categories 與 10 hard-negatives 沒有新增項目。
+- Current `PyPDFParserClient` corpus verification：PASS。3 份 frozen PDFs、52 pages、8 題所有
+  source/page/anchor preflight：PASS。
+- New semantic cases 各自只有一個 bounded evidence group，涵蓋三份 corpus 中的至少兩份；new
+  multi-evidence cases 各自需要兩個獨立 groups；`rv-030` 使用相距較遠的 pages，`rv-027` 則依
+  human review 改用 Week 3 p7+p9 的兩個獨立 implementation concepts。
+- Focused retrieval benchmark tests：`18 passed`。`git diff --check`：PASS。
+- 本輪停在 human-review boundary。尚未執行 current baseline retrieval、embedding A/B、任何
+  embedding provider call、任何 retrieval benchmark 或 database；因此沒有 A/B metrics，也尚未
+  選定 alternative embedding candidate。
+- Production embedding、relevance floor `0.30`、chunking、retriever、schema、dependencies 與
+  default model 維持不變。未新增 Decision、未 stage、commit 或 push。
+
+## 2026-09-08 Post-8.1 rv-020 Grounding Risk Diagnosis
+
+### Scope and artifact boundary
+
+- 本輪只做 offline diagnosis。沒有呼叫 provider、沒有重跑 retrieval benchmark、沒有 reopen
+  `8.1`，也沒有修改 production code、Roadmap 或 Decisions。
+- Existing E2E report 只保存 rv-020 的 bounded result：accepted evidence `yes`、
+  `insufficient_info=false`、`UNSAFE_UNSUPPORTED_ANSWER`、3 citations，以及
+  `final answer did not establish a bounded rejection`。沒有保存 final answer、推測語氣或
+  citation payload，因此不能從現有 artifact 還原 provider 實際命名的 framework/SDK。
+
+### Citation support review
+
+rv-020 的已記錄 evidence 是 `chatgpt_tasks_week3` 的 `page 1`、`page 3`、`page 9`。
+
+- Page 1 只顯示 Week 3 的 Scheduler、LLM Engine、MCP 文件範圍，不支持 framework 或 SDK identity。
+- Page 3 支持 `Go scheduler (HTTP API + Worker + Watcher) + Python MCP server` 的跨語言架構，
+  也提到 HTTP API、Swagger 與 MCP Inspector；沒有 named Python MCP framework 或 SDK。
+- Page 9 將 MCP 說明為 LLM 與 backend 之間的標準化介面／API Gateway；沒有指出實作 library、
+  framework 或 SDK。
+
+Current parser 對整份 Week 3 PDF 的 bounded term scan 找到 `Python MCP server`、`MCP`、`HTTP API`、
+`Go scheduler`、`MCP Inspector`、`Swagger` 與 `JSON-RPC`，但沒有 `SDK`、`framework`、
+`FastMCP`、`FastAPI`、`Flask` 或 `Django`。因此三個 citation 都沒有支持 case 所要求的
+named Python framework/SDK；但因 final answer 未保存，無法判定它是否直接命名、使用推測語氣，
+或把哪一個 adjacent term 當成 implementation identity。
+
+### Contract and comparison
+
+`qa_answer_v3` 已要求只使用 supplied context；context evidence 不足時輸出 exactly
+`INSUFFICIENT_INFO`；並且不得捏造未由 context 支持的 facts 或 citations。此 contract 對
+requested specific implementation detail 已足夠清楚，分類為 `CONTRACT_ALREADY_SUFFICIENT`。
+
+`rv-017` 與 `rv-021` 都是「related technical evidence 存在，但 requested exact implementation
+detail 不存在」的相近 cases；前者涉及 timeout/retry，後者涉及 PostgreSQL/time_bucket/driver，
+兩者都在 final QA 收斂為 `insufficient_info`、zero citations。rv-020 的特殊點是 query 直接要求
+framework/SDK identity，而 retrieved page 3 同時出現 Python MCP server、Go scheduler、HTTP API、
+Swagger 等 adjacent implementation terms。這支持 wording/evidence-confusion 是 plausible
+因素，但不是統計結論。
+
+### Assessment and one follow-up
+
+- Root-cause assessment：`UNRESOLVED`。現有資料不足以在 provider variance、wording sensitivity、
+  evidence confusion 與 bounded classifier limitation 之間定案，也不足以證明 general architecture
+  gap。Current contract 已明確禁止該行為。
+- 唯一建議：未來若需要定案，做一次單 case、另行授權的 rv-020 replay，只保存 bounded final-claim
+  label 與每個 citation 的 page/locator support matrix，不保存 raw response；本輪不執行。
+- Positive retrieval 的既有下一個 target 仍是 semantic paraphrase 與 multi-evidence coverage；
+  本紀錄不新增 Roadmap slice，也不實作 optimization。
+
+## 2026-09-08 8.2 Phase E.1 Minimal Gold Diversity Correction
+
+### Human review and replacements
+
+- Human review 通過 `rv-023`、`rv-024`、`rv-026`、`rv-028`、`rv-029`、`rv-030`。這 6 題的
+  annotation correctness 與 case diversity 保持不變。
+- `rv-025` 的 source/page/anchor 原本有效，但與 `rv-006` 都集中在 Google p14 的
+  human-in-the-loop evidence。保留 id，改為 Google p6 loop pattern：query 測 specialized
+  agents 反覆執行至 termination condition，anchor 為 `subagents until a specific termination
+  condition is met`。
+- `rv-027` 的 source/page/anchor 原本有效，但與 `rv-009` 都使用 Week 3 p6+p16 的
+  Watcher/Worker separation 與 idempotent handler。保留 id，改為 Week 3 p7+p9：第一組測 tool
+  description 對 operation selection 的作用，第二組測 MCP 對 LLM/backend 的 decoupling。
+
+### Preflight and stop boundary
+
+- Benchmark 仍為 30 cases、20 positive、10 hard-negative；8.2 additions 仍為 4 semantic
+  paraphrase 與 4 multi-evidence。
+- `load_benchmark()`、三份 frozen corpus source/page validation、current `PyPDFParserClient`
+  anchor preflight、semantic query exact-anchor check 與 multi-evidence independent-group check：
+  PASS。
+- Focused retrieval + QA regression：`24 passed`；Agent Golden Set：`29/29`；
+  `git diff --check`：PASS。
+- 本輪沒有 embedding provider call、database、embedding candidate selection、A/B、retrieval
+  benchmark 或 production change。`8.2` 保持 `in_progress`，等待替換兩題的 human review；未新增
+  Decision、Roadmap slice 或 sub-slice，未 stage、commit 或 push。
+
+## 2026-09-08 8.2 Single Embedding A/B
+
+### Scope and controls
+
+- Human review 已通過 `rv-023` 至 `rv-030`；Gold freeze 維持 30 cases、20 positive、10
+  hard-negative、7 semantic paraphrase 與 6 multi-evidence。
+- Candidate compatibility PASS：既有 `OpenAIEmbeddingClient`、`EmbeddingBatchService` 與
+  runner 可明確傳入 `model` 與 `dimensions`；`text-embedding-3-large` 使用 1536 dimensions，
+  不需 production schema migration。
+- 只執行一次 A/B。兩個 variant 都使用 current `PyPDFParserClient`、page-aware chunks、
+  `max_chunk_chars=1200`、overlap `0`、exact cosine、candidate pool `20`、relevance floor
+  `0.30`、top-k `1/3/5`。文件與 query 在各自 variant 使用同一 model；A/B chunk fingerprint
+  （count、source、locator、normalized content hash）相同。
+- 每個 variant 使用 isolated disposable PostgreSQL+pgvector database；執行後已清理。沒有保存
+  embedding vectors，沒有 final LLM E2E、threshold calibration 或 production reindex/model
+  change。
+
+### Bounded comparison
+
+| Metric | A `text-embedding-3-small` | B `text-embedding-3-large` |
+| --- | ---: | ---: |
+| Positive Recall@1 / @3 / @5 | 0.625 / 0.750 / 0.850 | 0.600 / 0.717 / 0.800 |
+| Positive MRR | 0.750 | 0.715 |
+| Full-case success@1 / @3 / @5 | 0.450 / 0.650 / 0.800 | 0.400 / 0.600 / 0.750 |
+| Source recall@5 | 1.000 | 1.000 |
+| Page coverage@5 | 0.850 | 0.800 |
+| Semantic pass rate (7) | 4/7 (0.571) | 3/7 (0.429) |
+| Semantic Recall@1 / @3 / @5 | 0.571 / 0.714 / 0.857 | 0.429 / 0.619 / 0.810 |
+| Multi pass rate (6) | 4/6 (0.667) | 3/6 (0.500) |
+| Multi group Recall@1 / @3 / @5 | 0.583 / 0.750 / 0.833 | 0.500 / 0.667 / 0.778 |
+| Multi full-case success@1 / @3 / @5 | 0.333 / 0.667 / 0.833 | 0.333 / 0.667 / 0.833 |
+
+- Strong-category pass counts沒有變化：`single_document_factual` 3/3、`exact_term_identifier`
+  2/2、`cross_source_discrimination` 2/2。Hard-negative rejection rate A/B 都是 `0.100`；
+  這只作 safety observation，不作 embedding selection primary metric。
+- Index embedding latency：A `2.096700s`、B `1.776822s`；query embedding latency：A
+  `0.203127s`、B `0.175630s`。這是單次 controlled run 的 operational observation；沒有額外
+  建立 cost framework，cost comparison deferred。
+- Console delta summary 曾混入 hard-negative IDs，且未保存 bounded per-case report；因此本紀錄
+  不採用該 summary 作為 20 個 positive cases 的正式 `IMPROVED` / `REGRESSED` / `UNCHANGED`
+  清單，也無法還原每題 completion rank。這不影響上述 aggregate metrics，但 case-level
+  evidence 不完整。
+
+### Decision boundary
+
+- B 沒有帶來 semantic 或 multi-evidence improvement，且 overall positive Recall@5 與 full-case
+  success@5 下降；strong categories 持平。Recommendation：`KEEP_CURRENT_EMBEDDING`。
+- 不修改 production embedding，不新增 Decision 或下一個 optimization slice；`8.2` 等待
+  human adoption decision。
+
+## 2026-09-08 Post-8.2 Current Positive Failure Map
+
+### 8.2 closure
+
+- Human adoption decision 為 `KEEP_CURRENT_EMBEDDING`。`text-embedding-3-large / 1536` 未改善
+  semantic 或 multi-evidence quality，production 維持 `text-embedding-3-small / 1536`。
+- 8.2 Gold review、current vs. one alternative embedding A/B 與本次 current-model failure map
+  已完成。Aggregate A/B 結果足以完成 adoption decision，但 bounded positive case-level delta
+  未保存。Embedding model exploration stops here；沒有新增 Decision 或 roadmap slice。
+
+### Current-model diagnostic
+
+- 唯一執行 Variant A：`text-embedding-3-small / 1536`。使用 frozen 3-PDF corpus、30 queries、
+  current `PyPDFParserClient`、page-aware `1200/0` chunking、exact cosine、candidate pool `20`、
+  relevance floor `0.30` 與 top-k `1/3/5`。
+- Isolated disposable PostgreSQL+pgvector database 已於執行後清理。沒有呼叫 final LLM，沒有保存
+  raw PDF text、full chunk text、embedding vectors 或 provider raw response。
+- Bounded report：`eval/retrieval/reports/8.2-current-positive-failure-map-20260908.json`。
+  Report 保留 20 個 positive cases 的 case result、accepted source/page/locator、score、group
+  hits、rank 與 retrieval mode。
+- Aggregate：Recall@1/3/5 `0.425 / 0.575 / 0.700`；MRR `0.625`；full-case success@1/3/5
+  `0.300 / 0.500 / 0.650`；source recall@5 `0.950`；page coverage@5 `0.750`。
+
+### Failed positive cases
+
+| Case | Category | Expected source/page | Source in top-5 | Page in top-5 | Groups hit / missed at @5 | Best bounded accepted locator | Pattern |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `rv-004` | semantic_paraphrase | `production_agents` p7 | yes | no | none / `deterministic-control-flow` | `production_agents` p8, rank 1, score `0.619704` | B |
+| `rv-005` | semantic_paraphrase | `google_agent_patterns` p4 | yes | yes | none / `sequential-agent-input` | `google_agent_patterns` p4, rank 5, score `0.499237` | C |
+| `rv-009` | multi_evidence | `chatgpt_tasks_week3` p6+p16 | yes | p6 yes, p16 no | `queue-separation` / `repeat-execution-handling` | p6, rank 4, score `0.470650` | D |
+| `rv-023` | semantic_paraphrase | `production_agents` p7 | yes | no | none / `dependable-agent-timing` | `production_agents` p8, rank 1, score `0.642107` | B |
+| `rv-026` | semantic_paraphrase | `production_agents` p2 | yes | no | none / `selective-model-use` | `production_agents` p3, rank 1, score `0.596184` | B |
+| `rv-027` | multi_evidence | `chatgpt_tasks_week3` p7+p9 | no | no | none / both groups | none | A |
+| `rv-029` | multi_evidence | `production_agents` p7 + `google_agent_patterns` p8 | yes | p8 yes, p7 no | `coordinator-workflow-owner` / `dependable-agent-control-owner` | Google p8, rank 2, score `0.592795` | D |
+
+### Failure pattern and diagnosis
+
+- Semantic failures：`rv-004`、`rv-005`、`rv-023`、`rv-026`。Multi-evidence failures：`rv-009`、
+  `rv-027`、`rv-029`。Other positive failures：none。
+- Observable pattern counts：A correct source absent `1` (`rv-027`); B correct source present but
+  correct page absent `3` (`rv-004`、`rv-023`、`rv-026`); C correct page present but anchor group
+  not hit `1` (`rv-005`); D multi-evidence partial coverage `2` (`rv-009`、`rv-029`)；E relevance-gate
+  ambiguity `0`；F unresolved `0`。
+- 這些結果只描述 accepted top-5 evidence。它們不能單獨證明 embedding、threshold 或 chunking
+  是 root cause；accepted-only report 也沒有足夠資料判定 relevance-gate ambiguity。
+
+### One next experiment
+
+- 唯一建議：做一個 evaluation-only、single-variable `chunk_max_chars` A/B，固定 current
+  `text-embedding-3-small / 1536`、page-aware parsing、overlap `0`、threshold、top-k 與 benchmark，
+  比較目前 `1200` 與一個預先固定的較大 page-aware chunk limit。這直接覆蓋最大的 B pattern，
+  也能觀察 C 與 D 是否隨 evidence context placement 改變；本輪不 implementation。
+
+## 2026-09-08 8.2 Retrieval Metric Reproducibility Audit
+
+### Artifact inventory
+
+- Earlier embedding A/B：目前只有 `DAILY_LOG.md` 的 human-facing aggregate summary。沒有找到
+  earlier A/B JSON、per-case observations、chunk fingerprint、tracked A/B adapter 或可重跑的
+  experiment-specific script；原先 summary 保留作 audit trail，沒有靜默改寫。
+- Current positive failure map：`eval/retrieval/reports/8.2-current-positive-failure-map-20260908.json`。
+  這份 bounded JSON 保留 30 cases 的 case result、accepted source/page/locator、score、group
+  hits、rank 與 retrieval mode，未保存 raw chunk text、raw PDF text、vectors 或 provider raw
+  response。
+
+### Benchmark and configuration identity
+
+- Current benchmark：`knowvia-retrieval-pilot` version `8.2`、30 cases、20 positive、10
+  hard-negative；benchmark SHA256 為
+  `c8eca9a7d6f4c3acfa0037df966187d89862376db82fcf31f0f35990327cf9c3`。
+- Current corpus SHA256/page counts 與 YAML manifest 一致：`production_agents` 14 pages、
+  `chatgpt_tasks_week3` 17 pages、`google_agent_patterns` 21 pages。`rv-025` 與 `rv-027` 為
+  diversity replacement 後的 definitions，current report 的 case IDs、category 與 answerable
+  flags 與 benchmark 一致。
+- Earlier A/B 的 Daily Log 時序表示它在 Gold replacement review 後執行，且摘要宣稱同一 30-case
+  controls；但沒有 earlier benchmark hash、chunk fingerprint 或 per-case report，無法獨立確認
+  exact benchmark/configuration identity。沒有證據直接證明 benchmark drift 或 configuration drift。
+- Current runner 的 canonical path 使用 `evaluate_case()`、`aggregate_metrics()`、page-aware
+  `1200/0` chunking、`text-embedding-3-small / 1536`、exact cosine、candidate pool `20`、
+  relevance floor `0.30`、top-k `1/3/5`、`owner_scope="local"` 與
+  `pgvector_exact_cosine`。Earlier A/B adapter 不可取得，故無法比較其 metric-code identity。
+
+### Current artifact recomputation
+
+- Offline canonical recomputation：PASS。Report aggregate 與逐案 bounded data 完全一致：13/20
+  positive pass、semantic `3/7`、multi-evidence `3/6`、strong categories 全部 pass，
+  full-case success@5 `0.650`、Recall@1/3/5 `0.425 / 0.575 / 0.700`、MRR `0.625`、source
+  recall@5 `0.950`、page coverage@5 `0.750`。
+- Current report 因已保存 group hits、rank 與 source/page observations，可用 canonical aggregate
+  semantics 離線重算；不需要 provider 或 database。
+
+### Discrepancy assessment
+
+- Earlier summary 同時記錄 semantic `4/7`、multi `4/6`、strong categories `3/3 + 2/2 + 2/2`，
+  其合計是 `15/20`，與 full-case success@5 `0.800`（`16/20`）不一致；multi `4/6` 也與
+  multi full-case success@5 `0.833333`（`5/6`）不一致。
+- Primary classification：`ARTIFACT_INSUFFICIENT`。Secondary issue：`REPORTING_SUMMARY_ERROR`
+  （earlier human-facing summary 內部算術不一致）。由於 earlier per-case artifact 不存在，不能
+  判定是 transcription error 或 category/full-case semantics drift；`METRIC_CALCULATION_DRIFT`、
+  `BENCHMARK_DRIFT`、`EXPERIMENT_CONFIGURATION_DRIFT` 與 provider nondeterminism 都未被證明。
+
+### Adoption and optimization gate
+
+- Embedding decision：`DECISION_REQUIRES_REVALIDATION`。Current production 仍維持
+  `text-embedding-3-small / 1536`，但 earlier A/B 不足以作為可重建的 adoption evidence。
+- Live rerun：需要時只建議一次重新取得完整 bounded comparison 的 `A + B` run，原因是要同時重建
+  current baseline 與 alternative comparison；本輪不執行。
+- `CHUNKING_EXPERIMENT_BLOCKED`。在 current baseline 與 A/B canonical provenance 確認前，不
+  開始 chunking A/B。
+
+## 2026-09-08 Post-8.2 Positive Retrieval Depth Diagnostic
+
+### Status and controls
+
+- `8.2=done` 維持不變。Earlier `text-embedding-3-small` vs.
+  `text-embedding-3-large` A/B 沒有可重建的 per-case artifact，正式視為
+  provenance-incomplete / inconclusive；本輪沒有重跑 large，也沒有重新開啟 embedding work。
+- Production 維持 `text-embedding-3-small / 1536`。Canonical baseline 仍使用已有 bounded
+  current-model artifact：Recall@1/3/5 `0.425 / 0.575 / 0.700`、MRR `0.625`、
+  full-case success@5 `0.650`、source recall@5 `0.950`、page coverage@5 `0.750`。
+- User 明確授權本次 controlled diagnostic 將 frozen 3-PDF corpus 的 current
+  `PyPDFParserClient` / page-aware chunker outputs 與 7 個 failed queries 傳給
+  `text-embedding-3-small`。Controls 固定為 `1200/0` chunking、1536 dimensions、exact cosine、
+  candidate pool `min(top_k * 2, 20)`、relevance floor `0.30`、`owner_scope=local`；沒有呼叫
+  final LLM。
+- Production contract `top_k=[1,3,5]` 未修改。`top_k=10` 只作 diagnostic，實際 candidate pool
+  上限為 `20`。
+
+### Depth result
+
+- Targeted failed positive cases：`7`。在 top-10 完整回收 `4`，仍未回收 `3`。
+- Diagnostic semantics：targeted failed positive cases only。Recall@5 `0.200`、Recall@10
+  `0.600`、full-case success@5 `0.000`、full-case success@10 `0.571429`。
+- Semantic cases：`3/4` recovered，`rv-004`、`rv-005`、`rv-023`。
+  `rv-026` 在 top-10 仍 absent。
+- Multi-evidence cases：`1/3` recovered，只有 `rv-009`；`rv-027` 與 `rv-029` 在 top-10
+  仍 absent。
+
+| Case | Gold depth observation | Completion | Classification |
+| --- | --- | ---: | --- |
+| `rv-004` | `production_agents` p7 | 8 | `DEPTH_LIMITED` |
+| `rv-005` | p4 page returned at @5；Gold anchor chunk at @7 | 7 | `SAME_PAGE_WRONG_CHUNK_DEPTH` |
+| `rv-009` | queue group @4；repeat-execution p16 group @9 | 9 | `PARTIAL_MULTI_EVIDENCE_DEPTH` |
+| `rv-023` | `production_agents` p7 | 8 | `DEPTH_LIMITED` |
+| `rv-026` | `production_agents` p2 absent @10 | absent | `STILL_ABSENT_AT_10` |
+| `rv-027` | Week 3 p7 and p9 groups both absent @10 | absent | `STILL_ABSENT_AT_10` |
+| `rv-029` | coordinator p8 @2；production p7 absent @10 | absent | `STILL_ABSENT_AT_10` |
+
+`rv-005` 的結果只表示同頁另一個 chunk 在 top-5 之後出現 Gold anchor，不宣稱 chunking
+root cause。`rv-026`、`rv-027`、`rv-029` 的結果也不支持把 miss 歸因為 embedding、chunking
+或 threshold failure。
+
+### Artifact and next step
+
+- Bounded artifact：`eval/retrieval/reports/8.2-current-depth-diagnostic-20260908.json`。
+  Artifact 包含 benchmark SHA256、三份 corpus hashes、model/dimensions、chunk controls、
+  threshold、top-k diagnostic 與每題 bounded source/page/locator/score；沒有保存 full chunk
+  text 或 embeddings。
+- Pattern summary：`DEPTH_LIMITED` = `rv-004`、`rv-023`；
+  `SAME_PAGE_WRONG_CHUNK_DEPTH` = `rv-005`；
+  `PARTIAL_MULTI_EVIDENCE_DEPTH` = `rv-009`；
+  `STILL_ABSENT_AT_10` = `rv-026`、`rv-027`、`rv-029`。
+- 唯一下一步建議是 retrieval depth / evidence coverage 的 evaluation-only study，後續再評估
+  production top-k tradeoff 與 multi-evidence coverage；本輪不做 implementation，不開始
+  chunking A/B、BM25、RRF、reranker、multi-query、query rewrite、threshold tuning 或 parser change。
+
+### Verification
+
+- Retrieval benchmark 與 depth diagnostic focused suite：`23 passed`。
+- Agent Golden Set deterministic runner：`29/29`，test suite `2 passed`。
+- `py_compile` 與 `git diff --check`：PASS。
+- `8.2` 維持 `done`；本輪沒有修改 roadmap、production retrieval defaults、embedding model 或
+  canonical benchmark contract。未 stage、commit 或 push。
+
+## 2026-09-08 Post-8.2 Retrieval Depth / Evidence Coverage Tradeoff
+
+### Controlled comparison
+
+- `8.2=done` 維持不變。這次只比較 production-equivalent `top_k=5/8/10`，沒有修改 production
+  default、candidate pool formula、threshold、embedding、chunking 或 parser。
+- 三個 variant 共用 frozen 3-PDF corpus、30 benchmark queries、current
+  `PyPDFParserClient`、page-aware `1200/0` chunking、`text-embedding-3-small / 1536`、exact
+  cosine、relevance floor `0.30` 與 `owner_scope=local`。沒有呼叫 final LLM。
+- Candidate pool 依 current retriever 實際使用 `min(top_k * 2, 20)`：`k=5` 為 `10`、`k=8`
+  為 `16`、`k=10` 為 `20`。這是 candidate pool 與 final list 同時改變的 retrieval-depth
+  comparison，不是固定 candidate pool 的 truncation-only experiment。
+- `k=5` baseline reproducibility：PASS。Canonical metrics 與 7 個 failed positive case IDs
+  完全一致。
+
+### Positive results
+
+| Metric | k=5 | k=8 | k=10 |
+| --- | ---: | ---: | ---: |
+| Evidence-group Recall | 0.700 | 0.850 | 0.850 |
+| Full-case success | 0.650 | 0.800 | 0.800 |
+| MRR | 0.625 | 0.644643 | 0.644643 |
+| Source recall | 0.950 | 0.950 | 1.000 |
+| Page coverage | 0.750 | 0.850 | 0.850 |
+
+- Semantic paraphrase：`3/7` → `6/7` at both `k=8` and `k=10`；recovered cases are
+  `rv-004`、`rv-005`、`rv-023`。`rv-026` remains failed。
+- Multi-evidence：group recall `0.666667`、full-case success `0.500000` at all three k values。
+  `rv-009`、`rv-027`、`rv-029` remain failed in this full 30-case comparison。
+- Strong categories had no regression at any k: single-document factual `3/3`、exact-term
+  identifier `2/2`、cross-source discrimination `2/2`。
+
+### Case-level deltas
+
+- `k=8` recovered `rv-004`、`rv-005`、`rv-023`；`k=10` added no further recovered positive
+  case or group/full-case recall。
+- `rv-009`、`rv-026`、`rv-027`、`rv-029` remained `UNCHANGED_FAIL` at both deeper variants。
+- Other positive cases were `UNCHANGED_PASS`；no `REGRESSED` case was observed。
+
+### Negative evidence volume and context
+
+| Observation | k=5 | k=8 | k=10 |
+| --- | ---: | ---: | ---: |
+| Negative rejection rate | 0.100 | 0.100 | 0.100 |
+| False-positive retrieval rate | 0.900 | 0.900 | 0.900 |
+| Negative average accepted chunks | 3.7 | 5.3 | 5.9 |
+| Negative maximum accepted chunks | 5 | 8 | 10 |
+| Positive average accepted chunks | 4.45 | 7.0 | 8.7 |
+| Positive average retrieved characters | 3973.5 | 6247.65 | 7853.15 |
+| Negative average retrieved characters | 2892.9 | 4147.5 | 4614.4 |
+| Average retrieval latency (ms) | 10.337 | 11.290 | 11.246 |
+
+Deeper retrieval did not change negative rejection, but it increased accepted evidence and context
+volume. `k=10` added context over `k=8` without adding positive full-case recovery.
+
+### Candidate decision
+
+- Decision：`CANDIDATE_TOP_K_8`。
+- Reason：`k=8` captures all observed positive full-case gains. `k=10` adds no recovered positive
+  case, group recall or full-case recall; its only positive metric increase is source recall
+  `0.950` → `1.000`.
+- This is a pilot-supported candidate only. Production remains `top_k=5` in this round.
+- 唯一下一步：對 `top_k=8` 做 human review 與 bounded final-QA safety check，再決定是否進入
+  production change；本輪不執行該 change。
+
+### Artifacts and verification
+
+- Variant reports：`eval/retrieval/reports/8.2-top-k-5-20260908.json`、
+  `8.2-top-k-8-20260908.json`、`8.2-top-k-10-20260908.json`。
+- Comparison report：`eval/retrieval/reports/8.2-top-k-tradeoff-comparison-20260908.json`。
+- Reports 包含 benchmark SHA256、corpus hashes、model/dimensions、chunk controls、threshold、
+  candidate-pool behavior、retrieval mode、bounded per-case observations、aggregate metrics、
+  context volume 與 latency；沒有保存 full chunk text、raw PDF text、embeddings 或 provider
+  raw response。
+- Focused retrieval/evaluation suite：`26 passed`。Agent Golden Set：`29/29`，test suite
+  `2 passed`。Artifact consistency checks、`py_compile` 與 `git diff --check`：PASS。
+- Roadmap 未新增 slice；`8.2` 維持 `done`。未 stage、commit 或 push。
+
+## 2026-09-08 Post-8.2 Paired Final-QA Adoption Gate
+
+### STATUS
+
+- `8.2` 維持 `done`。本輪只執行 evaluation-only paired final-QA gate，沒有修改 production
+  `top_k`、candidate pool、threshold、prompt、embedding 或 chunking。
+- 已依明確授權將 frozen 3-PDF corpus、30 benchmark queries 與 retrieved context 傳送至目前
+  設定的 OpenAI embedding/chat providers。Artifact 不保存 raw provider response、prompt、CoT、
+  full chunk text、full PDF text、embeddings 或 secrets。
+
+### QA_PATH AND CONTROLS
+
+- 實際使用 `QAOrchestrator.answer_question()`、`qa_answer_v3`、current citation handling 與
+  current `insufficient_info` handling。`top_k` 已是 method parameter，因此只需 evaluation-only
+  adapter，沒有 production refactor。
+- k=5 與 k=8 共用 frozen benchmark、current parser/chunking `1200/0`、
+  `text-embedding-3-small / 1536`、pgvector exact cosine、relevance floor `0.30`、QA model
+  `gpt-4o-mini` 與 citation policy。Candidate pool 維持 current behavior：
+  `min(top_k * 2, 20)`。
+
+### FINAL-QA RESULTS
+
+| Metric | k=5 | k=8 |
+| --- | ---: | ---: |
+| Answerable `CORRECT_GROUNDED` | 13/20 (0.650) | 16/20 (0.800) |
+| `RETRIEVAL_INCOMPLETE` | 5 | 1 |
+| `UNSUPPORTED_OR_INCORRECT` | 2 | 3 |
+| Hard-negative safe rejection | 9/10 (0.900) | 9/10 (0.900) |
+| Hard-negative unsafe IDs | `rv-020` | `rv-020` |
+| Insufficient answers with non-zero citations | 0 | 0 |
+
+- Recovered semantic cases `rv-004`、`rv-005`、`rv-023` 都轉成 user-visible
+  `CORRECT_GROUNDED`，因此 k=8 有明確 utility gain。
+- `rv-009`、`rv-029` 兩個 variant 都仍有部分 evidence，但 final answer 補出缺失的
+  multi-evidence claim，標記為 `UNSUPPORTED_OR_INCORRECT`；multi-evidence retrieval 沒有被解決。
+- `rv-027` 是 final-QA regression：k=5 回覆 `insufficient_info` 且 citation 清除，k=8 在兩組
+  required Gold 都缺失時產生 unsupported answer，並帶有不支持 claim 的 citations。
+- `rv-020` 在 k=5、k=8 都是既有 unsafe case，k=8 沒有新增 hard-negative unsafe case；但這不
+  抵銷 `rv-027` 的 positive grounding regression。
+
+### ADOPTION DECISION
+
+- `KEEP_TOP_K_5`。k=8 雖然提升 recovered semantic final QA，但未通過 no-regression / citation
+  support gate，因為 `rv-027` 出現新的 unsupported final answer。
+- Production change：`False`。本輪不修改 production default。8.2 roadmap state 仍為 `done`。
+
+### ARTIFACTS AND VERIFICATION
+
+- Paired variant reports：`eval/retrieval/reports/top-k-5-final-qa-20260908.json`、
+  `eval/retrieval/reports/top-k-8-final-qa-20260908.json`。
+- Bounded comparison：`eval/retrieval/reports/top-k-final-qa-comparison-20260908.json`。
+- Artifacts 保留 exact final user-visible answer、retrieval/citation source-page-locator metadata、
+  bounded classification、case-level delta 與必要 operational observation；沒有保存禁止的 raw
+  provider content。
+- Focused QA/retrieval tests、artifact invariant checks、`py_compile` 與 `git diff --check`：PASS。
+- Agent Golden Set：`29/29`，test suite `2 passed`。未 stage、commit 或 push。
+
+## 2026-09-08 Final-QA Gate Provenance Reconciliation
+
+- Uploaded/stale file mismatch：current working tree 的 review function 位於
+  `eval/retrieval/final_qa_gate.py`，current test 位於 `tests/test_final_qa_gate.py`；不存在
+  task 所述的 `tests/evals/test_final_qa_gate.py`。因此不能以 uploaded snapshot 判定 current
+  implementation 缺少 `apply_bounded_human_review`。
+- 確認 human review path：原始 live QA records 先形成 raw automated classification；本次沒有
+  provider call、re-index 或 live rerun，而是對已保存 artifacts 做 offline post-processing，套用
+  `apply_bounded_human_review`，再重算 variant metrics 與 comparison/adoption decision。
+- 修正 evaluation provenance：每個 case 現在明確保存 `automated_classification`、
+  `reviewed_classification` 與 review basis；variant/comparison artifact 標記
+  `application_mode=offline_post_processing`，aggregate 明確使用 reviewed classification。
+- Offline recomputation 保持 `k=5` `CORRECT_GROUNDED=13/20`、`k=8` `16/20`；`rv-027` 仍為
+  k=5 `RETRIEVAL_INCOMPLETE`、k=8 `UNSUPPORTED_OR_INCORRECT`；adoption 仍為
+  `KEEP_TOP_K_5`。`rv-009`、`rv-029` 的 reviewed labels 依 exact final answer 與 bounded
+  evidence metadata 的 claim basis，而非只依 `gold_complete=false` mechanical 判斷。
+- Focused reconciliation/QA/retrieval tests：`35 passed`；Agent Golden Set：`2 passed`；offline
+  artifact recomputation、`py_compile` 與 `git diff --check`：PASS。`8.2` 維持 `done`，未修改
+  production code、roadmap 或 decision。
+Final-QA evaluation now separates live automated classification from explicit offline human adjudication.
