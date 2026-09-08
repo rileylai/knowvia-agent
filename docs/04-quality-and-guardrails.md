@@ -97,15 +97,17 @@ automatic consolidation、memory graph、importance ranking 或 temporal ranking
 
 Memory 可另外保存 bounded `retrieval_text` 作為 semantic search representation。它只能在
 explicit-save authorization 通過後產生，不能改寫 user-authoritative `content`，也不能取得
-persistence authority。Planned `5.0.3.1` representation slice 的 canonicalization 不得新增 fact、改
-entity/value 或猜 unknown acronym；產生失敗時，embedding 回退使用原始 `content`。
+persistence authority。Current save-side canonicalization 不得新增 fact、改 entity/value 或猜
+unknown acronym；產生失敗時，embedding 回退使用原始 `content`。Memory Inspector/API 仍只顯示
+original `content`。
 Memory search 可接受自然 user query，不要求 query 包含 `memory`、`remember` 或 `saved`。
 
-Query-side semantic normalization 只作 no-hit 或 low-confidence fallback。Retrieval candidate
-先取 top-k，再套用既有 relevance gate；direct recall 只回傳 final best-1，broad recall 維持
-bounded multi-result。既有 global relevance floors 不因單一案例降低，也不建立大型 hard-coded
-synonym dictionary。English/Chinese cross-language recall 與 unrelated-memory fail-closed
-behavior 是 `5.0.3.1` follow-up 的 regression contract。
+`5.0.3.1` 已 deferred。Current `MemoryService.search_memories()` 沒有 query-side semantic
+normalization，也沒有 no-hit / low-confidence second-pass retry。Existing retrieval 仍先取
+top-k，再套用既有 relevance gate；direct recall 只回傳 final best-1，broad recall 維持 bounded
+multi-result。既有 global relevance floors 不因單一案例降低，也不建立大型 hard-coded synonym
+dictionary。English/Chinese cross-language recall 與 unrelated-memory fail-closed behavior
+保留為未來若重啟 `.1` 時的 regression contract。
 
 當 saved company/project context 能 materially improve current Knowledge task 時，bounded
 Agent 可以同一 run 使用 `search_knowledge` 與 `search_memory`。Contextual memory search

@@ -180,6 +180,10 @@ reference-resolution boundary 可見；它不會成為 Knowledge evidence、Memo
 `ContextualFacet` 上限 2、Knowledge/Memory 分離、partial/all Memory miss degradation 與 max 3
 tool calls 保持不變。
 
+5.0.3.3 的 architecture implementation 與 automated verification 已完成；unresolved
+actual-provider stability probe 與 browser acceptance deferred。這項 stability work 不列為
+目前主線，`7.0 Evaluation and Demo Hardening` 是下一個唯一主線 priority。
+
 ## MCP boundary
 
 Native MCP server 只負責 protocol mapping。Local runtime 使用 official Python MCP

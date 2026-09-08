@@ -97,7 +97,8 @@ Backend 在每一步檢查 timeout、argument、permission、context budget 與 
 
 ### Current: 5.0.3.3 Context Authority Consolidation
 
-這是已完成 implementation 的 current workflow。Explicit save、conversation
+這是已完成 implementation 的 current workflow。Unresolved actual-provider stability 與 browser
+acceptance deferred；`7.0 Evaluation and Demo Hardening` 是下一個唯一主線 priority。Explicit save、conversation
 recall、conversation transform 與 direct Memory compatibility 先走既有 dedicated routes；其餘
 substantive request 走 structured path：
 

@@ -230,24 +230,24 @@ Knowledge source
 
 ### 目前工程焦點
 
-`5.0.3.3 Context Authority Consolidation` 已完成 implementation 與 automated verification，現為 `manual_verification`。Incidental conversation history 僅在 bounded reference resolution 可見；substantive retrieval 與 synthesis 使用 validated reference bindings、exact current user message 與 fresh authority context。
+`7.0 Evaluation and Demo Hardening` 是下一個唯一主線 priority。`5.0.3.3 Context Authority Consolidation` 的 architecture implementation 與 automated verification 已完成；unresolved actual-provider stability 與 browser acceptance deferred。Incidental conversation history 僅在 bounded reference resolution 可見；substantive retrieval 與 synthesis 使用 validated reference bindings、exact current user message 與 fresh authority context。
 
 ### 後續規劃
 
 - Evidence Readiness
 - Final Synthesis Contract Hardening
 - Selector Authority Slimming
-- Live Semantic Stability Gate
-- Generalized Semantic Memory Representation
+- Live Semantic Stability Gate（deferred）
 
 ### Deferred
 
 - YouTube generic indexing
 - Notion UX integration
 - Same-session conversational transform hardening
+- Generalized Semantic Memory Representation 的未完成 query-side 部分
 - remote MCP、RBAC redesign 與 provider-native streaming
 
-`7.0 Evaluation and Demo Hardening` 目前是 `manual_verification`。Final closure waits for `5.0.3.3` stability and the approved memory/context follow-ups required for final closure, followed by evaluation and Demo Story rerun.
+`7.0 Evaluation and Demo Hardening` 目前是 `manual_verification`，也是下一個唯一主線 priority。`5.0.3.1` 的 save-side representation 已有 evidence；query-side semantic normalization 與 no-hit / low-confidence second-pass retry 尚未 implemented，已 deferred。
 
 ## 非目標與設計約束
 

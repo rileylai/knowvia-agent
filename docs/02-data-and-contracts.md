@@ -301,10 +301,14 @@ conversation history 只在 Reference Binding 可見；後續 selector、retriev
 只接 exact current message、validated bindings 與 fresh authority context。Explicit conversation
 recall、conversation transform 與 direct Memory compatibility 維持 dedicated paths。
 
-Planned `5.0.3.1` slice 將把目前少量 normalization foundation generalize 為 bounded
-structured semantic canonicalization，並規劃 query-side semantic normalization 只在 no-hit
-或 low-confidence fallback 使用。Direct recall 維持 final best-1，broad recall 維持 bounded
-multi-result；不降低現有 global relevance floors。
+`5.0.3.1` 已 deferred，且不是整體失敗。Current implementation 已保留
+user-authoritative original `content`、bounded derived `retrieval_text`、retrieval embedding、
+explicit-save authorization、strict bounded save-side canonicalization fallback、original-content
+Inspector/API display、direct best-1、broad bounded multi-result、owner scope 與 relevance gates。
+Current `MemoryService.search_memories()` 沒有 query-side semantic normalization，也沒有 no-hit /
+low-confidence second-pass semantic retry。若未來重啟，query-side behavior 才會作為額外 scope；
+current direct recall 仍維持 final best-1，broad recall 仍維持 bounded multi-result，不降低現有
+global relevance floors。
 
 ## `Citation`
 

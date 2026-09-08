@@ -2077,3 +2077,27 @@ dependencies 或 frontend。
   `7.0=manual_verification`。
 - Post-`.3` 的 Evidence Readiness、Final Synthesis Contract Hardening、Selector Authority Slimming
   與 Live Semantic Stability Gate 仍為 planned，未開始。
+
+## 2026-09-08 Documentation-only closure sync
+
+### Closure result
+
+- `5.0.3.1 Generalized Semantic Memory Representation` 改為 `deferred`。這不是整個 slice
+  失敗：original `content`、bounded derived `retrieval_text`、retrieval embedding、explicit-save
+  authorization、save-side canonicalization fallback、original-content Inspector/API display、
+  direct best-1、broad bounded multi-result、owner scope、relevance gates、natural paraphrase
+  recall 與 unrelated-memory negative control 都保留為 current evidence。
+- Current `MemoryService.search_memories()` 沒有 query-side semantic normalization，也沒有
+  no-hit / low-confidence second-pass semantic retry。相關描述已從 current behavior 改為
+  deferred scope。
+- `5.0.3.3 Context Authority Consolidation` 的 architecture implementation 與 automated
+  verification 保留；unresolved actual-provider stability 與 browser acceptance 改為 `deferred`。
+  Deterministic Golden Set PASS 不再被描述為 live-provider stability evidence。
+- `7.0 Evaluation and Demo Hardening` 維持 `manual_verification`，並設為下一個唯一主線
+  priority。Formal browser Demo Story 是下一個驗證入口。
+
+### Scope confirmation
+
+本輪只修改 roadmap、README、architecture/workflow/data/quality/deployment 文件、decisions 與
+daily log。未修改 runtime、tests、eval、frontend、dependencies、migration、Docker 或 config；
+未重新進行 architecture diagnosis，也未開始 implementation。
