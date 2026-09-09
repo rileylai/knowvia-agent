@@ -122,12 +122,20 @@ class _FakeProposalProvider(LLMProvider):
 
 
 class _FakeQAProvider(LLMProvider):
+    supports_structured_output = True
+
     @property
     def name(self) -> str:
         return "openai"
 
     async def generate(self, request: LLMRequest) -> LLMResponse:
-        _ = request
+        if request.response_format is not None:
+            return LLMResponse(
+                provider="openai",
+                model="gpt-4o-mini",
+                output_text="",
+                structured_output={"ready": True},
+            )
         return LLMResponse(
             provider="openai",
             model="gpt-4o-mini",
@@ -647,7 +655,7 @@ def test_telegram_webhook_ask_returns_answer_with_scoped_notion_citation() -> No
                 row for row in workflow_runs if row.id == payload["workflow_run_id"]
             )
             qa_metadata = json.loads(qa_run.metadata_json or "{}")
-            assert qa_metadata["prompt_id"] == "qa_answer"
+            assert qa_metadata["prompt_id"] == "qa_answer_v4"
             assert qa_metadata["estimated_cost"] == pytest.approx(0.00000975)
             metadata = json.loads(telegram_run.metadata_json or "{}")
             assert metadata["command"] == "ask"

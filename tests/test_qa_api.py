@@ -29,12 +29,20 @@ from src.providers import (
 
 
 class FakeProvider(LLMProvider):
+    supports_structured_output = True
+
     @property
     def name(self) -> str:
         return "openai"
 
     async def generate(self, request: LLMRequest) -> LLMResponse:
-        _ = request
+        if request.response_format is not None:
+            return LLMResponse(
+                provider="openai",
+                model="gpt-4o-mini",
+                output_text="",
+                structured_output={"ready": True},
+            )
         return LLMResponse(
             provider="openai",
             model="gpt-4o-mini",
@@ -55,12 +63,20 @@ class FailingProvider(LLMProvider):
 
 
 class InsufficientContextProvider(LLMProvider):
+    supports_structured_output = True
+
     @property
     def name(self) -> str:
         return "openai"
 
     async def generate(self, request: LLMRequest) -> LLMResponse:
-        _ = request
+        if request.response_format is not None:
+            return LLMResponse(
+                provider="openai",
+                model="gpt-4o-mini",
+                output_text="",
+                structured_output={"ready": True},
+            )
         return LLMResponse(
             provider="openai",
             model="gpt-4o-mini",
@@ -243,8 +259,8 @@ def test_qa_api_returns_grounded_answer_with_citations() -> None:
             metadata = json.loads(workflow_run.metadata_json or "{}")
             assert metadata["provider_name"] == "openai"
             assert metadata["model"] == "gpt-4o-mini"
-            assert metadata["prompt_id"] == "qa_answer"
-            assert metadata["prompt_version"] == "qa_answer_v3"
+            assert metadata["prompt_id"] == "qa_answer_v4"
+            assert metadata["prompt_version"] == "qa_answer_v4"
             assert metadata["retrieval_mode"] == "lexical_fallback"
             assert (
                 metadata["retrieval_fallback_reason"]
@@ -367,7 +383,7 @@ def test_qa_api_returns_insufficient_info_when_no_retrieval_match() -> None:
         app.dependency_overrides.clear()
 
 
-def test_qa_api_returns_zero_citations_when_provider_rejects_retrieved_context() -> None:
+def test_qa_api_returns_contract_error_when_final_provider_rejects_ready_context() -> None:
     session_factory = _build_session_factory()
     seed_session = session_factory()
     try:
@@ -403,11 +419,11 @@ def test_qa_api_returns_zero_citations_when_provider_rejects_retrieved_context()
             },
         )
 
-        assert response.status_code == 200
-        payload = response.json()
-        assert payload["insufficient_info"] is True
-        assert payload["citations"] == []
-        assert payload["retrieved_chunk_count"] >= 1
+        assert response.status_code == 502
+        payload = response.json()["detail"]
+        assert payload["error_code"] == "LLM_OUTPUT_INVALID"
+        assert payload["failure_reason"] == "LLM_OUTPUT_INVALID"
+        assert payload["workflow_run_id"] is not None
     finally:
         app.dependency_overrides.clear()
 
@@ -462,8 +478,8 @@ def test_qa_api_returns_provider_not_found_when_provider_missing() -> None:
             metadata = json.loads(workflow_run.metadata_json or "{}")
             assert metadata["provider_name"] == "openai"
             assert metadata["model"] == "gpt-4o-mini"
-            assert metadata["prompt_id"] == "qa_answer"
-            assert metadata["prompt_version"] == "qa_answer_v3"
+            assert metadata["prompt_id"] == "qa_answer_v4"
+            assert metadata["prompt_version"] == "qa_answer_v4"
             assert metadata["estimated_cost"] is None
         finally:
             verify_session.close()
@@ -523,8 +539,8 @@ def test_qa_api_returns_llm_provider_error_when_provider_request_fails() -> None
             metadata = json.loads(workflow_run.metadata_json or "{}")
             assert metadata["provider_name"] == "openai"
             assert metadata["model"] == "gpt-4o-mini"
-            assert metadata["prompt_id"] == "qa_answer"
-            assert metadata["prompt_version"] == "qa_answer_v3"
+            assert metadata["prompt_id"] == "qa_answer_v4"
+            assert metadata["prompt_version"] == "qa_answer_v4"
             assert metadata["estimated_cost"] is None
         finally:
             verify_session.close()

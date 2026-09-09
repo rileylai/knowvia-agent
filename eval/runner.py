@@ -62,6 +62,17 @@ class ScriptedProvider(LLMProvider):
                 output_text="",
                 structured_output=copy.deepcopy(self.reference_bindings),
             )
+        if (
+            request.response_format is not None
+            and request.response_format["json_schema"]["name"]
+            == "evidence_readiness_decision"
+        ):
+            return LLMResponse(
+                provider=self.name,
+                model=request.model,
+                output_text="",
+                structured_output={"ready": True},
+            )
         if not self._responses:
             raise RuntimeError("script exhausted")
         response = self._responses.pop(0)
@@ -373,8 +384,8 @@ def _run_agent_scenario(scenario: GoldenScenario) -> Dict[str, Any]:
         "standalone-reference-binding-empty",
         "repeated-standalone-reference-binding-empty",
     }:
-        selector_requests = provider.requests[1::3]
-        final_requests = provider.requests[2::3]
+        selector_requests = provider.requests[1::4]
+        final_requests = provider.requests[3::4]
         checks.extend(
             [
                 _check(

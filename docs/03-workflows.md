@@ -131,9 +131,9 @@ Context Requirement Selection、後續 retrieval 與 final synthesis 都不接 i
 conversation transcript。這項 restriction 不套用到明確要求 conversation evidence 的 recall
 或 transform dedicated path。
 
-### 8.4 target：Evidence Readiness（planned, not implemented）
+### 8.4 current：Evidence Readiness（automated verified, manual pending）
 
-Documentation-only contract freeze 的 target flow 是：
+Current flow 是：
 
 ```text
 Accepted Knowledge Evidence
@@ -156,14 +156,13 @@ existing zero-evidence gate，可直接回傳 insufficient result，不必呼叫
 top-k、rewrite query 或以 Memory 取代缺少的 Knowledge。`ready=true` 時才呼叫 final synthesis，
 並沿用同一批 accepted Knowledge evidence 與既有 authorized supplemental Memory。
 
-Current structured substantive path 約有 3 個 semantic LLM calls：Reference Binding、Context
-Requirement Selection 與 Final Synthesis。Target 增加 1 個 Evidence Readiness call。`/api/qa`
-目前為 1 個 final QA call，target 為 readiness 加 final synthesis，共 2 個。這增加 latency、
-token 與 cost，但不增加 Agent tool-call budget。
+Current structured substantive path 約有 4 個 semantic LLM calls：Reference Binding、Context
+Requirement Selection、Evidence Readiness 與 Final Synthesis。`/api/qa` 為 readiness 加 final
+synthesis，共 2 個。這增加 latency、token 與 cost，但不增加 Agent tool-call budget。
 
 Readiness provider/runtime failure 沿用既有 provider error 或 contract error mapping，不偽裝成
-`insufficient_info`。Future implementation 應以新的 `qa_answer_v4` 表達 ready-only final
-synthesis contract；本輪不修改 `qa_answer_v3` 或任何 prompt。
+`insufficient_info`。`qa_answer_v4` 只用於 ready path 的 final synthesis；`qa_answer_v3` 保持
+不變。
 
 ### Current
 

@@ -212,12 +212,20 @@ class _DeterministicEmbeddingClient(EmbeddingClient):
 
 
 class _DeterministicLLMProvider(LLMProvider):
+    supports_structured_output = True
+
     @property
     def name(self) -> str:
         return CANARY_PROVIDER
 
     async def generate(self, request: LLMRequest) -> LLMResponse:
-        _ = request
+        if request.response_format is not None:
+            return LLMResponse(
+                provider=CANARY_PROVIDER,
+                model=CANARY_MODEL,
+                output_text="",
+                structured_output={"ready": True},
+            )
         return LLMResponse(
             provider=CANARY_PROVIDER,
             model=CANARY_MODEL,

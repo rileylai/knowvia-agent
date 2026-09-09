@@ -1,0 +1,121 @@
+{
+  "artifact_type": "evidence_readiness_false_negative_mixed_routing_diagnostic",
+  "verification_date": "2026-09-08",
+  "live_source_artifact": "8.4-evidence-readiness-live-20260908.json",
+  "controls": {
+    "live_provider_calls": false,
+    "embedding_api_calls": false,
+    "live_retrieval_rebuild": false,
+    "prompt_or_parameter_changes": false,
+    "production_code_changes": false,
+    "benchmark_changes": false,
+    "raw_provider_content_persisted": false,
+    "full_chunk_text_persisted": false,
+    "embeddings_persisted": false
+  },
+  "rv_001": {
+    "query": "What does the production-agent article say most production-agent behavior runs through?",
+    "gold_sufficiency": {
+      "classification": "GOLD_SUFFICIENT",
+      "source_id": "production_agents",
+      "pages": [2],
+      "anchors": ["conventional, deterministic code"],
+      "anchor_present_on_expected_page": true,
+      "basis": "The benchmark anchor is a direct answer to the single factual question."
+    },
+    "accepted_evidence": {
+      "classification": "EVIDENCE_PRESENT",
+      "accepted_count": 5,
+      "best_score": 0.55024,
+      "gold_support_rank": 4,
+      "gold_support_source_id": "production_agents",
+      "gold_support_page": 2,
+      "ranked_metadata": [
+        {"rank": 1, "source_id": "production_agents", "page": 3, "locator": "page 3", "score": 0.55024},
+        {"rank": 2, "source_id": "production_agents", "page": 11, "locator": "page 11", "score": 0.525198},
+        {"rank": 3, "source_id": "production_agents", "page": 10, "locator": "page 10", "score": 0.498615},
+        {"rank": 4, "source_id": "production_agents", "page": 2, "locator": "page 2", "score": 0.462578},
+        {"rank": 5, "source_id": "google_agent_patterns", "page": 3, "locator": "page 3", "score": 0.458697}
+      ],
+      "locator_granularity_note": "The frozen chunk locator is page-level when page labels are absent, so page 2 maps to two local chunks. The live artifact intentionally does not retain chunk IDs or full text. Existing top-k-5 baseline records the production-control Gold group hit at rank 4, matching the live source/page/rank evidence."
+    },
+    "readiness_input": {
+      "classification": "READINESS_INPUT_CONSTRUCTION_CORRECT",
+      "task_is_exact": true,
+      "accepted_evidence_count": 5,
+      "evidence_ids_in_order": ["K1", "K2", "K3", "K4", "K5"],
+      "max_reconstructed_chunk_chars": 1198,
+      "chunk_limit_chars": 1200,
+      "source_metadata_present": true,
+      "memory_content_present": false,
+      "raw_candidate_pool_present": false,
+      "previous_assistant_answer_present": false,
+      "duplicate_evidence_rows": false,
+      "basis": "The current helper directly serializes accepted evidence in retrieval order, keeps bounded text and source metadata, and passes the exact task."
+    },
+    "prompt_analysis": {
+      "classification": "NOT_OBVIOUSLY_OVERCONSERVATIVE",
+      "material_claim_criterion_present": true,
+      "count_alone_rejected": true,
+      "requires_every_query_phrase": false,
+      "requires_all_possible_details": false,
+      "requires_extra_certainty": false,
+      "basis": "The prompt asks whether evidence collectively supports material claims for the exact task; it does not require exhaustive phrase coverage or certainty beyond the contract."
+    },
+    "root_cause": {
+      "classification": "PROVIDER_VARIANCE_UNRESOLVED",
+      "confidence_boundary": "Gold, accepted source/page evidence, input construction, and prompt semantics were not deterministic defects. One live response is insufficient to claim stochasticity or identify the provider's internal semantic rationale."
+    }
+  },
+  "mixed_knowledge_memory": {
+    "query": "Based on the indexed production-agent notes, which practices should an organization of our size prioritize, given our preference for staged development?",
+    "case_validity": {
+      "classification": "INCONCLUSIVE",
+      "design_invalid": false,
+      "basis": "The Knowledge portion explicitly targets the frozen production-agent notes, but correct-scope top-k-5 retrieval was not observed because the Agent scope filter removed the corpus before ranking."
+    },
+    "context_decision": {
+      "needs_knowledge": true,
+      "needs_memory": true,
+      "contextual_memory_search_calls": 2,
+      "total_tool_calls": 3,
+      "knowledge_search_executed": true,
+      "context_selection_miss": false,
+      "basis": "The bounded execution shape is one Knowledge requirement plus two contextual facets."
+    },
+    "knowledge_retrieval_request": {
+      "query_source": "exact mixed task",
+      "source_kinds": ["pdf"],
+      "top_k": 5,
+      "page_ids": null,
+      "section_paths": null,
+      "owner_scope": "live-8-4-owner",
+      "candidate_count": 0,
+      "accepted_evidence_count": 0,
+      "retrieval_mode": "lexical_fallback"
+    },
+    "scope_comparison": {
+      "indexed_corpus_owner_scope": "local",
+      "agent_knowledge_tool_owner_scope": "owner_id",
+      "agent_live_owner_id": "live-8-4-owner",
+      "knowledge_repository_filter": "KnowledgeChunk.owner_scope == owner_scope",
+      "classification": "FILTER_OR_SCOPE_MISS",
+      "code_evidence": [
+        "src/services/knowledge_indexing_service.py:73,151",
+        "src/agent/tools.py:177-185",
+        "src/repositories/chunk_repository.py:275-277,373-381"
+      ]
+    },
+    "root_cause": "FILTER_OR_SCOPE_MISS"
+  },
+  "architecture": {
+    "d033_status": "D033_ARCHITECTURE_STILL_SUPPORTED",
+    "basis": "Partial cases were blocked, the complete multi-evidence case reached final synthesis, rv-001 remains an unresolved provider semantic result, and the mixed miss occurred before readiness at deterministic Knowledge scope filtering."
+  },
+  "next_minimal_action": {
+    "recommendation": "Authorize one deterministic Agent Knowledge owner_scope contract fix and integration regression, keeping readiness, prompt, retrieval parameters, and D033 unchanged.",
+    "live_provider_call_required": false,
+    "single_direction": true
+  },
+  "roadmap_state": "8.4=automated_verified"
+}

@@ -1,0 +1,339 @@
+{
+  "artifact_type": "evidence_readiness_targeted_live_verification",
+  "benchmark_id": "knowvia-retrieval-pilot",
+  "benchmark_sha256": "c8eca9a7d6f4c3acfa0037df966187d89862376db82fcf31f0f35990327cf9c3",
+  "benchmark_version": "8.2",
+  "cases": [
+    {
+      "accepted_evidence_count": 5,
+      "answerable": true,
+      "case_id": "rv-001",
+      "category": "single_document_factual",
+      "checks": {
+        "accepted_evidence_gt_0": true,
+        "citation_count": 0,
+        "classification": "REPEATED_READINESS_FALSE_NEGATIVE",
+        "final_called": false,
+        "forbidden_terms_present": [],
+        "gold_support_present": true,
+        "insufficient_info": true,
+        "pass": true,
+        "readiness_called": true,
+        "ready": false
+      },
+      "citation_count": 0,
+      "citations": [],
+      "final_answer": "I do not have enough information in production notes to answer safely.",
+      "final_called": false,
+      "gold_support": {
+        "page": 2,
+        "present": true,
+        "rank": 4,
+        "score": 0.462543
+      },
+      "insufficient_info": true,
+      "model": null,
+      "owner_scope": "local",
+      "provider": null,
+      "provider_calls": [
+        {
+          "latency_ms": 1769.187,
+          "model": "gpt-4o-mini",
+          "operation": "evidence_readiness",
+          "provider": "openai",
+          "ready": false,
+          "token_input": 1544,
+          "token_output": 5
+        }
+      ],
+      "query": "What does the production-agent article say most production-agent behavior runs through?",
+      "readiness_called": true,
+      "readiness_ready": false,
+      "retrieval": {
+        "accepted_evidence_count": 5,
+        "best_score": 0.550239,
+        "candidate_count": 10,
+        "evidence": [
+          {
+            "locator": "page 3",
+            "page": 3,
+            "rank": 1,
+            "score": 0.550239,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 11",
+            "page": 11,
+            "rank": 2,
+            "score": 0.525198,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 10",
+            "page": 10,
+            "rank": 3,
+            "score": 0.4986,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 2",
+            "page": 2,
+            "rank": 4,
+            "score": 0.462543,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 1",
+            "page": 1,
+            "rank": 5,
+            "score": 0.459537,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          }
+        ],
+        "relevance_floor": 0.3,
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "token_input": null,
+      "token_output": null
+    },
+    {
+      "accepted_evidence_count": 5,
+      "answerable": true,
+      "case_id": "mixed-knowledge-memory",
+      "category": "mixed_knowledge_memory",
+      "checks": {
+        "accepted_evidence_gt_0": true,
+        "citation_count": 0,
+        "context_requirement_called": true,
+        "final_called": false,
+        "insufficient_info": true,
+        "knowledge_citations_only": true,
+        "needs_knowledge": true,
+        "needs_memory": true,
+        "pass": false,
+        "readiness_called": true,
+        "ready": false,
+        "used_saved_memory": false
+      },
+      "citation_count": 0,
+      "citations": [],
+      "final_answer": "I do not have enough information in production notes to answer safely.",
+      "final_called": false,
+      "insufficient_info": true,
+      "knowledge_query": "Based on the indexed production-agent notes, which practices should an organization of our size prioritize, given our preference for staged development?",
+      "memory_search_calls": [
+        {
+          "owner_id": "local",
+          "retrieval_mode": "contextual",
+          "top_k": 3
+        },
+        {
+          "owner_id": "local",
+          "retrieval_mode": "contextual",
+          "top_k": 3
+        }
+      ],
+      "memory_status": null,
+      "model": null,
+      "owner_scope": "local",
+      "provider": null,
+      "provider_calls": [
+        {
+          "latency_ms": 1453.69,
+          "model": "gpt-4o-mini",
+          "operation": "reference_binding_resolution",
+          "provider": "openai",
+          "token_input": 341,
+          "token_output": 6
+        },
+        {
+          "latency_ms": 1412.681,
+          "model": "gpt-4o-mini",
+          "needs_knowledge": true,
+          "needs_memory": true,
+          "operation": "context_requirement_selection",
+          "provider": "openai",
+          "token_input": 565,
+          "token_output": 45
+        },
+        {
+          "latency_ms": 1296.186,
+          "model": "gpt-4o-mini",
+          "operation": "evidence_readiness",
+          "provider": "openai",
+          "ready": false,
+          "token_input": 1641,
+          "token_output": 5
+        }
+      ],
+      "query": "Based on the indexed production-agent notes, which practices should an organization of our size prioritize, given our preference for staged development?",
+      "readiness_called": true,
+      "readiness_ready": false,
+      "retrieval": {
+        "accepted_evidence_count": 5,
+        "best_score": 0.531272,
+        "candidate_count": 10,
+        "evidence": [
+          {
+            "locator": "page 2",
+            "page": 2,
+            "rank": 1,
+            "score": 0.531272,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 11",
+            "page": 11,
+            "rank": 2,
+            "score": 0.528637,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 10",
+            "page": 10,
+            "rank": 3,
+            "score": 0.495598,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 3",
+            "page": 3,
+            "rank": 4,
+            "score": 0.49254,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 12",
+            "page": 12,
+            "rank": 5,
+            "score": 0.490419,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          }
+        ],
+        "relevance_floor": 0.3,
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "token_input": null,
+      "token_output": null,
+      "tool_calls_used": 3,
+      "used_saved_memory": false
+    }
+  ],
+  "controls": {
+    "corpus_isolated_in_disposable_database": true,
+    "evidence_readiness_contract_version": "v1",
+    "full_chunk_text_or_embeddings_persisted": false,
+    "live_provider": true,
+    "model": "gpt-4o-mini",
+    "no_parameter_tuning": true,
+    "one_pass_per_case": true,
+    "permanent_memory_written": false,
+    "production_top_k": 5,
+    "prompts_or_reasoning_persisted": false,
+    "provider": "openai",
+    "qa_prompt_version": "qa_answer_v4",
+    "raw_provider_responses_persisted": false,
+    "targeted_cases": [
+      "mixed-knowledge-memory",
+      "rv-001"
+    ]
+  },
+  "corpus_manifest": [
+    {
+      "filename": "Best Practices for Building AI Agents That Work in Production.pdf",
+      "page_count": 14,
+      "sha256": "c88c995d6d6deb5d350f12621cabc9dbfa2323047491ad66771989f58100f074",
+      "source_id": "production_agents"
+    },
+    {
+      "filename": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+      "page_count": 17,
+      "sha256": "eec40e93d8adb8755f89378dc9778a9219786b4f4b466e696a6aa8e1f54b2591",
+      "source_id": "chatgpt_tasks_week3"
+    },
+    {
+      "filename": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+      "page_count": 21,
+      "sha256": "c22fe67748782b2dfe8bff364a9ea3fa852a0eba9da22f100cbe43cd73cbba36",
+      "source_id": "google_agent_patterns"
+    }
+  ],
+  "provider_call_behavior": {
+    "embedding_call_count": 4,
+    "embedding_calls": [
+      {
+        "input_count": 22,
+        "latency_ms": 4049.984,
+        "model": "text-embedding-3-small",
+        "token_input": 3532
+      },
+      {
+        "input_count": 17,
+        "latency_ms": 478.569,
+        "model": "text-embedding-3-small",
+        "token_input": 4619
+      },
+      {
+        "input_count": 40,
+        "latency_ms": 713.912,
+        "model": "text-embedding-3-small",
+        "token_input": 7014
+      },
+      {
+        "input_count": 2,
+        "latency_ms": 946.022,
+        "model": "text-embedding-3-small",
+        "token_input": 39
+      }
+    ],
+    "llm_call_count": 4,
+    "llm_operations": {
+      "bounded_agent_final": 0,
+      "context_requirement_selection": 1,
+      "evidence_readiness": 2,
+      "qa_answer": 0,
+      "reference_binding_resolution": 1
+    }
+  },
+  "retrieval_contract": {
+    "candidate_pool_max": 20,
+    "chunk_max_chars": 1200,
+    "chunk_overlap_chars": 0,
+    "embedding_dimensions": 1536,
+    "embedding_model": "text-embedding-3-small",
+    "page_aware": true,
+    "relevance_floor": 0.3,
+    "similarity": "cosine",
+    "top_k": [
+      1,
+      3,
+      5
+    ]
+  },
+  "summary": {
+    "mixed_case_pass": false,
+    "rv_001_classification": "REPEATED_READINESS_FALSE_NEGATIVE",
+    "targeted_live_gate": "FAIL"
+  },
+  "verification_date": "2026-09-08"
+}

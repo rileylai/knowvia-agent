@@ -32,12 +32,20 @@ from src.providers import (
 
 
 class _FakeProvider(LLMProvider):
+    supports_structured_output = True
+
     @property
     def name(self) -> str:
         return "openai"
 
     async def generate(self, request: LLMRequest) -> LLMResponse:
-        _ = request
+        if request.response_format is not None:
+            return LLMResponse(
+                provider="openai",
+                model="gpt-4o-mini",
+                output_text="",
+                structured_output={"ready": True},
+            )
         return LLMResponse(
             provider="openai",
             model="gpt-4o-mini",

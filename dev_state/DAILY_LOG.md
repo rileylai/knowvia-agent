@@ -3095,3 +3095,524 @@ volume. `k=10` added context over `k=8` without adding positive full-case recove
   artifact recomputation、`py_compile` 與 `git diff --check`：PASS。`8.2` 維持 `done`，未修改
   production code、roadmap 或 decision。
 Final-QA evaluation now separates live automated classification from explicit offline human adjudication.
+
+## 2026-09-08 Evidence Readiness Minimal Implementation
+
+### Done
+
+- 完成 8.4 minimal implementation。新增 strict `EvidenceReadinessDecision`，contract 只有
+  `ready: StrictBool`，並拒絕 extra fields。
+- Structured substantive Agent path 與 `/api/qa` 共用同一個 readiness provider/helper。Readiness
+  位於 accepted Knowledge evidence 之後、final synthesis 之前。
+- `ready=false` 由 backend deterministic 回傳 `insufficient_info` 與 zero citations，跳過
+  final synthesis。零 accepted Knowledge evidence 維持既有 gate，不呼叫 readiness provider。
+- Provider、timeout、malformed structured output 與 extra field 維持既有 provider/contract
+  failure semantics，不轉成 semantic `insufficient_info`。
+- 新增 `qa_answer_v4`。ready path 的 final provider 只負責 grounded synthesis；ready 後回傳
+  legacy `INSUFFICIENT_INFO` 會視為 provider contract failure。`qa_answer_v3` 未修改。
+- 沒有修改 parser、chunking、embedding、threshold、top-k、candidate pool、retrieval retry、
+  Memory authority、tool-call budget、SSE event contract 或 D033。
+
+### Automated Evidence
+
+- Readiness、Agent runtime、QA orchestrator、API、citation、contextual Memory、prompt loader 與
+  impacted regression suites 通過：focused `58 passed`，impacted `121 passed`；沒有 live provider
+  call。
+- Frozen backend regression 使用 project `.venv` 為 `939 passed, 6 skipped`，包含 Agent Golden
+  Set、demo preflight 與 Native MCP targeted coverage。`compileall` 與 `git diff --check` 通過。
+
+### Manual Verification
+
+尚未進行 frontend/browser verification。Not yet manually verified.
+
+### Next
+
+- 由 human 明確授權後，再執行 bounded live-provider regression，覆蓋 sufficient cases 與
+  `rv-009`、`rv-027`、`rv-029`。
+
+## 2026-09-08 Evidence Readiness Bounded Live Provider Verification
+
+### Scope
+
+- 依明確授權執行一次 bounded live-provider verification。Provider 為 configured OpenAI，model
+  為 `gpt-4o-mini`。
+- 使用 frozen 3-PDF corpus、production retrieval contract、`top_k=5`、`qa_answer_v4` 與
+  Evidence Readiness contract `v1`。Indexing 使用 disposable PostgreSQL database；沒有寫入
+  permanent user memory。
+- Case set 僅包含 `rv-001`、`rv-010`、`rv-009`、`rv-027`、`rv-029`、`rv-020` 與一個 controlled
+  mixed Knowledge+Memory fixture。每個 case 只執行一次，沒有 prompt、model、temperature、
+  top-k 或 threshold tuning。
+
+### Results
+
+- `rv-001` single positive：retrieval accepted 5 chunks，readiness provider 回 `ready=false`，
+  deterministic insufficient response，zero citations，沒有 final synthesis。依 gate 規則記錄
+  `READINESS_FALSE_NEGATIVE`。
+- `rv-010` complete multi-evidence：accepted 5 chunks，readiness `ready=true`，完成 final
+  synthesis，5 個 PDF citations，answer 通過 bounded grounded candidate check。
+- `rv-009` partial multi-evidence：`ready=false`、insufficient、zero citations、沒有 final，
+  answer 沒有補出 `job chaining` 或 `parent_job_id`。
+- `rv-027` 與 `rv-029`：都為 `ready=false`、insufficient、zero citations、沒有 final；`rv-029`
+  沒有補出 model responsibility guess。
+- `rv-020` hard negative：本次為 `CURRENT_RUN_SAFE`，沒有 final、zero citations。這是本次 run
+  的 observation，不宣稱已永久修正 hard-negative behavior。
+- Mixed Knowledge+Memory：context requirement selector 與 contextual Memory fixture search
+  有執行，但本次沒有取得 accepted Knowledge evidence，未呼叫 readiness 或 final synthesis，
+  因此 mixed case 未通過 live gate。這個結果保留為一次 provider routing observation，不做
+  live rerun。
+
+### Provider and Artifact Evidence
+
+- Provider call behavior：4 次 embedding calls（3 次 corpus indexing、1 次 7-query batch）；6
+  次 `evidence_readiness` calls、1 次 `qa_answer` final call，以及 mixed case 的 1 次 reference
+  binding 與 1 次 context selection。沒有保存 raw provider response、prompt、CoT、full chunk
+  text、embeddings 或 secrets。
+- Bounded artifact：[8.4-evidence-readiness-live-20260908.json](../eval/retrieval/reports/8.4-evidence-readiness-live-20260908.json)。Artifact 保存 provider/model、token
+  counts、latency、accepted count、source/page/locator metadata、citation metadata 與 exact
+  final user-visible answer。
+
+### Verification and Decision
+
+- Live gate：`READINESS_FALSE_NEGATIVE`。因 `rv-001` single positive 沒有通過 readiness，這一輪
+  不進行 live rerun、不調參，也不把 8.4 推進到 `manual_verification`。
+- `8.4` roadmap state 維持 `automated_verified`。本輪沒有修改 runtime、retrieval contract、
+  provider schema 或 decision record。
+- Live run 前的 backend regression 為 `939 passed, 6 skipped`，Agent Golden Set 與 demo
+  preflight 為 `4 passed`。Live run 後只重跑 readiness、QA、Agent focused suites、Golden Set、
+  `py_compile` 與 `git diff --check`。
+
+### Next
+
+- 保留 `rv-001` provider false negative 與 mixed routing observation，交由後續明確授權的
+  architecture/provider stability investigation 決定是否新增 diagnostic slice。不要在沒有新
+  contract decision 前調整 retrieval parameters 或 readiness schema。
+
+## 2026-09-08 Mixed Knowledge and Memory Owner-Scope Contract Repair
+
+### Root cause
+
+- 分類為 `LIVE_TEST_FIXTURE_SCOPE_BUG`。Single-user production contract 的
+  `get_current_owner_id()` 固定回傳 `local`，Knowledge corpus 也以 `local` indexing；8.4
+  disposable Agent harness 卻使用 `live-8-4-owner`，因此 Knowledge repository 在 filter stage
+  排除整個 corpus。
+- Agent production owner propagation、Knowledge repository filtering、Memory owner isolation
+  與 native MCP spoof rejection 均維持原 contract，沒有發現需要修改 production owner logic 的
+  evidence。
+
+### Repair and verification
+
+- 只將 `/private/tmp/run_8_4_live.py` 的 trusted fixture owner 改回 `local`。沒有修改
+  `src/`、Evidence Readiness、D033、retrieval parameters、MCP trust boundary 或 Memory
+  authority。
+- 新增 deterministic regression，覆蓋 local Knowledge hit、wrong-owner zero evidence、tool
+  argument scope spoof、mixed Knowledge and Memory owner separation。
+- Focused Agent、mixed context、Memory isolation/save permission、QA 與 Native MCP suites 通過；
+  Native MCP 為 `10 passed`。Agent Golden Set 為 `29/29`，`compileall`、harness `py_compile` 與
+  `git diff --check` 通過。
+
+### State
+
+- `8.4` 維持 `automated_verified`，D033 不變。
+- `rv-001` 的 `PROVIDER_VARIANCE_UNRESOLVED` 保留，沒有 provider rerun、re-index 或參數調整。
+- 下一步只允許一次 bounded live verification，覆蓋 mixed Knowledge and Memory 與 targeted
+  `rv-001` repeatability probe。
+
+## 2026-09-08 Final Targeted Live Verification
+
+### Scope
+
+- 依授權只執行兩個 case：mixed Knowledge+Memory 與 `rv-001` targeted repeatability probe。
+- 使用 configured OpenAI provider、`gpt-4o-mini`、frozen 3-PDF corpus、`top_k=5`、
+  `qa_answer_v4` 與 Evidence Readiness contract `v1`。每個 case 只執行一次，沒有 tuning、retry、
+  prompt 或 production source change。
+- Disposable database 與 single-user owner scope 均使用 `local`。沒有寫入 permanent memory。
+
+### Results
+
+- Mixed Knowledge+Memory：Knowledge retrieval 有 10 個 candidates、5 個 accepted evidence，
+  context selector 回報 `needs_knowledge=true` 與 `needs_memory=true`，Memory 執行兩次 contextual
+  search，兩次均為 `owner_id=local`、`top_k=3`。Readiness 有呼叫但回傳 `ready=false`，沒有 final
+  synthesis，zero citations，runtime observation 的 `used_saved_memory=false`，mixed case 未通過。
+- `rv-001`：Knowledge retrieval 有 10 個 candidates、5 個 accepted evidence。Gold support 存在於
+  rank 4、page 2、score `0.462543`。Readiness 回傳 `ready=false`，沒有 final synthesis，zero
+  citations，分類為 `REPEATED_READINESS_FALSE_NEGATIVE`。
+- 兩案 owner boundary 均為 `local`，沒有再現先前 fixture owner mismatch。這只確認 owner-scope
+  repair 與 retrieval path，不能視為 readiness semantic issue 已解決。
+
+### Artifact and Decision
+
+- Bounded artifact：[8.4-evidence-readiness-targeted-live-20260908.json](../eval/retrieval/reports/8.4-evidence-readiness-targeted-live-20260908.json)。Artifact 未保存 raw provider response、prompt、CoT、full chunk text、embeddings 或 secrets。
+- 本輪 provider usage 為 4 次 embedding calls、4 次 LLM calls。沒有再執行其他 benchmark，也沒有
+  live rerun、re-index 或參數調整。
+- `8.4` roadmap state 維持 `automated_verified`，D033 不變。Targeted live gate 為 `FAIL`，因
+  mixed case 未完成 readiness/final path，且 `rv-001` 在 Gold support 存在時再次被 readiness 拒絕。
+
+### Verification and Next
+
+- Live 後 focused owner-scope test 為 `2 passed`，context/mixed suite 為 `38 passed`，Agent Golden
+  Set 為 `29/29`，`git diff --check` 通過。
+- 下一步限於一次 bounded readiness semantic false-negative diagnostic。暫不調整 retrieval
+  parameters、embedding、threshold、top-k、provider model、temperature 或 readiness schema，也不
+  推進到 `manual_verification`。
+
+## 2026-09-08 Bounded Semantic Prompt Correction
+
+### Change
+
+- 將 `EVIDENCE_READINESS_SYSTEM_MESSAGE` 的 semantic rule 改為：`ready=true` 代表 accepted
+  Knowledge evidence 足以產生至少一個 materially complete、correct、grounded answer，且不需
+  exhaustive source coverage、逐字涵蓋每個 query phrase 或支援 optional details。
+- 明確規定 readiness 只評估回答所需的 material Knowledge-backed claims。Separately designated
+  Memory-side dependencies 不算缺少的 Knowledge requirements，但 Memory 不能補足缺少的
+  Knowledge claim。
+- `EvidenceReadinessDecision` 維持 `{ready: StrictBool}`，沒有修改 retrieval、Memory、
+  `qa_answer_v4`、D033 或架構拓撲。Production prompt 未加入 benchmark case ID、few-shot、reasoning
+  或新 schema field。
+
+### Verification
+
+- 先以 prompt contract test 取得 1 個預期失敗，再完成 correction 後通過。
+- Evidence Readiness 與 mixed Agent tests：`44 passed`。
+- Agent runtime readiness tests：`14 passed`。
+- QAOrchestrator readiness/citation tests：`9 passed`。
+- QA API insufficient/provider-error tests：`6 passed`。
+- Agent Golden Set：`29/29`。
+- 本輪未呼叫 live provider；`compileall`、`py_compile` 與 `git diff --check` 通過。
+
+### State
+
+- `8.4` 維持 `automated_verified`，D033 不變，未推進到 `manual_verification`。
+- 下一輪才執行明確授權的 bounded live semantic regression，涵蓋 positive `rv-001`、sufficient
+  single factual、`rv-010`、mixed Knowledge+Memory，以及 negative `rv-009`、`rv-027`、`rv-029`、
+  `rv-020`，每案一次。
+
+## 2026-09-08 Final Bounded Live Semantic Regression
+
+### Scope and Results
+
+- 依授權執行 8 個 case，每案一次；使用 configured OpenAI provider、`gpt-4o-mini`、frozen
+  `top_k=5`、`owner_scope=local`、既有 retrieval contract 與 `qa_answer_v4`，沒有 retry、tuning、
+  re-index 或 production source change。
+- Positive：`rv-001`、`rv-002`、`rv-010` 均通過 readiness、final synthesis、bounded grounded
+  candidate 與 PDF citation checks。`rv-002` 使用既有 top-k=5 Gold rank 1 的 single-document
+  factual control。
+- Mixed Knowledge+Memory 未通過：context selector 回報 `needs_knowledge=true`、
+  `needs_memory=true`，Memory search 使用 `owner_id=local`，但 readiness 回 `ready=false`；沒有
+  final synthesis、citation 或 `used_saved_memory` authority path，記錄為 1 個 readiness
+  false negative。
+- Negative：`rv-009`、`rv-027`、`rv-029`、`rv-020` 均安全停止（`ready=false`、insufficient、
+  沒有 final synthesis、zero citations），沒有觀察到 false positive。
+
+### Artifact and Verification
+
+- Bounded artifact：[8.4-evidence-readiness-semantic-live-20260908.json](../eval/retrieval/reports/8.4-evidence-readiness-semantic-live-20260908.json)。保存 provider/model、token/latency、retrieval/citation metadata 與 bounded final answer；沒有保存 raw provider response、prompt、CoT、full chunks、embeddings 或 secrets。
+- Provider behavior：4 次 embedding calls、13 次 LLM calls；final synthesis 只在 readiness `true`
+  時呼叫。Live semantic gate 為 `FAIL`，positive `3/4`、negative `4/4`、false negative `1`、
+  false positive `0`。
+- Live 後 focused regression：`71 passed`；Agent Golden Set `29/29`；`git diff --check` 通過。
+
+### State
+
+- `8.4` roadmap 維持 `automated_verified`，不推進到 `manual_verification`；D033 不變。
+- 本輪已停止 live work，不做 rerun、調參或 runtime implementation。Mixed readiness false
+  negative 留待後續明確授權的 diagnostic slice。
+
+## 2026-09-09 Backend Memory Resolution Signal
+
+### Change
+
+- 完成 8.4 最小 offline implementation：backend 以每個 required contextual Memory facet 的
+  實際 `search_memory` result 計算 `memory_dependencies_resolved`，不以 deduplicated Memory
+  record count 代替 dependency resolution。
+- `needs_memory=false` 時 readiness input 不帶 Memory resolution requirement；`needs_memory=true`
+  時才帶 bounded boolean signal。`EvidenceReadinessDecision` 仍只有 `{ready: StrictBool}`，
+  沒有把 Memory content 傳入 readiness，也沒有修改 D033、retrieval、embedding 或 provider
+  contract。
+- Mixed Knowledge + Memory 只在所有 required Memory dependencies resolved 且 Knowledge readiness
+  通過時進入 final synthesis；partial、zero 或 unresolved Memory 會 deterministic fail closed，
+  回傳 `insufficient_info=true` 與 zero citations。Knowledge-only、direct Memory-only、QAOrchestrator
+  與 explicit-save/isolation paths 維持既有邊界。
+
+### Verification
+
+- TDD 先加入 resolution signal、missing signal、partial/all unresolved、duplicate record per
+  facet、Knowledge authority 與 no-rescue regression tests；紅燈後完成 minimal implementation。
+- Focused regression：context/readiness、runtime/mixed memory、Memory/isolation/citation、
+  QA/MCP 共 `125 passed`。
+- 本輪只做 deterministic offline verification，沒有 live provider、embedding、re-index、retry
+  或 retrieval tuning。下一輪 live scope 限定為一次 targeted mixed verification，不重跑 8-case suite。
+
+### State
+
+- `8.4` roadmap 維持 `automated_verified`，D033 不變，未推進到 `manual_verification`。
+- 未 stage、commit 或 push。
+
+## 2026-09-09 8.4 Final Targeted Mixed Live Verification
+
+### Scope
+
+- 依授權準備執行一次 mixed Knowledge + Memory case，使用 configured OpenAI provider、
+  `gpt-4o-mini`、`owner_scope=local`、frozen 3-PDF corpus、`top_k=5`、`qa_answer_v4` 與
+  Evidence Readiness contract `v1`。
+- 未修改 production config、prompt、model、temperature、retrieval、Memory fixture 或
+  任何 runtime code。
+
+### Result
+
+- 唯一一次實際 live harness execution 在建立 `EmbeddingBatchService` 時失敗。失敗的
+  `RecordingEmbeddingClient` 沒有將 `get_capabilities()` delegation 到
+  `OpenAIEmbeddingClient`，因此 constructor 直接產生 `EmbeddingBatchError`，內層 reason 為
+  `CAPABILITY_UNAVAILABLE`；沒有建立 outbound embedding request。
+- 因此尚未執行 Reference Binding、Context Requirement Selection、Knowledge retrieval、
+  Memory retrieval、backend resolution signal、Evidence Readiness 或 Final Synthesis。
+- 本次沒有產生 user-visible answer、citation 或 permanent Memory write。依 No Retry 規則
+  不再呼叫 provider，也不把本次結果分類為 provider transient、Memory acquisition、
+  resolution 或 readiness semantic failure。本次 primary classification 為
+  `LOCAL_HARNESS_DEFECT`。
+
+### Diagnostic
+
+- 目前預期的 provider request 為 `openai`、`text-embedding-3-small`、1536 dimensions，
+  首批預計 22 inputs；這些值與前次成功 run 相同。成功 run 的 frozen corpus chunk counts
+  為 `22/17/40`，三份 corpus SHA256 也一致。
+- 目前沒有 HTTP/provider status、provider category、retry attempt 或 exhausted retry；
+  failure 發生在 `_execute_batch()` 之前。Retry policy 維持既有 `max_attempts=3`、backoff
+  `1s` 起始、上限 `30s`，沒有修改。
+- 與成功 harness 的 deterministic difference 是 capability delegation 缺失。這使本次為
+  `REQUEST_CONTRACT_CHANGED`，但不是 production embedding request contract 變更。
+
+### Artifact and State
+
+- Bounded artifact：[8.4-evidence-readiness-mixed-final-live-20260909.json](../eval/retrieval/reports/8.4-evidence-readiness-mixed-final-live-20260909.json)。未保存 raw provider response、prompt、CoT、full chunks、Memory content、embeddings 或 secrets。
+- 本次 gate 結果為 `FAIL`，classification 為 `LOCAL_HARNESS_DEFECT`，failure boundary 為
+  `EmbeddingBatchService construction -> capability validation`。
+- `8.4` 維持 `automated_verified`，D033 unchanged；未推進到 `manual_verification`。
+
+### Next Action
+
+- 只建議修復 harness 的 `get_capabilities()` delegation，並先做 offline adapter contract
+  verification；修復後若要重新執行同一 mixed live case，需另取得明確授權。
+
+### Offline Verification
+
+- `tests/test_embedding_batch_service.py`：`28 passed`。
+- `tests/test_embedding_client.py`：`28 passed`。
+- `tests/test_external_error.py`：`4 passed`。
+- `git diff --check`：PASS。
+- 本輪沒有 production code change、embedding provider call、LLM provider call、live retrieval
+  或 re-index。
+
+### Post-run Checks
+
+- Focused mixed/readiness regression：`6 passed`。
+- QA API 的 readiness/grounding/provider regression：`5 passed`。
+- Agent Golden Set：`29/29`，test suite `2 passed`。
+- `git diff --check`：PASS。
+- 本次只新增 bounded failure artifact 與本日誌；未 stage、commit 或 push。
+
+## 2026-09-09 8.4 Harness Contract Repair
+
+### Repair
+
+- 根因維持 `LOCAL_HARNESS_DEFECT`：`RecordingEmbeddingClient` 缺少
+  `get_capabilities(model, dimensions)` 對 delegate 的 forwarding，讓
+  `EmbeddingBatchService` 在 capability validation 階段收到 `None`。
+- 已確認 repaired adapter 同時透明保留 `name`、`get_capabilities()`、`embed()` 與
+  delegate exception propagation；`EmbeddingBatchService` 的 validation 沒有被 bypass。
+- 修復只限 live verification harness contract；沒有修改 production embedding、retry、model、
+  dimensions、batching、retrieval 或 8.4 readiness。
+
+### Offline Verification
+
+- 新增 harness-level adapter contract test：`5 passed`，涵蓋 capability delegation、supported
+  construction、unsupported fail-closed、single embed delegation、bounded recording 與 error
+  propagation。
+- Embedding/provider regression：`60 passed`；mixed/readiness focused regression：`13 passed`。
+- Frozen request contract：`text-embedding-3-small / 1536`、chunk counts `22/17/40`，corpus
+  manifest 與前次成功 run 一致。
+- `py_compile` 與 `git diff --check`：PASS。所有檢查均未發出 network/provider request。
+
+### State
+
+- `8.4` 維持 `automated_verified`，D033 unchanged。
+- 本輪禁止 live rerun；下一次 targeted mixed live case 仍需 separate explicit authorization。
+- 未 stage、commit 或 push。
+
+## 2026-09-09 8.4 Final Mixed Live Verification Rerun
+
+### Scope
+
+- 依 separate explicit authorization，只執行一次 frozen mixed Knowledge + Memory scenario；沒有
+  重跑其他 7 個 benchmark case，也沒有修改 model、prompt、temperature、retrieval、Memory
+  fixture、batch 或 retry policy。
+- repaired `RecordingEmbeddingClient` 通過 capability validation；使用 `owner_scope=local`、
+  `text-embedding-3-small / 1536`、pypdf、chunk counts `22/17/40` 與 disposable PostgreSQL。
+
+### Result
+
+- Indexing 完成；embedding calls 為 frozen corpus `22/17/40` 加上 mixed query `1`，沒有 provider
+  contract error。
+- Context Requirement Selection 回傳 `needs_knowledge=true`、`needs_memory=true`，兩個
+  contextual facets 為 `organization size` 與 `staged development`。
+- Knowledge retrieval 得到 `10` candidates、`5` accepted evidence，relevance floor `0.30`；
+  evidence 與 citation authority 維持 PDF-only。
+- 兩個 contextual Memory searches 均成功，`owner_id=local`、各 `1` candidate/accepted hit。
+  Backend runtime signal 為 required `2`、resolved `2`、`memory_dependencies_resolved=true`。
+- Readiness input 收到 `memory_dependencies_resolved=true` 且未混入 Memory-as-Knowledge evidence，
+  但 provider 回傳 `ready=false`。本輪分類為
+  `PERSISTENT_MIXED_READINESS_FALSE_NEGATIVE`，不是 harness、embedding、Memory acquisition 或
+  resolution-signal failure。
+- 因 readiness false，Final Synthesis 沒有執行；user-visible result 為 insufficient-info，沒有
+  citation，也沒有 `used_saved_memory` answer path。這是本次 live gate failure 的預期 boundary。
+
+### Provider and Artifact
+
+- Provider calls：embedding `4`；LLM `3`（reference binding、context selection、readiness），
+  沒有 final synthesis call。只保存 bounded model、token、latency、retrieval/citation metadata。
+- [8.4-evidence-readiness-mixed-final-live-20260909.json](../eval/retrieval/reports/8.4-evidence-readiness-mixed-final-live-20260909.json)
+  已保留前次 `LOCAL_HARNESS_DEFECT` attempt history 與本次 rerun 結果；沒有保存 raw provider
+  response、hidden prompt、CoT、embeddings、full PDF chunks 或 full Memory content。
+
+### State
+
+- `8.4` 維持 `automated_verified`，D033 unchanged；不推進到 `manual_verification`。
+- 本輪已停止，不做 live retry、prompt tuning、retrieval tuning 或 Memory tuning。下一步若要修正
+  仍需新的明確 implementation/diagnostic scope；本次不自動建立 `8.4.1`。
+- 未 stage、commit 或 push。
+
+## 2026-09-09 8.4 Restore Optional Memory / Knowledge-only Readiness
+
+### Contract Repair
+
+- D025、D027、D033 維持不變；contextual Memory 回復為 optional supplemental context。
+- 移除 `memory_dependencies_resolved` 對 Evidence Readiness 的 semantic input 與 runtime
+  hard gate coupling。partial 或 zero Memory hit 不再使足夠的 Knowledge evidence 進入
+  `insufficient_info`。
+- 保留 `memory_required_dependency_count`、`memory_resolved_dependency_count` 與
+  `memory_dependencies_resolved` workflow metadata，僅供 observability；Knowledge/Memory
+  authority separation、citation authority 與 retrieval freeze 不變。
+
+### Verification
+
+- 先以 deterministic regression assertions 重現舊行為：`6 failed, 1 passed`。
+- 修復後 focused mixed/readiness、Agent、Memory、citation 與 QA suites：`119 passed`。
+- Agent Golden Set：`29/29`；`tests/test_agent_eval.py`：`2 passed`。
+- Full backend regression：`949 passed, 6 skipped`；首次 collection 曾受既有 `mcp` venv
+  環境缺件影響，改用 frozen venv interpreter 後完成相同 suite。
+- `compileall`：PASS；`git diff --check`：PASS；最終 full regression 已包含 contract
+  fixture 更新。
+
+### State
+
+- `8.4` 維持 `automated_verified`；未推進到 `manual_verification`，不建立 `8.4.1`。
+- 本輪沒有 live provider、embedding provider、live retrieval 或 re-index；未 stage、commit
+  或 push。
+
+## 2026-09-09 8.4 Final Optional-Memory Live Verification
+
+### Result
+
+- 依明確授權只啟動一次 controlled mixed Knowledge + Memory live run。執行在
+  `OPENAI_API_KEY` preflight availability boundary 終止，沒有送出 provider request，沒有
+  indexing、embedding、context selection、Memory retrieval、Evidence Readiness 或 Final
+  Synthesis observation。
+- Failure classification 為 `HARNESS_FAILURE`，不是 embedding/provider contract failure；本輪
+  不 retry、不調整 prompt、model、temperature、retrieval、Memory 或 embedding config。
+- 指定 bounded artifact 已建立，並以摘要保留前次 `LOCAL_HARNESS_DEFECT` provenance；沒有保存
+  API secret、raw provider response、hidden prompt、CoT、embedding、full PDF chunk 或 full
+  Memory content。
+
+### Offline Verification
+
+- Focused optional-Memory/readiness、Agent runtime、Memory、citation、QA 與 embedding/provider
+  contract suites：`184 passed`。
+- Agent Golden Set：`2 passed`；`git diff --check`：PASS。
+
+### State
+
+- `8.4` 維持 `automated_verified`，D025、D027、D033 unchanged；不推進到
+  `manual_verification`。
+- 本輪已在 exact preflight failure boundary 停止，不做 live retry、browser verification、
+  full backend regression 或其他 benchmark case。未 stage、commit 或 push。
+
+## 2026-09-09 8.4 Optional-Memory Live Verification Rerun After API-Key Preflight
+
+### Result
+
+- 依新的明確授權，只檢查既有 shell environment 的 API-key availability，結果為
+  `OPENAI_API_KEY_AVAILABLE = false`。
+- 依 stop condition 立即停止；沒有 provider request、indexing、retrieval、Memory search、
+  Evidence Readiness 或 Final Synthesis，也沒有執行測試或 retry。
+- Artifact 已更新為 `HARNESS_FAILURE`，並保留本次與前次 API-key preflight failure，以及更早的
+  `LOCAL_HARNESS_DEFECT` provenance；沒有保存 secret 或 provider response。
+
+### State
+
+- `8.4` 維持 `automated_verified`，D025、D027、D033 unchanged；不推進到
+  `manual_verification`。
+- 本輪已在 `preflight -> OPENAI_API_KEY availability` 停止。未 stage、commit 或 push。
+
+## 2026-09-09 8.4 Optional-Memory Final Live Verification Execution
+
+### Scope
+
+- Repository root `.env` 存在；在同一 shell source 後，preflight 結果為
+  `OPENAI_API_KEY_AVAILABLE = true`。只執行一次 frozen mixed Knowledge + Memory scenario，
+  未執行其他 benchmark case，未 retry 或 tuning。
+- 使用 `owner_scope=local`、pypdf、chunk `1200/0`、`text-embedding-3-small / 1536`、pgvector
+  cosine、relevance floor `0.30`、`top_k=5` 與現行 optional-Memory contract。
+
+### Result
+
+- Indexing 完成，三份 PDF chunk counts 為 `22/17/40`；embedding calls 為 `4`，包含 frozen
+  corpus batches 與 mixed query batch。
+- Context Requirement Selection 為 `needs_knowledge=true`、`needs_memory=true`，facets 為
+  `organization size` 與 `staged development`。
+- Knowledge retrieval 為 `10` candidates、`5` accepted evidence，best score `0.531268`，
+  relevance floor `0.30`；Memory 兩個 facet 都執行 contextual search，`owner_id=local`，各有
+  `1` accepted hit。
+- Readiness input 包含 exact task、`5` accepted PDF evidence 與 bounded facet labels，沒有
+  `memory_dependencies_resolved`、Memory content、Memory citation 或 rejected candidate。
+- Evidence Readiness 執行但回傳 `ready=false`，因此分類為
+  `PERSISTENT_MIXED_KNOWLEDGE_READINESS_FALSE_NEGATIVE`。Final Synthesis 未執行；本次 live gate
+  在 readiness boundary 停止，沒有 retry 或 prompt 修改。
+- Runtime resolution counters 在 readiness-false path 未捕獲；Memory search observations
+  仍確認兩個 facet 都有 accepted hit，且 citations 為空，沒有 Memory authority leakage。
+
+### Verification
+
+- Focused optional-Memory/readiness、Agent runtime、Memory、citation、QA 與 embedding/provider
+  contract suites：`184 passed`。
+- Agent Golden Set：`2 passed`；`git diff --check`：PASS。
+- [8.4-optional-memory-final-live-20260909.json](../eval/retrieval/reports/8.4-optional-memory-final-live-20260909.json)
+  已保留前兩次 API-key preflight 與較早 `LOCAL_HARNESS_DEFECT` history；未保存 secret、raw
+  provider response、hidden prompt、CoT、embedding、full PDF chunk 或 full Memory content。
+
+### State
+
+- `8.4` 維持 `automated_verified`，D025、D027、D033 unchanged；不推進到
+  `manual_verification`。
+- 本輪已停止，不做 live retry、readiness redesign、retrieval tuning、Memory tuning 或
+  browser verification。未 stage、commit 或 push。
+
+## 2026-09-09 8.4 Bounded Closure and Known Limitation Sync
+
+### Closure
+
+- 停止所有 8.4 live tuning。Deterministic Evidence Readiness implementation、optional Memory
+  fallback、Knowledge/Memory authority separation 與 automated verification 均維持完成。
+- Actual-provider Knowledge-only positive probes `rv-001`、`rv-002`、`rv-010` pass；incomplete/
+  negative safety probes `rv-009`、`rv-027`、`rv-029`、`rv-020` safe。
+- Controlled mixed Knowledge + Memory case 的 indexing、context selection、Knowledge retrieval、
+  contextual Memory retrieval 與 owner scope pass，但 readiness 仍為 `ready=false`，分類為
+  `PERSISTENT_MIXED_KNOWLEDGE_READINESS_FALSE_NEGATIVE`。此 limitation 不表示 Memory hard gate
+  回復；它表示 whole mixed task 與 Knowledge-backed portion 的 provider semantic separation
+  尚未穩定。
+
+### State
+
+- `8.4` 維持 `automated_verified`，不標記 `manual_verification` 或 `done`，不建立 `8.4.1`。
+- 後續 mixed semantic-stability work deferred，不選擇或實作 task decomposition、planner 或
+  another verifier；不阻塞其他 MVP priority。
+- D025、D027、D033 unchanged；既有 bounded artifacts 保留，不重跑、不改寫 historical
+  outcomes。未 stage、commit 或 push。

@@ -14,6 +14,10 @@ from src.agent.models import (
     ReferenceBinding,
     ReferenceBindingDecision,
 )
+from src.agent.evidence_readiness import (
+    EvidenceReadinessContractError,
+    assess_evidence_readiness,
+)
 from src.agent.reference_binding import validate_reference_bindings
 from src.conversation_context import ReferenceResolverMessage
 from src.agent.tools import (
@@ -597,6 +601,10 @@ class BoundedAgentRuntime:
             if decision.needs_knowledge
             else int(decision.needs_memory)
         )
+        state.memory_required_dependency_count = (
+            memory_requirement_count if decision.needs_memory else 0
+        )
+        state.memory_resolved_dependency_count = 0
         required_tools = int(decision.needs_knowledge) + memory_requirement_count
         if required_tools > self.max_tool_calls - state.tool_calls_used:
             return self._failed_result(
@@ -674,9 +682,48 @@ class BoundedAgentRuntime:
                     selector_response,
                 )
             self._record_tool_result(state, result)
+            if tool_name == "search_memory" and self._memory_result_resolved(result):
+                state.memory_resolved_dependency_count += 1
 
         if decision.needs_knowledge and state.knowledge_accepted_evidence_count == 0:
             return self._complete_insufficient_info_result(state)
+
+        if decision.needs_knowledge:
+            memory_dependencies = {
+                "needs_memory": decision.needs_memory,
+                "facet_labels": [
+                    facet.text for facet in decision.contextual_facets
+                ],
+            }
+            try:
+                readiness_decision, _ = await assess_evidence_readiness(
+                    provider_router=self.provider_router,
+                    provider_name=provider_name,
+                    model=model,
+                    task=query,
+                    reference_bindings=state.reference_bindings,
+                    accepted_evidence=state.knowledge_context,
+                    memory_dependencies=memory_dependencies,
+                    metadata={
+                        "workflow_id": request_workflow_id,
+                        "session_id": session_id,
+                        "owner_id": owner_id,
+                    },
+                )
+            except EvidenceReadinessContractError:
+                return self._failed_result(
+                    state,
+                    AgentTerminationReason.PROVIDER_CONTRACT_ERROR,
+                    selector_response,
+                )
+            except Exception:
+                return self._failed_result(
+                    state,
+                    AgentTerminationReason.PROVIDER_ERROR,
+                    selector_response,
+                )
+            if not readiness_decision.ready:
+                return self._complete_insufficient_info_result(state)
 
         final_messages = self._initial_messages(
             query=query,
@@ -748,8 +795,13 @@ class BoundedAgentRuntime:
             output_text = self._build_memory_answer(state)
         return self._complete_result(state, final_response, output_text)
 
-    def _complete_insufficient_info_result(self, state: AgentState) -> AgentRunResult:
-        state.insufficient_info_source = "knowledge_required_but_missing"
+    def _complete_insufficient_info_result(
+        self,
+        state: AgentState,
+        *,
+        source: str = "knowledge_required_but_missing",
+    ) -> AgentRunResult:
+        state.insufficient_info_source = source
         state.termination_reason = AgentTerminationReason.INSUFFICIENT_INFO
         result = AgentRunResult(
             workflow_run_id=state.workflow_run_id,
@@ -850,12 +902,16 @@ class BoundedAgentRuntime:
         )
         if knowledge_required and decision is not None and decision.contextual_facets:
             knowledge_rule += (
-                " Contextual saved memory is optional supplemental context. Missing or partial "
-                "contextual memory does not make accepted Knowledge insufficient. Do not invent "
-                "missing company or project facts; answer using available Knowledge."
+                " Contextual saved Memory is optional supplemental context. Available Memory may "
+                "personalize the answer, but missing or partial Memory does not make accepted "
+                "Knowledge insufficient. Do not invent missing company or project facts; answer "
+                "using the supplied authority context."
             )
         return (
             f"{CONTEXT_ASSEMBLY_SYSTEM_PREFIX}\n{knowledge_rule}\n\n"
+            "Backend has confirmed Evidence Readiness for the supplied Knowledge evidence. "
+            "Do not use INSUFFICIENT_INFO as a normal semantic sufficiency decision; "
+            "synthesize only from the supplied authority context.\n\n"
             f"{format_untrusted_prompt_block(label='REFERENCE_BINDINGS', value=reference_bindings)}\n\n"
             f"{format_untrusted_prompt_block(label='KNOWLEDGE_CONTEXT', value=knowledge_items)}\n\n"
             f"{format_untrusted_prompt_block(label='MEMORY_CONTEXT', value=memory_items)}"
@@ -985,6 +1041,21 @@ class BoundedAgentRuntime:
                 value=conversation_context,
             )
         return [LLMMessage(role="system", content=system), LLMMessage(role="user", content=user)]
+
+    @staticmethod
+    def _memory_result_resolved(result: ToolResult) -> bool:
+        structured = result.structured_content or {}
+        saved_memories = structured.get("saved_memories")
+        retrieval_hit_count = structured.get("retrieval_hit_count")
+        return bool(
+            structured.get("authority") == "saved_memory"
+            and structured.get("used_saved_memory") is True
+            and isinstance(saved_memories, list)
+            and saved_memories
+            and isinstance(retrieval_hit_count, int)
+            and not isinstance(retrieval_hit_count, bool)
+            and retrieval_hit_count > 0
+        )
 
     def _record_tool_result(self, state: AgentState, result: ToolResult) -> None:
         structured = result.structured_content or {}
@@ -1219,6 +1290,13 @@ class BoundedAgentRuntime:
                 "memory_effective_top_k": state.memory_effective_top_k,
                 "memory_retrieval_hit_count": state.memory_retrieval_hit_count,
                 "memory_best_similarity": state.memory_best_similarity,
+                "memory_required_dependency_count": state.memory_required_dependency_count,
+                "memory_resolved_dependency_count": state.memory_resolved_dependency_count,
+                "memory_dependencies_resolved": (
+                    state.memory_required_dependency_count > 0
+                    and state.memory_resolved_dependency_count
+                    == state.memory_required_dependency_count
+                ),
                 "context_requirement": (
                     {
                         "needs_knowledge": state.context_requirement_decision.needs_knowledge,

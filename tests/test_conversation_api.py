@@ -43,6 +43,8 @@ from src.services.memory import MemoryService
 
 
 class CapturingProvider(LLMProvider):
+    supports_structured_output = True
+
     def __init__(self, outputs: Optional[list[str]] = None) -> None:
         self.requests: list[LLMRequest] = []
         self.outputs = outputs or ["Grounded answer"]
@@ -53,7 +55,19 @@ class CapturingProvider(LLMProvider):
 
     async def generate(self, request: LLMRequest) -> LLMResponse:
         self.requests.append(request)
-        output = self.outputs[min(len(self.requests) - 1, len(self.outputs) - 1)]
+        if request.response_format is not None:
+            return LLMResponse(
+                provider="openai",
+                model="gpt-4o-mini",
+                output_text="",
+                structured_output={"ready": True},
+                token_input=10,
+                token_output=2,
+            )
+        final_request_count = sum(
+            request.response_format is None for request in self.requests
+        )
+        output = self.outputs[min(final_request_count - 1, len(self.outputs) - 1)]
         return LLMResponse(
             provider="openai",
             model="gpt-4o-mini",
@@ -121,6 +135,13 @@ class HistorySensitiveStructuredProvider(LLMProvider):
                     model=request.model,
                     output_text="",
                     structured_output={"reference_bindings": []},
+                )
+            if request.response_format["json_schema"]["name"] == "evidence_readiness_decision":
+                return LLMResponse(
+                    provider=self.name,
+                    model=request.model,
+                    output_text="",
+                    structured_output={"ready": True},
                 )
             return LLMResponse(
                 provider=self.name,
@@ -721,9 +742,9 @@ def test_conversation_message_persists_sequence_and_same_session_context() -> No
             4,
         ]
         assert payload["title"] == "What agent design patterns support sequential wo"
-        assert "First grounded answer" in provider.requests[1].messages[-1].content
-        assert "Which sequential workflow pattern should I choose?" in provider.requests[1].messages[-1].content
-        assert "FINAL_RESPONSE_LANGUAGE: English" in provider.requests[0].messages[0].content
+        assert "First grounded answer" in provider.requests[3].messages[-1].content
+        assert "Which sequential workflow pattern should I choose?" in provider.requests[3].messages[-1].content
+        assert "FINAL_RESPONSE_LANGUAGE: English" in provider.requests[1].messages[0].content
         assert payload["citations"]
     finally:
         app.dependency_overrides.clear()
@@ -811,9 +832,9 @@ def test_structured_substantive_api_repeats_with_isolated_final_authority() -> N
         ]
         assert all(response.json()["citations"] for response in responses)
         assert all(response.json()["used_saved_memory"] for response in responses)
-        assert len(provider.requests) == 9
-        selector_requests = provider.requests[1::3]
-        final_requests = provider.requests[2::3]
+        assert len(provider.requests) == 12
+        selector_requests = provider.requests[1::4]
+        final_requests = provider.requests[3::4]
         assert all(
             "[assistant]" not in request.messages[1].content
             for request in selector_requests
@@ -959,9 +980,9 @@ def test_same_session_recall_remembers_previous_assistant_answer_without_citatio
         assert "multi-agent sequential pattern" in payload["answer"]
         assert payload["insufficient_info"] is False
         assert payload["citations"] == []
-        assert len(provider.requests) == 2
+        assert len(provider.requests) == 3
         assert "The suitable pattern is the multi-agent sequential pattern." in (
-            provider.requests[1].messages[-1].content
+            provider.requests[2].messages[-1].content
         )
     finally:
         app.dependency_overrides.clear()
@@ -998,9 +1019,9 @@ def test_same_session_recall_explains_previous_recommendation_without_citations(
         assert "each approval step must run in order" in payload["answer"]
         assert payload["insufficient_info"] is False
         assert payload["citations"] == []
-        assert len(provider.requests) == 2
-        assert provider.requests[1].metadata["prompt_id"] == "conversation_recall"
-        assert "not enterprise evidence" in provider.requests[1].messages[0].content
+        assert len(provider.requests) == 3
+        assert provider.requests[2].metadata["prompt_id"] == "conversation_recall"
+        assert "not enterprise evidence" in provider.requests[2].messages[0].content
     finally:
         app.dependency_overrides.clear()
 

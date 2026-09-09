@@ -127,11 +127,12 @@ structured output capability 時，既有 bounded tool loop 仍可作相容 fall
 或 keyword 代替 selector。
 
 Current pre-final guard 以 accepted Knowledge evidence 作為 required Knowledge 的 deterministic
-gate。Contextual Memory 是 optional supplemental context；部分或全部 facet 沒有 relevant hit
-時，仍可用 accepted Knowledge 產生 Knowledge-only answer，不得因此回傳 request failure。若
-required Knowledge 缺失，Memory hit 也不能 rescue，結果仍是 `insufficient_info` 與 zero
-citations。Whole-answer semantic sufficiency 目前仍是 `HYBRID`，尚未由單一 backend verifier
-完整接管。
+gate。Mixed task 的 contextual Memory dependency 由 backend 逐 facet 計算；
+`memory_dependencies_resolved` 只作 observability signal，不參與 Knowledge readiness 或 final
+synthesis eligibility。部分或全部 facet 未 resolved 時，只要 Knowledge readiness 通過，仍可
+使用 accepted Knowledge 進行 Knowledge-only 或 partial-personalized synthesis；若 required
+Knowledge 缺失，Memory hit 也不能 rescue。Evidence Readiness 只判斷 Knowledge-backed claims，
+不判斷 Memory completeness。
 
 Regression 必須同時驗證 decision flags、實際 tool execution、owner scope、tool count 與
 final context authority。測試只記錄 bounded decision labels、tool names、availability 與
@@ -178,14 +179,15 @@ Knowledge count 或 answer-sufficiency signal，也不能 rescue missing Knowled
 不引入 `conversation_dependency`、`reference_status`、`resolved_task` 或 free-form query rewrite；
 self-contained request 保留 exact current user message，使用空的 `reference_bindings`。
 
-### Evidence Readiness：8.4 frozen target contract
+### Evidence Readiness：8.4 current implementation
 
 Current `knowledge_relevance_floor=0.30` 只表示 chunk relevance acceptance，不表示 whole-answer
 sufficiency。Current runtime 在 Knowledge required 且 accepted Knowledge 為 0 時，會由 backend
-deterministic 回傳 `insufficient_info`；accepted Knowledge 大於 0 時，仍可能交給 final provider
-自行判斷 sufficiency。Current semantic sufficiency authority 是 `HYBRID`。
+deterministic 回傳 `insufficient_info`；accepted Knowledge 大於 0 時，先經 Evidence Readiness
+判斷，再決定是否進入 final synthesis。Current semantic sufficiency authority 是 backend gate
+加上 bounded readiness provider。
 
-8.4 凍結的 target topology 是：
+Current 8.4 topology 是：
 
 ```text
 Accepted Knowledge Evidence
@@ -216,7 +218,9 @@ Knowledge evidence 與 bounded source metadata。它不接 incidental raw transc
 assistant answer、rejected Knowledge chunks、raw candidate pool 或 LongTermMemory content 作為
 Knowledge evidence。`contextual_facets` 仍只表示 separately-authorized Memory dependencies，
 不表示 Knowledge answer requirements。若 mixed task 需要辨識 Memory-side dependency，provider 最多
-取得 bounded `needs_memory` indication 與既有 facet labels，不取得 Memory content。
+取得 bounded `needs_memory` 與 facet labels；這些欄位只表示 separately-authorized supplemental
+Memory dependencies，不表示 Knowledge requirements 或 mandatory answer completeness。它不取得
+Memory content；resolution signal 只保留在 backend observability，不進入 readiness input。
 
 Backend 擁有 input construction、schema validation、Knowledge/Memory authority separation、gate、
 citations、insufficient-info behavior、final topology、provider failure handling 與 termination。
@@ -237,15 +241,28 @@ invalid schema 都是 runtime/provider failure，不是 semantic `insufficient_i
 `PROVIDER_ERROR` / `LLM_PROVIDER_ERROR` 或 `PROVIDER_CONTRACT_ERROR` / `LLM_OUTPUT_INVALID`
 mapping，不新增 `EVIDENCE_READINESS_FAILED`。
 
-Future implementation 應讓 final synthesis 只負責 grounded answer wording；ready 後若 final
-provider 仍回傳 legacy `INSUFFICIENT_INFO`，應視為 provider contract violation，而不是重新改判
-`insufficient_info`。本輪不修改 prompt；`qa_answer_v4` 留給 implementation slice。
+Final synthesis 只負責 grounded answer wording；ready 後若 final provider 仍回傳 legacy
+`INSUFFICIENT_INFO`，會視為 provider contract violation，而不是重新改判
+`insufficient_info`。ready path 使用 `qa_answer_v4`，`qa_answer_v3` 不變。
 
 8.4 implementation 的 regression contract 至少包括：zero accepted evidence、sufficient single
 evidence、complete multi-evidence、partial multi-evidence、related-but-incomplete evidence、
 rv-009、rv-027、rv-029、Memory 不得 rescue Knowledge、mixed Knowledge + Memory、malformed output、
 provider timeout/error、ready citations、not-ready zero citations，以及 final synthesis 不再擁有
 semantic sufficiency authority。
+
+### 8.4 actual-provider limitation
+
+Actual-provider verification 已通過 Knowledge-only positive probes 與 incomplete/negative safety
+controls。Controlled mixed Knowledge + Memory recommendation case 則仍出現
+`PERSISTENT_MIXED_KNOWLEDGE_READINESS_FALSE_NEGATIVE`：indexing、context selection、Knowledge
+retrieval、contextual Memory retrieval 與 owner scope 都符合 contract，但 readiness 仍回傳
+`ready=false`，因此沒有進入 final synthesis。這是 mixed task 與其 Knowledge-backed portion 的
+provider semantic separation 尚未穩定的 evidence，不表示 optional Memory 又成為 hard gate。
+
+這項 limitation 不改變 current 8.4 implementation，也不在本 slice 內引入 task decomposition、
+planner 或另一個 verifier。後續 mixed semantic-stability work deferred，且不阻塞其他 MVP
+priority。
 
 SSE 只公開實際執行的 tool phase 與一次 final `generating` status。Provider 在 Knowledge
 result 後的 internal continuation decision 不另外顯示 `generating`，避免 mixed flow 出現

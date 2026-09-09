@@ -202,17 +202,17 @@ scenarios:
         memory_type: project_context
         content: Our organization has approximately 1000 people.
     user_input: Based on the indexed PDF, what practices should our company prioritize?
-    expected_behavior: A partial contextual Memory miss does not block an answer grounded in Knowledge and available saved context.
+    expected_behavior: An unresolved contextual Memory facet degrades to a Knowledge-backed final synthesis.
     forbidden_behavior:
-      - no insufficient_info because one contextual facet missed
       - saved memory does not become a Knowledge citation
     verification:
       - structured decision requires both authorities
       - two bounded contextual Memory searches execute
       - one contextual Memory search may have no hit
-      - a PDF citation is present
-      - used_saved_memory is true
-    expected_citation_kind: pdf
+      - readiness does not receive memory resolution state
+      - final synthesis still executes
+      - saved memory may be used when one facet resolves
+    expected_termination: completed
     expected_memory_use: true
     max_tool_calls: 3
 
@@ -225,16 +225,16 @@ scenarios:
         memory_type: project_context
         content: Our organization has approximately 1000 people.
     user_input: Considering our deployment constraints and target customer profile, which PDF practices should we prioritize?
-    expected_behavior: Missing contextual Memory leaves a normal Knowledge-only grounded answer.
+    expected_behavior: Missing contextual Memory falls back to Knowledge-only final synthesis.
     forbidden_behavior:
-      - no insufficient_info solely because contextual Memory missed
       - no saved-memory disclosure
     verification:
       - structured decision requires both authorities
       - two bounded contextual Memory searches execute with no hits
-      - a PDF citation is present
+      - readiness does not receive memory resolution state
+      - final synthesis still executes from Knowledge
       - used_saved_memory is false
-    expected_citation_kind: pdf
+    expected_termination: completed
     expected_memory_use: false
     max_tool_calls: 3
 

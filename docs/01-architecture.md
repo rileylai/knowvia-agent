@@ -177,22 +177,24 @@ reference-resolution boundary 可見；它不會成為 Knowledge evidence、Memo
 5.0.3.3 已以 backend-validatable bindings 取代 structured selector 的
 `conversation_dependency` representation。Current selector 仍保留 `needs_knowledge`、
 `needs_memory`、`contextual_facets` 與 `memory_query`；本輪不做 Selector Authority Slimming。
-`ContextualFacet` 上限 2、Knowledge/Memory 分離、partial/all Memory miss degradation 與 max 3
-tool calls 保持不變。
+`ContextualFacet` 上限 2、Knowledge/Memory 分離、per-facet Memory resolution signal 與 max 3
+tool calls 保持不變；partial 或 zero contextual Memory hit 時，若 Knowledge readiness 通過，
+仍可退化為 Knowledge-only 或 partial-personalized synthesis。Malformed decision、provider failure
+或超過 tool budget 仍依既有規則 fail closed。
 
 5.0.3.3 的 architecture implementation 與 automated verification 已完成；unresolved
 actual-provider stability probe 與 browser acceptance deferred。這項 stability work 不列為
 目前主線，`7.0 Evaluation and Demo Hardening` 是下一個唯一主線 priority。
 
-## Evidence Readiness target（8.4 planned）
+## Evidence Readiness（8.4 current implementation）
 
-8.4 是 documentation-only contract freeze。以下是 target architecture，不代表 current
-runtime 已完成 implementation。Current production retrieval freeze 維持不變：
+8.4 的 contract 已完成 implementation，structured substantive Agent path 與 `/api/qa`
+共用同一個 readiness boundary。Current production retrieval freeze 維持不變：
 `PyPDFParserClient / pypdf`、`chunk_max_chars=1200`、`overlap=0`、
 `text-embedding-3-small / 1536`、pgvector cosine、`knowledge_relevance_floor=0.30` 與
 production `top_k=5`。
 
-Structured substantive target flow：
+Structured substantive current flow：
 
 ```text
 Current User Task
@@ -225,11 +227,13 @@ provider failure，並決定是否進入 final synthesis。`ready=false` 時不�
 provider/runtime failure 不轉成 `insufficient_info`。
 
 Memory 只能提供 authorized supplemental context。LongTermMemory 不會成為 Knowledge evidence，
-也不能 rescue missing Knowledge。`contextual_facets` 仍只表示 Memory retrieval dependencies，
-不改寫成 Knowledge answer requirements。
+也不能 rescue missing Knowledge。`contextual_facets` 仍只表示 Memory retrieval dependencies；
+backend 以每個 facet 的實際結果計算 bounded `memory_dependencies_resolved` signal，僅供
+observability 使用，不參與 Knowledge readiness 或 final-synthesis eligibility，也不改寫成
+Knowledge answer requirements。
 
 Dedicated explicit save、conversation recall 與 conversation transform paths 不使用這個
-Knowledge readiness gate。此 section 凍結 target contract，不修改 current implementation。
+Knowledge readiness gate。前端 user-visible event contract 不新增 readiness event。
 
 ## MCP boundary
 

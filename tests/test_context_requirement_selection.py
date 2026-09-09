@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from dataclasses import replace
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -16,7 +17,12 @@ from src.agent import (
     BoundedAgentRuntime,
     ContextualFacet,
     ContextRequirementDecision,
+    EvidenceReadinessDecision,
     build_agent_tool_registry,
+)
+from src.agent.evidence_readiness import (
+    EvidenceReadinessContractError,
+    build_evidence_readiness_messages,
 )
 from src.providers import LLMProvider, LLMRequest, LLMResponse, ProviderRouter
 from src.rag import RetrievalResult, RetrievedChunk
@@ -35,9 +41,11 @@ class StructuredDecisionProvider(LLMProvider):
         self,
         decisions: List[Dict[str, Any]],
         final_outputs: Optional[List[str]] = None,
+        readiness_outputs: Optional[List[Dict[str, Any]]] = None,
     ) -> None:
         self.decisions = list(decisions)
         self.final_outputs = list(final_outputs or ["final answer"])
+        self.readiness_outputs = list(readiness_outputs or [{"ready": True}])
         self.requests: List[LLMRequest] = []
 
     @property
@@ -54,6 +62,18 @@ class StructuredDecisionProvider(LLMProvider):
                     model=request.model,
                     output_text="",
                     structured_output={"reference_bindings": []},
+                )
+            if schema_name == "evidence_readiness_decision":
+                readiness = dict(
+                    self.readiness_outputs.pop(0)
+                    if self.readiness_outputs
+                    else {"ready": True}
+                )
+                return LLMResponse(
+                    provider=self.name,
+                    model=request.model,
+                    output_text="",
+                    structured_output=readiness,
                 )
             if not self.decisions:
                 raise RuntimeError("structured decision exhausted")
@@ -93,6 +113,13 @@ class HistorySensitiveStructuredProvider(LLMProvider):
                     output_text="",
                     structured_output={"reference_bindings": []},
                 )
+            if schema_name == "evidence_readiness_decision":
+                return LLMResponse(
+                    provider=self.name,
+                    model=request.model,
+                    output_text="",
+                    structured_output={"ready": True},
+                )
             return LLMResponse(
                 provider=self.name,
                 model=request.model,
@@ -118,6 +145,17 @@ class HistorySensitiveStructuredProvider(LLMProvider):
             model=request.model,
             output_text=output,
         )
+
+
+class ReadinessFailureProvider(StructuredDecisionProvider):
+    async def generate(self, request: LLMRequest) -> LLMResponse:
+        if (
+            request.response_format is not None
+            and request.response_format["json_schema"]["name"]
+            == "evidence_readiness_decision"
+        ):
+            raise RuntimeError("readiness provider failed")
+        return await super().generate(request)
 
 
 class ReferenceBindingProvider(LLMProvider):
@@ -148,6 +186,8 @@ class ReferenceBindingProvider(LLMProvider):
             output = (
                 {"reference_bindings": self.reference_bindings}
                 if schema_name == "reference_binding_decision"
+                else {"ready": True}
+                if schema_name == "evidence_readiness_decision"
                 else dict(self.decision)
             )
             self.structured_outputs.append(output)
@@ -304,6 +344,7 @@ def _run(
     runtime: BoundedAgentRuntime,
     query: str,
     *,
+    owner_id: str = "owner-a",
     provider_name: str = "structured-scripted",
     conversation_context: Optional[str] = None,
     reference_resolver_history: Optional[List[Any]] = None,
@@ -315,7 +356,7 @@ def _run(
         runtime.run(
             query=query,
             session_id=7,
-            owner_id="owner-a",
+            owner_id=owner_id,
             provider_name=provider_name,
             model="fixture-1",
             request_workflow_id="wf-context-selection",
@@ -358,6 +399,252 @@ def test_context_requirement_decision_validates_bounded_contract() -> None:
         "memory_query": None,
     }
     assert "steps" not in ContextRequirementDecision.model_json_schema()["properties"]
+
+
+def test_evidence_readiness_decision_is_strict_and_minimal() -> None:
+    decision = EvidenceReadinessDecision.model_validate({"ready": True})
+
+    assert decision.model_dump() == {"ready": True}
+    schema = EvidenceReadinessDecision.response_format()["json_schema"]
+    assert schema["name"] == "evidence_readiness_decision"
+    assert schema["strict"] is True
+    assert schema["schema"]["required"] == ["ready"]
+    assert set(schema["schema"]["properties"]) == {"ready"}
+
+    with pytest.raises(ValidationError):
+        EvidenceReadinessDecision.model_validate({"ready": "true"})
+    with pytest.raises(ValidationError):
+        EvidenceReadinessDecision.model_validate({"ready": True, "reasoning": "enough"})
+
+
+def test_readiness_input_keeps_memory_as_optional_dependency_and_not_knowledge_evidence() -> None:
+    messages = build_evidence_readiness_messages(
+        task="Which indexed practice fits our company?",
+        reference_bindings=[],
+        accepted_evidence=[
+            {
+                "id": "K1",
+                "text": "The indexed practice requires a staged rollout.",
+                "source_kind": "pdf",
+                "source_display_name": "controls.pdf",
+                "locator": "page 2",
+            }
+        ],
+        memory_dependencies={
+            "needs_memory": True,
+            "facet_labels": ["company size"],
+        },
+    )
+
+    readiness_input = "\n".join(message.content for message in messages)
+    readiness_system = messages[0].content
+    assert "Which indexed practice fits our company?" in readiness_input
+    assert "ACCEPTED_KNOWLEDGE_EVIDENCE" in readiness_input
+    assert "MEMORY_SIDE_DEPENDENCIES" in readiness_input
+    assert "company size" in readiness_input
+    assert "memory_dependencies_resolved" not in readiness_input
+    assert "previous assistant answer" not in readiness_input
+    assert "secret memory content" not in readiness_input
+    assert "at least one materially complete, correct, grounded answer" in readiness_system
+    assert "does not require exhaustive source coverage" in readiness_system
+    assert "every query phrase" in readiness_system
+    assert "must not be treated as missing Knowledge requirements" in readiness_system
+    assert "Memory cannot satisfy or replace a missing Knowledge-backed claim" in readiness_system
+    assert "memory_dependencies_resolved" not in readiness_system
+    assert "optional supplemental context" in readiness_system
+    for case_id in ("rv-001", "rv-009", "rv-027", "rv-029"):
+        assert case_id not in readiness_system
+
+    with pytest.raises(EvidenceReadinessContractError):
+        build_evidence_readiness_messages(
+            task="Which indexed practice fits our company?",
+            reference_bindings=[],
+            accepted_evidence=[{"text": "The indexed practice requires a staged rollout."}],
+            memory_dependencies={
+                "needs_memory": True,
+                "facet_labels": ["company size"],
+                "content": "secret memory content",
+            },
+        )
+
+def test_knowledge_only_readiness_input_has_no_memory_resolution_requirement() -> None:
+    messages = build_evidence_readiness_messages(
+        task="What practice does the indexed PDF describe?",
+        reference_bindings=[],
+        accepted_evidence=[{"text": "The indexed practice uses staged rollout."}],
+        memory_dependencies={"needs_memory": False, "facet_labels": []},
+    )
+
+    readiness_user = messages[1].content
+    assert '"needs_memory": false' in readiness_user
+    assert "memory_dependencies_resolved" not in readiness_user
+
+
+def test_sufficient_single_evidence_runs_readiness_then_final_synthesis() -> None:
+    provider = StructuredDecisionProvider(
+        [
+            {
+                "needs_knowledge": True,
+                "needs_memory": False,
+                "memory_query": None,
+            }
+        ],
+        ["The evidence supports this answer."],
+        [{"ready": True}],
+    )
+    runtime, _, _ = _runtime(provider)
+
+    result = _run(runtime, "What practice does the indexed PDF describe?")
+
+    assert result.status == "succeeded"
+    assert result.insufficient_info is False
+    assert result.citations
+    assert [request.response_format["json_schema"]["name"] for request in provider.requests[:3]] == [
+        "reference_binding_decision",
+        "context_requirement_decision",
+        "evidence_readiness_decision",
+    ]
+    assert provider.requests[3].response_format is None
+
+
+def test_partial_multi_evidence_is_not_ready_and_skips_final_synthesis() -> None:
+    provider = StructuredDecisionProvider(
+        [
+            {
+                "needs_knowledge": True,
+                "needs_memory": False,
+                "memory_query": None,
+            }
+        ],
+        [],
+        [{"ready": False}],
+    )
+    runtime, _, _ = _runtime(provider, chunks=[_chunk(), _chunk()])
+
+    result = _run(runtime, "Which two controls are required by the indexed material?")
+
+    assert result.status == "succeeded"
+    assert result.insufficient_info is True
+    assert result.citations == []
+    assert len(provider.requests) == 3
+    assert all(request.response_format is not None for request in provider.requests)
+
+
+def test_complete_multi_evidence_runs_final_synthesis() -> None:
+    provider = StructuredDecisionProvider(
+        [
+            {
+                "needs_knowledge": True,
+                "needs_memory": False,
+                "memory_query": None,
+            }
+        ],
+        ["The complete evidence supports this answer."],
+        [{"ready": True}],
+    )
+    runtime, _, _ = _runtime(provider, chunks=[_chunk(), _chunk()])
+
+    result = _run(runtime, "Which controls are described across the indexed sources?")
+
+    assert result.insufficient_info is False
+    assert result.citations
+    assert provider.requests[-1].response_format is None
+
+
+def test_malformed_readiness_output_fails_closed_without_final_synthesis() -> None:
+    provider = StructuredDecisionProvider(
+        [
+            {
+                "needs_knowledge": True,
+                "needs_memory": False,
+                "memory_query": None,
+            }
+        ],
+        ["The final provider must not be called."],
+        [{"ready": "true"}],
+    )
+    runtime, _, _ = _runtime(provider)
+
+    result = _run(runtime, "What does the indexed material require?")
+
+    assert result.status == "failed"
+    assert result.termination_reason == AgentTerminationReason.PROVIDER_CONTRACT_ERROR
+    assert len(provider.requests) == 3
+
+
+def test_readiness_provider_failure_uses_provider_error_without_insufficient_info() -> None:
+    provider = ReadinessFailureProvider(
+        [
+            {
+                "needs_knowledge": True,
+                "needs_memory": False,
+                "memory_query": None,
+            }
+        ],
+        ["The final provider must not be called."],
+    )
+    runtime, _, _ = _runtime(provider)
+
+    result = _run(runtime, "What does the indexed material require?")
+
+    assert result.status == "failed"
+    assert result.insufficient_info is False
+    assert result.termination_reason == AgentTerminationReason.PROVIDER_ERROR
+    assert len(provider.requests) == 2
+
+
+def test_memory_cannot_rescue_missing_knowledge_readiness() -> None:
+    provider = StructuredDecisionProvider(
+        [
+            {
+                "needs_knowledge": True,
+                "needs_memory": True,
+                "contextual_facets": [{"id": "c1", "text": "company size"}],
+            }
+        ],
+        ["The final provider must not be called."],
+        [{"ready": False}],
+    )
+    runtime, _, memory_service = _runtime(
+        provider,
+        chunks=[],
+        candidate_count=1,
+        accepted_evidence_count=0,
+        memory_search_results=[[_memory("Our organization has 1000 people.")]],
+    )
+
+    result = _run(runtime, "Which indexed practice fits our company?")
+
+    assert result.insufficient_info is True
+    assert result.citations == []
+    assert provider.requests[-1].response_format is not None
+    assert len(memory_service.search_calls) == 1
+
+
+def test_zero_accepted_evidence_bypasses_readiness_provider() -> None:
+    provider = StructuredDecisionProvider(
+        [
+            {
+                "needs_knowledge": True,
+                "needs_memory": False,
+                "memory_query": None,
+            }
+        ],
+        [],
+        [{"ready": False}],
+    )
+    runtime, _, _ = _runtime(
+        provider,
+        chunks=[],
+        candidate_count=2,
+        accepted_evidence_count=0,
+    )
+
+    result = _run(runtime, "What does the indexed material require?")
+
+    assert result.insufficient_info is True
+    assert result.citations == []
+    assert len(provider.requests) == 2
 
 
 def test_context_requirement_decision_rejects_malformed_memory_requirement() -> None:
@@ -487,12 +774,19 @@ def test_mixed_contextual_facets_execute_each_memory_query_within_three_calls() 
     ]
     assert all(call["retrieval_mode"] == "contextual" for call in memory_service.search_calls)
     assert result.used_saved_memory is True
+    readiness_request = next(
+        request
+        for request in provider.requests
+        if request.response_format
+        and request.response_format["json_schema"]["name"] == "evidence_readiness_decision"
+    )
+    assert "memory_dependencies_resolved" not in readiness_request.messages[1].content
     final_context = "\n".join(message.content for message in provider.requests[-1].messages)
     assert final_context.count("approximately 1000 people") == 1
     assert final_context.count("We prefer SDD/TDD.") == 1
 
 
-def test_mixed_contextual_facets_allow_partial_memory_hit() -> None:
+def test_mixed_contextual_facets_allow_knowledge_only_fallback_when_one_memory_dependency_is_unresolved() -> None:
     provider = StructuredDecisionProvider(
         [
             {
@@ -518,9 +812,52 @@ def test_mixed_contextual_facets_allow_partial_memory_hit() -> None:
     assert result.citations
     assert result.used_saved_memory is True
     assert len(memory_service.search_calls) == 2
+    assert len(provider.requests) == 4
+    assert "memory_dependencies_resolved" not in provider.requests[2].messages[1].content
 
 
-def test_mixed_contextual_facets_allow_all_memory_misses_as_knowledge_only() -> None:
+def test_mixed_contextual_facets_resolve_duplicate_memory_record_per_facet() -> None:
+    provider = StructuredDecisionProvider(
+        [
+            {
+                "needs_knowledge": True,
+                "needs_memory": True,
+                "contextual_facets": [
+                    {"id": "c1", "text": "company size"},
+                    {"id": "c2", "text": "development preferences"},
+                ],
+            }
+        ],
+        ["The grounded answer uses the saved company context."],
+    )
+    runtime, _, memory_service = _runtime(
+        provider,
+        memories=[
+            _memory(
+                "Our organization has approximately 1000 people and prefers SDD/TDD."
+            )
+        ],
+    )
+
+    result = _run(
+        runtime,
+        "Considering our company size and development preferences, which indexed PDF practices should we prioritize?",
+    )
+
+    assert result.insufficient_info is False
+    assert result.used_saved_memory is True
+    assert len(memory_service.search_calls) == 2
+    readiness_request = next(
+        request
+        for request in provider.requests
+        if request.response_format
+        and request.response_format["json_schema"]["name"] == "evidence_readiness_decision"
+    )
+    assert "memory_dependencies_resolved" not in readiness_request.messages[1].content
+    assert provider.requests[-1].response_format is None
+
+
+def test_mixed_contextual_facets_allow_knowledge_only_fallback_when_all_memory_dependencies_are_unresolved() -> None:
     provider = StructuredDecisionProvider(
         [
             {
@@ -546,9 +883,8 @@ def test_mixed_contextual_facets_allow_all_memory_misses_as_knowledge_only() -> 
     assert result.citations
     assert result.used_saved_memory is False
     assert len(memory_service.search_calls) == 2
-    final_context = provider.requests[-1].messages[-1].content
-    assert "optional supplemental context" in final_context
-    assert "Missing or partial contextual memory" in final_context
+    assert len(provider.requests) == 4
+    assert "memory_dependencies_resolved" not in provider.requests[2].messages[1].content
 
 def test_context_selector_marks_previous_answer_as_non_authority() -> None:
     provider = StructuredDecisionProvider(
@@ -636,10 +972,13 @@ def test_repeated_substantive_query_reacquires_both_authorities() -> None:
     assert [request.response_format is not None for request in provider.requests] == [
         True,
         True,
+        True,
         False,
         True,
         True,
+        True,
         False,
+        True,
         True,
         True,
         False,
@@ -705,8 +1044,8 @@ def test_repeated_substantive_final_synthesis_excludes_previous_assistant() -> N
     assert all(result.tool_calls_used == 3 for result in results)
     assert len(retriever.calls) == 3
     assert len(memory_service.search_calls) == 6
-    selector_requests = provider.requests[1::3]
-    final_requests = provider.requests[2::3]
+    selector_requests = provider.requests[1::4]
+    final_requests = provider.requests[3::4]
     assert all("[assistant]" not in request.messages[1].content for request in selector_requests)
     assert all("[assistant]" not in request.messages[1].content for request in final_requests)
     assert all(query in request.messages[1].content for request in final_requests)
@@ -746,11 +1085,11 @@ def test_structured_knowledge_only_executes_knowledge_once_without_memory() -> N
     assert memory_service.search_calls == []
     assert result.citations and result.citations[0].source_kind == "pdf"
     assert result.used_saved_memory is False
-    assert len(provider.requests) == 3
+    assert len(provider.requests) == 4
     assert provider.requests[0].response_format["json_schema"]["name"] == "reference_binding_decision"
     assert provider.requests[1].response_format["json_schema"]["name"] == "context_requirement_decision"
-    assert provider.requests[2].tools is None
-    assert provider.requests[2].response_format is None
+    assert provider.requests[3].tools is None
+    assert provider.requests[3].response_format is None
 
 
 def test_structured_memory_only_executes_memory_once_without_knowledge() -> None:
@@ -822,7 +1161,36 @@ def test_structured_mixed_execution_is_deterministic_and_uses_both_contexts() ->
     assert "SDD/TDD" in final_context
 
 
-def test_knowledge_hit_memory_no_hit_falls_back_to_knowledge() -> None:
+def test_mixed_local_scope_keeps_knowledge_and_memory_boundaries_separate() -> None:
+    decision = {
+        "needs_knowledge": True,
+        "needs_memory": True,
+        "contextual_facets": [{"id": "c1", "text": "company size"}],
+    }
+    provider = StructuredDecisionProvider([decision], ["answer"])
+    local_memory = replace(
+        _memory("Our organization has approximately 1000 people."),
+        owner_id="local",
+    )
+    runtime, retriever, memory_service = _runtime(
+        provider,
+        memories=[local_memory],
+    )
+
+    result = _run(
+        runtime,
+        "Based on the indexed PDF, what should an organization our size prioritize?",
+        owner_id="local",
+    )
+
+    assert result.status == "succeeded"
+    assert retriever.calls[0]["owner_scope"] == "local"
+    assert memory_service.search_calls[0]["owner_id"] == "local"
+    assert result.citations
+    assert result.used_saved_memory is True
+
+
+def test_knowledge_hit_memory_no_hit_allows_knowledge_only_final_synthesis() -> None:
     provider = StructuredDecisionProvider(
         [
             {
@@ -845,6 +1213,7 @@ def test_knowledge_hit_memory_no_hit_falls_back_to_knowledge() -> None:
     assert result.insufficient_info is False
     assert result.citations
     assert result.used_saved_memory is False
+    assert len(provider.requests) == 4
 
 
 def test_knowledge_miss_memory_hit_cannot_substitute_enterprise_evidence() -> None:
@@ -994,6 +1363,9 @@ def test_workflow_metadata_projects_bounded_context_execution_without_content() 
     assert metadata["retrieved_chunk_count"] == 1
     assert metadata["memory_retrieval_hit_count"] == 1
     assert metadata["memory_retrieval_mode"] == "contextual"
+    assert metadata["memory_required_dependency_count"] == 1
+    assert metadata["memory_resolved_dependency_count"] == 1
+    assert metadata["memory_dependencies_resolved"] is True
     assert metadata["used_saved_memory"] is True
     assert metadata["provider_termination_type"] == "final_text"
     assert metadata["termination_reason"] == "completed"
@@ -1267,11 +1639,11 @@ def test_repeated_self_contained_request_keeps_selector_and_final_free_of_raw_hi
         assert result.status == "succeeded"
         assert result.insufficient_info is False
 
-    resolver_requests = provider.requests[0::3]
-    selector_requests = provider.requests[1::3]
-    final_requests = provider.requests[2::3]
+    resolver_requests = provider.requests[0::4]
+    selector_requests = provider.requests[1::4]
+    final_requests = provider.requests[3::4]
     assert len(resolver_requests) == len(selector_requests) == len(final_requests) == 4
-    assert provider.structured_outputs[0::2] == [
+    assert provider.structured_outputs[0::3] == [
         {"reference_bindings": []}
     ] * 4
     assert all(query in request.messages[1].content for request in selector_requests)
@@ -1330,7 +1702,7 @@ def test_referential_request_uses_only_backend_validated_binding_for_context_and
         "What about the second one?\nReference: Tool Boundaries"
     )
     selector_request = provider.requests[1]
-    final_request = provider.requests[2]
+    final_request = provider.requests[3]
     assert "What about the second one?" in selector_request.messages[1].content
     assert "Tool Boundaries" in selector_request.messages[1].content
     assert "Deterministic Control Flow" not in selector_request.messages[1].content

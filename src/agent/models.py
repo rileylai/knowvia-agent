@@ -19,6 +19,7 @@ from pydantic import (
 
 CONTEXT_REQUIREMENT_DECISION_SCHEMA_NAME = "context_requirement_decision"
 REFERENCE_BINDING_DECISION_SCHEMA_NAME = "reference_binding_decision"
+EVIDENCE_READINESS_DECISION_SCHEMA_NAME = "evidence_readiness_decision"
 MAX_CONTEXT_MEMORY_QUERY_CHARS = 500
 MAX_CONTEXTUAL_FACETS = 2
 MAX_CONTEXTUAL_FACET_ID_CHARS = 32
@@ -145,6 +146,27 @@ class ContextRequirementDecision(BaseModel):
         }
 
 
+class EvidenceReadinessDecision(BaseModel):
+    """The minimal pre-final decision for accepted Knowledge evidence."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    ready: StrictBool
+
+    @classmethod
+    def response_format(cls) -> Dict[str, Any]:
+        schema = cls.model_json_schema()
+        schema["required"] = ["ready"]
+        return {
+            "type": "json_schema",
+            "json_schema": {
+                "name": EVIDENCE_READINESS_DECISION_SCHEMA_NAME,
+                "strict": True,
+                "schema": schema,
+            },
+        }
+
+
 class ReferenceBinding(BaseModel):
     """A bounded textual reference proposed by the resolver."""
 
@@ -239,6 +261,8 @@ class AgentState:
     memory_effective_top_k: Optional[int] = None
     memory_retrieval_hit_count: Optional[int] = None
     memory_best_similarity: Optional[float] = None
+    memory_required_dependency_count: int = 0
+    memory_resolved_dependency_count: int = 0
     context_requirement_decision: Optional[ContextRequirementDecision] = None
     insufficient_info_source: Optional[str] = None
     knowledge_candidate_count: int = 0

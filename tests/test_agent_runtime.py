@@ -75,6 +75,21 @@ class FakeRetriever:
         )
 
 
+class OwnerScopedFakeRetriever(FakeRetriever):
+    def __init__(self, chunks: List[RetrievedChunk], *, allowed_scope: str) -> None:
+        super().__init__(chunks)
+        self.allowed_scope = allowed_scope
+
+    def retrieve_with_metadata(self, **kwargs: Any) -> RetrievalResult:
+        self.calls.append(kwargs)
+        chunks = self.chunks if kwargs["owner_scope"] == self.allowed_scope else []
+        return RetrievalResult(
+            chunks=chunks,
+            retrieval_mode="lexical_fallback",
+            retrieval_fallback_reason=None,
+        )
+
+
 class FakeMemoryService:
     def __init__(self, memories: Optional[List[LongTermMemorySnapshot]] = None) -> None:
         self.memories = memories or []
@@ -209,6 +224,57 @@ def test_invalid_tool_arguments_fail_before_adapter_execution() -> None:
 
     assert result.is_error is True
     assert result.error_code == "invalid_arguments"
+
+
+def test_knowledge_search_keeps_trusted_owner_scope_and_ignores_tool_scope_spoof() -> None:
+    router, _ = _provider_router([])
+    retriever = OwnerScopedFakeRetriever([_chunk()], allowed_scope="local")
+    registry = build_agent_tool_registry(
+        retriever=retriever,
+        embedding_client=None,
+        memory_service=FakeMemoryService(),
+    )
+    runtime = BoundedAgentRuntime(provider_router=router, tool_registry=registry)
+
+    result = asyncio.run(
+        registry.call_tool(
+            "search_knowledge",
+            context=runtime.tool_context(owner_id="local"),
+            arguments={
+                "query": "What does the runtime use?",
+                "top_k": 1,
+                "owner_scope": "other-owner",
+            },
+        )
+    )
+
+    assert result.is_error is False
+    assert result.structured_content["knowledge_context_count"] == 1
+    assert retriever.calls[0]["owner_scope"] == "local"
+
+
+def test_knowledge_search_keeps_wrong_owner_isolated() -> None:
+    router, _ = _provider_router([])
+    retriever = OwnerScopedFakeRetriever([_chunk()], allowed_scope="local")
+    registry = build_agent_tool_registry(
+        retriever=retriever,
+        embedding_client=None,
+        memory_service=FakeMemoryService(),
+    )
+    runtime = BoundedAgentRuntime(provider_router=router, tool_registry=registry)
+
+    result = asyncio.run(
+        registry.call_tool(
+            "search_knowledge",
+            context=runtime.tool_context(owner_id="other-owner"),
+            arguments={"query": "What does the runtime use?", "top_k": 1},
+        )
+    )
+
+    assert result.is_error is False
+    assert result.structured_content["knowledge_context_count"] == 0
+    assert result.structured_content["citations"] == []
+    assert retriever.calls[0]["owner_scope"] == "other-owner"
 
 
 def test_search_memory_rejects_unsupported_memory_type() -> None:

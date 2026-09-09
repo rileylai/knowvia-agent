@@ -220,8 +220,11 @@ Mixed Knowledge + Memory task 必須使用 1 至 2 個 `contextual_facets`；每
 `id` 與 concise、atomic 的 `text`，不得包含 tool name、corpus location、search strategy 或
 retrieval plan。Mixed task 的 `memory_query` 固定為 `null`。Direct memory-only recall 為維持
 既有 routing，仍可使用最多 500 characters 的 `memory_query`，且不帶 contextual facets。
-`ContextualFacet` 代表 required retrieval attempts，不代表 mandatory answer-readiness requirements；
-partial 或 zero Memory hit 不會自動否定已接受的 Knowledge evidence。
+`ContextualFacet` 代表每個 bounded Memory retrieval dependency 的 facet；backend 仍逐一
+記錄每個 facet 是否實際 resolved，形成 `memory_dependencies_resolved` observability signal。
+這個 signal 不參與 Knowledge readiness 或 final-synthesis eligibility。partial 或 zero Memory
+hit 不會使已具備足夠 Knowledge evidence 的 mixed task fail closed，也不會將 Memory 轉成
+Knowledge evidence。
 Malformed decision、extra field、空 facet 或超過 facet 上限直接 fail closed，不用 keyword 或
 regex 重新猜測。
 
@@ -241,16 +244,20 @@ conversation transform 仍沿用各自 dedicated route 的 history handling。
 Backend 驗證 decision 後，先以 current substantive task 執行一次 `search_knowledge`，再依
 每個 contextual facet 各執行一次 `search_memory`，query 直接使用 facet `text`，並設定
 `retrieval_mode=contextual`。因此 mixed task 維持最多 3 次 tool calls。候選先取 bounded top-k，
-再套用既有 relevance gate；partial 或 zero Memory hit 不會覆寫已接受的 Knowledge evidence。
+再套用既有 relevance gate；backend 以每個 facet 的實際 resolved 結果計算
+`memory_dependencies_resolved`，供 diagnostics/observability 使用，不以 deduplicated Memory
+record count 取代 facet resolution。即使 facet 未全部 resolved，只要 Knowledge readiness
+通過，mixed task 仍可進入 final synthesis，並依可用 context 產生 Knowledge-only 或 partial
+personalized answer。
 Direct recall 只取 final best-1，broad 與 contextual recall 維持 bounded multi-result，不掃描
 或傾倒全部 memories。Knowledge 與 Memory context、citation authority、`Used saved memory`
 disclosure 仍分開。Provider 不具 structured output capability 時，保留既有 bounded tool loop
 作為相容 fallback。
 
-## `EvidenceReadinessDecision`（8.4 planned contract）
+## `EvidenceReadinessDecision`（8.4 current contract）
 
-這是 8.4 凍結的 target contract，尚未加入 current runtime。它只回答 final synthesis 是否
-可以安全開始，不保存 answer requirements，也不描述 retrieval plan：
+這是 8.4 凍結並已加入 current runtime 的最小 contract。它只回答 final synthesis 是否可以
+安全開始，不保存 answer requirements，也不描述 retrieval plan：
 
 ```python
 class EvidenceReadinessDecision(BaseModel):
@@ -269,8 +276,11 @@ class EvidenceReadinessDecision(BaseModel):
 
 Readiness provider 的輸入只包括 exact current substantive task、validated reference bindings、
 accepted Knowledge evidence，以及 bounded source metadata：`source_kind`、
-`source_display_name`、`locator`。若 task 有 Memory-side dependency，backend 可以提供 bounded
-dependency indication；Memory content 不作為 Knowledge evidence 傳入。
+`source_display_name`、`locator`。若 task 有 Memory-side dependency，backend 提供 bounded
+`needs_memory` 與 facet labels；這些欄位只識別 separately-authorized supplemental Memory
+dependencies，不是 Knowledge requirements 或 mandatory answer-completeness requirements。
+Memory content 不作為 Knowledge evidence 傳入。Memory resolution signal 只保留在 backend
+observability，不進入 readiness input。
 
 Provider output 不得加入 `missing_requirements`、`confidence`、`reasoning`、evidence IDs、
 citation IDs、facets、query、retrieval instructions、tool calls、ranking 或 planner state。

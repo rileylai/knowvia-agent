@@ -1,0 +1,1177 @@
+{
+  "artifact_type": "evidence_readiness_semantic_live_regression",
+  "benchmark_id": "knowvia-retrieval-pilot",
+  "benchmark_sha256": "c8eca9a7d6f4c3acfa0037df966187d89862376db82fcf31f0f35990327cf9c3",
+  "benchmark_version": "8.2",
+  "cases": [
+    {
+      "accepted_evidence_count": 5,
+      "answerable": true,
+      "case_id": "rv-001",
+      "category": "single_document_factual",
+      "checks": {
+        "accepted_evidence_gt_0": true,
+        "citation_count": 5,
+        "classification": "CURRENT_RUN_READY",
+        "final_called": true,
+        "forbidden_terms_present": [],
+        "gold_support_present": true,
+        "grounded_candidate": true,
+        "insufficient_info": false,
+        "pass": true,
+        "readiness_called": true,
+        "ready": true
+      },
+      "citation_count": 5,
+      "citations": [
+        {
+          "locator": "page 3",
+          "page": 3,
+          "page_id": null,
+          "score": 0.550168,
+          "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 11",
+          "page": 11,
+          "page_id": null,
+          "score": 0.525174,
+          "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 10",
+          "page": 10,
+          "page_id": null,
+          "score": 0.498566,
+          "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 2",
+          "page": 2,
+          "page_id": null,
+          "score": 0.46249,
+          "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 3",
+          "page": 3,
+          "page_id": null,
+          "score": 0.458647,
+          "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+          "source_kind": "pdf"
+        }
+      ],
+      "final_answer": "The production-agent article states that most production-agent behavior runs through conventional, deterministic code, with the model invoked at a small number of specific decision points. This approach contrasts with systems that rely heavily on the language model for their operations, emphasizing the importance of engineering decisions regarding where the model is given control and where it is held back.",
+      "final_called": true,
+      "gold_support": {
+        "matched_group_count": 1,
+        "matched_groups": [
+          {
+            "group_id": "production-control-implementation",
+            "locations": [
+              {
+                "page": 2,
+                "rank": 4,
+                "score": 0.46249,
+                "source_id": "production_agents"
+              }
+            ],
+            "match": "any"
+          }
+        ],
+        "present": true,
+        "required_group_count": 1
+      },
+      "insufficient_info": false,
+      "model": "gpt-4o-mini",
+      "owner_scope": "local",
+      "provider": "openai",
+      "provider_calls": [
+        {
+          "latency_ms": 2209.575,
+          "model": "gpt-4o-mini",
+          "operation": "evidence_readiness",
+          "provider": "openai",
+          "ready": true,
+          "token_input": 1735,
+          "token_output": 5
+        },
+        {
+          "latency_ms": 2004.125,
+          "model": "gpt-4o-mini",
+          "operation": "qa_answer",
+          "provider": "openai",
+          "token_input": 1515,
+          "token_output": 66
+        }
+      ],
+      "query": "What does the production-agent article say most production-agent behavior runs through?",
+      "readiness_called": true,
+      "readiness_ready": true,
+      "retrieval": {
+        "accepted_evidence_count": 5,
+        "best_score": 0.550168,
+        "candidate_count": 10,
+        "evidence": [
+          {
+            "locator": "page 3",
+            "page": 3,
+            "rank": 1,
+            "score": 0.550168,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 11",
+            "page": 11,
+            "rank": 2,
+            "score": 0.525174,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 10",
+            "page": 10,
+            "rank": 3,
+            "score": 0.498566,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 2",
+            "page": 2,
+            "rank": 4,
+            "score": 0.46249,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 3",
+            "page": 3,
+            "rank": 5,
+            "score": 0.458647,
+            "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+            "source_id": "google_agent_patterns",
+            "source_kind": "pdf"
+          }
+        ],
+        "relevance_floor": 0.3,
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "token_input": 1515,
+      "token_output": 66
+    },
+    {
+      "accepted_evidence_count": 5,
+      "answerable": true,
+      "case_id": "rv-002",
+      "category": "single_document_factual",
+      "checks": {
+        "accepted_evidence_gt_0": true,
+        "citation_count": 5,
+        "classification": "ANSWERABLE_CASE_READY",
+        "final_called": true,
+        "forbidden_terms_present": [],
+        "gold_support_present": true,
+        "grounded_candidate": true,
+        "insufficient_info": false,
+        "pass": true,
+        "readiness_called": true,
+        "ready": true
+      },
+      "citation_count": 5,
+      "citations": [
+        {
+          "locator": "page 10",
+          "page": 10,
+          "page_id": null,
+          "score": 0.449151,
+          "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 1",
+          "page": 1,
+          "page_id": null,
+          "score": 0.426972,
+          "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 5",
+          "page": 5,
+          "page_id": null,
+          "score": 0.38391,
+          "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 17",
+          "page": 17,
+          "page_id": null,
+          "score": 0.378756,
+          "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 3",
+          "page": 3,
+          "page_id": null,
+          "score": 0.356196,
+          "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+          "source_kind": "pdf"
+        }
+      ],
+      "final_answer": "The Week 3 prototype uses the \"time_bucket\" as the database partition key for hourly jobs. This key is derived from the scheduled time, formatted to the hour level (e.g., \"%Y%m%d%H\"). This approach allows for efficient querying by grouping jobs within the same hour.",
+      "final_called": true,
+      "gold_support": {
+        "matched_group_count": 1,
+        "matched_groups": [
+          {
+            "group_id": "hourly-partition-key",
+            "locations": [
+              {
+                "page": 10,
+                "rank": 1,
+                "score": 0.449151,
+                "source_id": "chatgpt_tasks_week3"
+              }
+            ],
+            "match": "any"
+          }
+        ],
+        "present": true,
+        "required_group_count": 1
+      },
+      "insufficient_info": false,
+      "model": "gpt-4o-mini",
+      "owner_scope": "local",
+      "provider": "openai",
+      "provider_calls": [
+        {
+          "latency_ms": 1373.442,
+          "model": "gpt-4o-mini",
+          "operation": "evidence_readiness",
+          "provider": "openai",
+          "ready": true,
+          "token_input": 1731,
+          "token_output": 5
+        },
+        {
+          "latency_ms": 1385.301,
+          "model": "gpt-4o-mini",
+          "operation": "qa_answer",
+          "provider": "openai",
+          "token_input": 1497,
+          "token_output": 59
+        }
+      ],
+      "query": "What field does the Week 3 prototype use as the database partition key for hourly jobs?",
+      "readiness_called": true,
+      "readiness_ready": true,
+      "retrieval": {
+        "accepted_evidence_count": 5,
+        "best_score": 0.449151,
+        "candidate_count": 10,
+        "evidence": [
+          {
+            "locator": "page 10",
+            "page": 10,
+            "rank": 1,
+            "score": 0.449151,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": "chatgpt_tasks_week3",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 1",
+            "page": 1,
+            "rank": 2,
+            "score": 0.426972,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": "chatgpt_tasks_week3",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 5",
+            "page": 5,
+            "rank": 3,
+            "score": 0.38391,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": "chatgpt_tasks_week3",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 17",
+            "page": 17,
+            "rank": 4,
+            "score": 0.378756,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": "chatgpt_tasks_week3",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 3",
+            "page": 3,
+            "rank": 5,
+            "score": 0.356196,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": "chatgpt_tasks_week3",
+            "source_kind": "pdf"
+          }
+        ],
+        "relevance_floor": 0.3,
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "token_input": 1497,
+      "token_output": 59
+    },
+    {
+      "accepted_evidence_count": 5,
+      "answerable": true,
+      "case_id": "rv-010",
+      "category": "multi_evidence",
+      "checks": {
+        "accepted_evidence_gt_0": true,
+        "citation_count": 5,
+        "classification": "ANSWERABLE_CASE_READY",
+        "final_called": true,
+        "forbidden_terms_present": [],
+        "gold_support_present": true,
+        "grounded_candidate": true,
+        "insufficient_info": false,
+        "pass": true,
+        "readiness_called": true,
+        "ready": true
+      },
+      "citation_count": 5,
+      "citations": [
+        {
+          "locator": "page 5",
+          "page": 5,
+          "page_id": null,
+          "score": 0.590191,
+          "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 4",
+          "page": 4,
+          "page_id": null,
+          "score": 0.524456,
+          "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 2",
+          "page": 2,
+          "page_id": null,
+          "score": 0.513347,
+          "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 9",
+          "page": 9,
+          "page_id": null,
+          "score": 0.429963,
+          "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 20",
+          "page": 20,
+          "page_id": null,
+          "score": 0.410128,
+          "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+          "source_kind": "pdf"
+        }
+      ],
+      "final_answer": "The sequential and parallel patterns described by the Google Cloud guide have distinct characteristics and use cases:\n\n1. **Sequential Pattern**:\n   - **Structure**: This pattern executes a series of specialized agents in a predefined, linear order. The output from one agent serves as the direct input for the next agent.\n   - **Workflow Management**: It uses a sequential workflow agent that operates on predefined logic without consulting an AI model for orchestration.\n   - **Use Case**: It is best suited for highly structured, repeatable processes where the sequence of operations does not change, such as a data processing pipeline that involves steps like data extraction, cleaning, and loading.\n   - **Efficiency**: While it can reduce latency and operational costs, it lacks flexibility due to its rigid structure, making it challenging to adapt to dynamic conditions or skip unnecessary steps.\n\n2. **Parallel Pattern**:\n   - **Structure**: In this pattern, multiple specialized subagents perform tasks or sub-tasks independently and simultaneously. The outputs of these subagents are then synthesized to produce a final response.\n   - **Workflow Management**: Similar to the sequential pattern, it uses a parallel workflow agent to manage the execution of subagents without needing an AI model for orchestration.\n   - **Use Case**: This pattern is ideal when sub-tasks can be executed concurrently, allowing for reduced latency and the gathering of diverse perspectives.\n   - **Efficiency**: While it can enhance performance by executing tasks in parallel, it may incur computational overhead due to running multiple agents simultaneously.\n\nIn summary, the sequential pattern is more rigid and structured, suitable for linear processes, while the parallel pattern offers flexibility and speed by allowing concurrent execution of tasks.",
+      "final_called": true,
+      "gold_support": {
+        "matched_group_count": 2,
+        "matched_groups": [
+          {
+            "group_id": "sequential-definition",
+            "locations": [
+              {
+                "page": 4,
+                "rank": 2,
+                "score": 0.524456,
+                "source_id": "google_agent_patterns"
+              }
+            ],
+            "match": "any"
+          },
+          {
+            "group_id": "parallel-definition",
+            "locations": [
+              {
+                "page": 5,
+                "rank": 1,
+                "score": 0.590191,
+                "source_id": "google_agent_patterns"
+              }
+            ],
+            "match": "any"
+          }
+        ],
+        "present": true,
+        "required_group_count": 2
+      },
+      "insufficient_info": false,
+      "model": "gpt-4o-mini",
+      "owner_scope": "local",
+      "provider": "openai",
+      "provider_calls": [
+        {
+          "latency_ms": 857.614,
+          "model": "gpt-4o-mini",
+          "operation": "evidence_readiness",
+          "provider": "openai",
+          "ready": true,
+          "token_input": 1878,
+          "token_output": 5
+        },
+        {
+          "latency_ms": 4953.76,
+          "model": "gpt-4o-mini",
+          "operation": "qa_answer",
+          "provider": "openai",
+          "token_input": 1656,
+          "token_output": 343
+        }
+      ],
+      "query": "Compare the sequential and parallel patterns described by the Google Cloud guide.",
+      "readiness_called": true,
+      "readiness_ready": true,
+      "retrieval": {
+        "accepted_evidence_count": 5,
+        "best_score": 0.590191,
+        "candidate_count": 10,
+        "evidence": [
+          {
+            "locator": "page 5",
+            "page": 5,
+            "rank": 1,
+            "score": 0.590191,
+            "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+            "source_id": "google_agent_patterns",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 4",
+            "page": 4,
+            "rank": 2,
+            "score": 0.524456,
+            "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+            "source_id": "google_agent_patterns",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 2",
+            "page": 2,
+            "rank": 3,
+            "score": 0.513347,
+            "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+            "source_id": "google_agent_patterns",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 9",
+            "page": 9,
+            "rank": 4,
+            "score": 0.429963,
+            "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+            "source_id": "google_agent_patterns",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 20",
+            "page": 20,
+            "rank": 5,
+            "score": 0.410128,
+            "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+            "source_id": "google_agent_patterns",
+            "source_kind": "pdf"
+          }
+        ],
+        "relevance_floor": 0.3,
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "token_input": 1656,
+      "token_output": 343
+    },
+    {
+      "accepted_evidence_count": 5,
+      "answerable": true,
+      "case_id": "rv-009",
+      "category": "multi_evidence",
+      "checks": {
+        "accepted_evidence_gt_0": true,
+        "citation_count": 0,
+      "classification": "CURRENT_RUN_SAFE",
+        "final_called": false,
+        "forbidden_terms_present": [],
+        "gold_support_present": false,
+        "grounded_candidate": false,
+        "insufficient_info": true,
+      "pass": true,
+        "readiness_called": true,
+        "ready": false
+      },
+      "citation_count": 0,
+      "citations": [],
+      "final_answer": "I do not have enough information in production notes to answer safely.",
+      "final_called": false,
+      "gold_support": {
+        "matched_group_count": 0,
+        "matched_groups": [],
+        "present": false,
+        "required_group_count": 2
+      },
+      "insufficient_info": true,
+      "model": null,
+      "owner_scope": "local",
+      "provider": null,
+      "provider_calls": [
+        {
+          "latency_ms": 915.874,
+          "model": "gpt-4o-mini",
+          "operation": "evidence_readiness",
+          "provider": "openai",
+          "ready": false,
+          "token_input": 1986,
+          "token_output": 5
+        }
+      ],
+      "query": "How does the Week 3 prototype separate due-job discovery from worker execution and address repeated execution?",
+      "readiness_called": true,
+      "readiness_ready": false,
+      "retrieval": {
+        "accepted_evidence_count": 5,
+        "best_score": 0.511489,
+        "candidate_count": 10,
+        "evidence": [
+          {
+            "locator": "page 3",
+            "page": 3,
+            "rank": 1,
+            "score": 0.511489,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": "chatgpt_tasks_week3",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 13",
+            "page": 13,
+            "rank": 2,
+            "score": 0.494375,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": "chatgpt_tasks_week3",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 6",
+            "page": 6,
+            "rank": 3,
+            "score": 0.474962,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 6",
+            "page": 6,
+            "rank": 4,
+            "score": 0.47065,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": "chatgpt_tasks_week3",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 8",
+            "page": 8,
+            "rank": 5,
+            "score": 0.46886,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          }
+        ],
+        "relevance_floor": 0.3,
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "token_input": null,
+      "token_output": null
+    },
+    {
+      "accepted_evidence_count": 5,
+      "answerable": true,
+      "case_id": "rv-027",
+      "category": "multi_evidence",
+      "checks": {
+        "accepted_evidence_gt_0": true,
+        "citation_count": 0,
+      "classification": "CURRENT_RUN_SAFE",
+        "final_called": false,
+        "forbidden_terms_present": [],
+        "gold_support_present": false,
+        "grounded_candidate": false,
+        "insufficient_info": true,
+      "pass": true,
+        "readiness_called": true,
+        "ready": false
+      },
+      "citation_count": 0,
+      "citations": [],
+      "final_answer": "I do not have enough information in production notes to answer safely.",
+      "final_called": false,
+      "gold_support": {
+        "matched_group_count": 0,
+        "matched_groups": [],
+        "present": false,
+        "required_group_count": 2
+      },
+      "insufficient_info": true,
+      "model": null,
+      "owner_scope": "local",
+      "provider": null,
+      "provider_calls": [
+        {
+          "latency_ms": 970.654,
+          "model": "gpt-4o-mini",
+          "operation": "evidence_readiness",
+          "provider": "openai",
+          "ready": false,
+          "token_input": 1673,
+          "token_output": 5
+        }
+      ],
+      "query": "How does the prototype help the model choose an operation, and why is an intermediary placed between the model and the scheduler service?",
+      "readiness_called": true,
+      "readiness_ready": false,
+      "retrieval": {
+        "accepted_evidence_count": 5,
+        "best_score": 0.503802,
+        "candidate_count": 10,
+        "evidence": [
+          {
+            "locator": "page 4",
+            "page": 4,
+            "rank": 1,
+            "score": 0.503802,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 8",
+            "page": 8,
+            "rank": 2,
+            "score": 0.503341,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 12",
+            "page": 12,
+            "rank": 3,
+            "score": 0.492708,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 10",
+            "page": 10,
+            "rank": 4,
+            "score": 0.472048,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 6",
+            "page": 6,
+            "rank": 5,
+            "score": 0.464798,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          }
+        ],
+        "relevance_floor": 0.3,
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "token_input": null,
+      "token_output": null
+    },
+    {
+      "accepted_evidence_count": 5,
+      "answerable": true,
+      "case_id": "rv-029",
+      "category": "multi_evidence",
+      "checks": {
+        "accepted_evidence_gt_0": true,
+        "citation_count": 0,
+      "classification": "CURRENT_RUN_SAFE",
+        "final_called": false,
+        "forbidden_terms_present": [],
+        "gold_support_present": false,
+        "grounded_candidate": false,
+        "insufficient_info": true,
+      "pass": true,
+        "readiness_called": true,
+        "ready": false
+      },
+      "citation_count": 0,
+      "citations": [],
+      "final_answer": "I do not have enough information in production notes to answer safely.",
+      "final_called": false,
+      "gold_support": {
+        "matched_group_count": 1,
+        "matched_groups": [
+          {
+            "group_id": "coordinator-workflow-owner",
+            "locations": [
+              {
+                "page": 8,
+                "rank": 2,
+                "score": 0.592716,
+                "source_id": "google_agent_patterns"
+              }
+            ],
+            "match": "any"
+          }
+        ],
+        "present": false,
+        "required_group_count": 2
+      },
+      "insufficient_info": true,
+      "model": null,
+      "owner_scope": "local",
+      "provider": null,
+      "provider_calls": [
+        {
+          "latency_ms": 1090.957,
+          "model": "gpt-4o-mini",
+          "operation": "evidence_readiness",
+          "provider": "openai",
+          "ready": false,
+          "token_input": 1470,
+          "token_output": 5
+        }
+      ],
+      "query": "How do these two designs assign responsibility for deciding what happens next: the dependable-agent design and the coordinator design?",
+      "readiness_called": true,
+      "readiness_ready": false,
+      "retrieval": {
+        "accepted_evidence_count": 5,
+        "best_score": 0.59356,
+        "candidate_count": 10,
+        "evidence": [
+          {
+            "locator": "page 17",
+            "page": 17,
+            "rank": 1,
+            "score": 0.59356,
+            "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+            "source_id": "google_agent_patterns",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 8",
+            "page": 8,
+            "rank": 2,
+            "score": 0.592716,
+            "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+            "source_id": "google_agent_patterns",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 9",
+            "page": 9,
+            "rank": 3,
+            "score": 0.590017,
+            "source_display_name": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+            "source_id": "google_agent_patterns",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 4",
+            "page": 4,
+            "rank": 4,
+            "score": 0.571279,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 10",
+            "page": 10,
+            "rank": 5,
+            "score": 0.569126,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          }
+        ],
+        "relevance_floor": 0.3,
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "token_input": null,
+      "token_output": null
+    },
+    {
+      "accepted_evidence_count": 3,
+      "answerable": false,
+      "case_id": "rv-020",
+      "category": "hard_negative",
+      "checks": {
+        "accepted_evidence_gt_0": true,
+        "citation_count": 0,
+        "classification": "CURRENT_RUN_SAFE",
+        "final_called": false,
+        "forbidden_terms_present": [],
+        "insufficient_info": true,
+        "pass": true,
+        "readiness_called": true,
+        "ready": false
+      },
+      "citation_count": 0,
+      "citations": [],
+      "final_answer": "I do not have enough information in production notes to answer safely.",
+      "final_called": false,
+      "gold_support": {
+        "matched_group_count": null,
+        "matched_groups": [],
+        "present": null,
+        "required_group_count": null
+      },
+      "insufficient_info": true,
+      "model": null,
+      "owner_scope": "local",
+      "provider": null,
+      "provider_calls": [
+        {
+          "latency_ms": 794.294,
+          "model": "gpt-4o-mini",
+          "operation": "evidence_readiness",
+          "provider": "openai",
+          "ready": false,
+          "token_input": 1328,
+          "token_output": 5
+        }
+      ],
+      "query": "Which Python MCP framework or SDK does the Week 3 prototype use to implement its MCP server?",
+      "readiness_called": true,
+      "readiness_ready": false,
+      "retrieval": {
+        "accepted_evidence_count": 3,
+        "best_score": 0.510885,
+        "candidate_count": 10,
+        "evidence": [
+          {
+            "locator": "page 1",
+            "page": 1,
+            "rank": 1,
+            "score": 0.510885,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": "chatgpt_tasks_week3",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 3",
+            "page": 3,
+            "rank": 2,
+            "score": 0.424647,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": "chatgpt_tasks_week3",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 9",
+            "page": 9,
+            "rank": 3,
+            "score": 0.351784,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": "chatgpt_tasks_week3",
+            "source_kind": "pdf"
+          }
+        ],
+        "relevance_floor": 0.3,
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "token_input": null,
+      "token_output": null
+    },
+    {
+      "accepted_evidence_count": 5,
+      "answerable": true,
+      "case_id": "mixed-knowledge-memory",
+      "category": "mixed_knowledge_memory",
+      "checks": {
+        "accepted_evidence_gt_0": true,
+        "citation_count": 0,
+        "context_requirement_called": true,
+        "final_called": false,
+        "insufficient_info": true,
+        "knowledge_citations_only": true,
+        "needs_knowledge": true,
+        "needs_memory": true,
+        "pass": false,
+        "readiness_called": true,
+        "ready": false,
+        "used_saved_memory": false
+      },
+      "citation_count": 0,
+      "citations": [],
+      "final_answer": "I do not have enough information in production notes to answer safely.",
+      "final_called": false,
+      "insufficient_info": true,
+      "knowledge_query": "Based on the indexed production-agent notes, which practices should an organization of our size prioritize, given our preference for staged development?",
+      "memory_search_calls": [
+        {
+          "owner_id": "local",
+          "retrieval_mode": "contextual",
+          "top_k": 3
+        },
+        {
+          "owner_id": "local",
+          "retrieval_mode": "contextual",
+          "top_k": 3
+        }
+      ],
+      "memory_status": null,
+      "model": null,
+      "owner_scope": "local",
+      "provider": null,
+      "provider_calls": [
+        {
+          "latency_ms": 994.357,
+          "model": "gpt-4o-mini",
+          "operation": "reference_binding_resolution",
+          "provider": "openai",
+          "token_input": 341,
+          "token_output": 6
+        },
+        {
+          "latency_ms": 1580.865,
+          "model": "gpt-4o-mini",
+          "needs_knowledge": true,
+          "needs_memory": true,
+          "operation": "context_requirement_selection",
+          "provider": "openai",
+          "token_input": 565,
+          "token_output": 45
+        },
+        {
+          "latency_ms": 853.547,
+          "model": "gpt-4o-mini",
+          "operation": "evidence_readiness",
+          "provider": "openai",
+          "ready": false,
+          "token_input": 1772,
+          "token_output": 5
+        }
+      ],
+      "query": "Based on the indexed production-agent notes, which practices should an organization of our size prioritize, given our preference for staged development?",
+      "readiness_called": true,
+      "readiness_ready": false,
+      "retrieval": {
+        "accepted_evidence_count": 5,
+        "best_score": 0.531303,
+        "candidate_count": 10,
+        "evidence": [
+          {
+            "locator": "page 2",
+            "page": 2,
+            "rank": 1,
+            "score": 0.531303,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 11",
+            "page": 11,
+            "rank": 2,
+            "score": 0.528542,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 10",
+            "page": 10,
+            "rank": 3,
+            "score": 0.495522,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 3",
+            "page": 3,
+            "rank": 4,
+            "score": 0.492461,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          },
+          {
+            "locator": "page 12",
+            "page": 12,
+            "rank": 5,
+            "score": 0.490387,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": "production_agents",
+            "source_kind": "pdf"
+          }
+        ],
+        "relevance_floor": 0.3,
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "token_input": null,
+      "token_output": null,
+      "tool_calls_used": 3,
+      "used_saved_memory": false
+    }
+  ],
+  "controls": {
+    "corpus_isolated_in_disposable_database": true,
+    "evidence_readiness_contract_version": "v1",
+    "full_chunk_text_or_embeddings_persisted": false,
+    "live_provider": true,
+    "model": "gpt-4o-mini",
+    "no_parameter_tuning": true,
+    "one_pass_per_case": true,
+    "owner_scope": "local",
+    "permanent_memory_written": false,
+    "production_top_k": 5,
+    "prompts_or_reasoning_persisted": false,
+    "provider": "openai",
+    "qa_prompt_version": "qa_answer_v4",
+    "raw_provider_responses_persisted": false,
+    "semantic_prompt_correction": true,
+    "targeted_cases": [
+      "rv-001",
+      "rv-002",
+      "rv-010",
+      "rv-009",
+      "rv-027",
+      "rv-029",
+      "rv-020",
+      "mixed-knowledge-memory"
+    ]
+  },
+  "corpus_manifest": [
+    {
+      "filename": "Best Practices for Building AI Agents That Work in Production.pdf",
+      "page_count": 14,
+      "sha256": "c88c995d6d6deb5d350f12621cabc9dbfa2323047491ad66771989f58100f074",
+      "source_id": "production_agents"
+    },
+    {
+      "filename": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+      "page_count": 17,
+      "sha256": "eec40e93d8adb8755f89378dc9778a9219786b4f4b466e696a6aa8e1f54b2591",
+      "source_id": "chatgpt_tasks_week3"
+    },
+    {
+      "filename": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+      "page_count": 21,
+      "sha256": "c22fe67748782b2dfe8bff364a9ea3fa852a0eba9da22f100cbe43cd73cbba36",
+      "source_id": "google_agent_patterns"
+    }
+  ],
+  "provider_call_behavior": {
+    "embedding_call_count": 4,
+    "embedding_calls": [
+      {
+        "input_count": 22,
+        "latency_ms": 3346.021,
+        "model": "text-embedding-3-small",
+        "token_input": 3532
+      },
+      {
+        "input_count": 17,
+        "latency_ms": 1224.808,
+        "model": "text-embedding-3-small",
+        "token_input": 4619
+      },
+      {
+        "input_count": 40,
+        "latency_ms": 745.716,
+        "model": "text-embedding-3-small",
+        "token_input": 7014
+      },
+      {
+        "input_count": 8,
+        "latency_ms": 289.123,
+        "model": "text-embedding-3-small",
+        "token_input": 155
+      }
+    ],
+    "llm_call_count": 13,
+    "llm_operations": {
+      "bounded_agent_final": 0,
+      "context_requirement_selection": 1,
+      "evidence_readiness": 8,
+      "qa_answer": 3,
+      "reference_binding_resolution": 1
+    }
+  },
+  "retrieval_contract": {
+    "candidate_pool_max": 20,
+    "chunk_max_chars": 1200,
+    "chunk_overlap_chars": 0,
+    "embedding_dimensions": 1536,
+    "embedding_model": "text-embedding-3-small",
+    "page_aware": true,
+    "relevance_floor": 0.3,
+    "similarity": "cosine",
+    "top_k": [
+      1,
+      3,
+      5
+    ]
+  },
+  "summary": {
+    "citation_authority_pass": true,
+    "false_negative_count": 1,
+    "false_positive_count": 0,
+    "final_calls_only_when_ready": true,
+    "final_synthesis_grounding_pass": false,
+    "memory_authority_pass": false,
+    "mixed_case_pass": false,
+    "negative_case_ids": [
+      "rv-009",
+      "rv-027",
+      "rv-029",
+      "rv-020"
+    ],
+    "negative_pass_count": 4,
+    "positive_case_ids": [
+      "rv-001",
+      "rv-002",
+      "rv-010",
+      "mixed-knowledge-memory"
+    ],
+    "positive_pass_count": 3,
+    "rv_001_classification": "CURRENT_RUN_READY",
+    "semantic_live_gate": "FAIL"
+  },
+  "verification_date": "2026-09-08"
+}

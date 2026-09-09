@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from http import HTTPStatus
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from src.providers import (
     EmbeddingClient,
@@ -16,6 +16,10 @@ from src.providers import (
     ProviderRouter,
     ProviderRouterError,
 )
+from src.agent.evidence_readiness import (
+    EvidenceReadinessContractError,
+    assess_evidence_readiness,
+)
 from src.memory import is_memory_recall_query
 from src.repositories.memory_repository import LongTermMemorySnapshot
 from src.rag import (
@@ -26,7 +30,7 @@ from src.rag import (
 from src.services import (
     CostTracker,
     PROMPT_ID_CONVERSATION_RECALL,
-    PROMPT_ID_QA_ANSWER,
+    PROMPT_ID_QA_ANSWER_V4,
     PROMPT_SAFETY_VERSION,
     PromptTemplateLoader,
     PromptTemplateLoaderError,
@@ -210,7 +214,7 @@ class QAOrchestrator:
         prompt_id = (
             PROMPT_ID_CONVERSATION_RECALL
             if conversation_only
-            else PROMPT_ID_QA_ANSWER
+            else PROMPT_ID_QA_ANSWER_V4
         )
         prompt_version: Optional[str] = None
         llm_token_input: Optional[int] = None
@@ -348,6 +352,71 @@ class QAOrchestrator:
                     token_output=None,
                 )
 
+            try:
+                readiness_decision, _ = await assess_evidence_readiness(
+                    provider_router=self._provider_router,
+                    provider_name=normalized_provider_name,
+                    model=normalized_model,
+                    task=normalized_query,
+                    reference_bindings=[],
+                    accepted_evidence=self._build_readiness_evidence(
+                        retrieved_chunks
+                    ),
+                    memory_dependencies={
+                        "needs_memory": False,
+                        "facet_labels": [],
+                    },
+                    metadata={
+                        "workflow_id": request_workflow_id,
+                        "provider_name": normalized_provider_name,
+                        "model": normalized_model,
+                    },
+                )
+            except EvidenceReadinessContractError as exc:
+                raise QAOrchestratorError(
+                    error_code="LLM_OUTPUT_INVALID",
+                    message=str(exc),
+                    http_status_code=HTTPStatus.BAD_GATEWAY,
+                    failure_reason="LLM_OUTPUT_INVALID",
+                ) from exc
+
+            if not readiness_decision.ready:
+                self._workflow_run_service.mark_workflow_succeeded(
+                    workflow_run.id,
+                    metadata_json=json.dumps(
+                        self._build_workflow_metadata(
+                            insufficient_info=True,
+                            retrieved_chunk_count=len(retrieved_chunks),
+                            citation_count=0,
+                            memory_count=0,
+                            used_saved_memory=False,
+                            provider_name=normalized_provider_name,
+                            model=normalized_model,
+                            prompt_id=prompt_id,
+                            prompt_version=prompt_version,
+                            token_input=None,
+                            token_output=None,
+                            estimated_cost=None,
+                            retrieval_mode=retrieval_mode,
+                            retrieval_fallback_reason=retrieval_fallback_reason,
+                            query_embedding_state=query_embedding_state,
+                        ),
+                        sort_keys=True,
+                    ),
+                )
+                return QAResult(
+                    workflow_run_id=workflow_run.id,
+                    status="succeeded",
+                    answer=insufficient_info_answer(response_language),
+                    insufficient_info=True,
+                    retrieved_chunk_count=len(retrieved_chunks),
+                    citations=[],
+                    provider=None,
+                    model=None,
+                    token_input=None,
+                    token_output=None,
+                )
+
             context_text = self._build_context_text(retrieved_chunks)
             system_message, user_message = prompt_bundle.render_messages(
                 variables={
@@ -416,10 +485,15 @@ class QAOrchestrator:
                 )
 
             insufficient_info = _answer_indicates_insufficient_info(answer_text)
-            response_answer = (
-                INSUFFICIENT_INFO_ANSWER if insufficient_info else answer_text
-            )
-            response_citations = [] if insufficient_info else citations
+            if insufficient_info:
+                raise QAOrchestratorError(
+                    error_code="LLM_OUTPUT_INVALID",
+                    message="Final provider returned INSUFFICIENT_INFO after readiness passed",
+                    http_status_code=HTTPStatus.BAD_GATEWAY,
+                    failure_reason="LLM_OUTPUT_INVALID",
+                )
+            response_answer = answer_text
+            response_citations = citations
 
             self._workflow_run_service.mark_workflow_succeeded(
                 workflow_run.id,
@@ -837,6 +911,27 @@ class QAOrchestrator:
                 f"score={chunk.score:.4f}\n{chunk.chunk_text}"
             )
         return "\n\n".join(context_lines)
+
+    def _build_readiness_evidence(
+        self,
+        retrieved_chunks: List[RetrievedChunk],
+    ) -> List[Dict[str, Any]]:
+        evidence: List[Dict[str, Any]] = []
+        for index, chunk in enumerate(retrieved_chunks, start=1):
+            evidence.append(
+                {
+                    "id": f"K{index}",
+                    "text": chunk.chunk_text,
+                    "source_kind": chunk.source_kind,
+                    "source_display_name": chunk.source_display_name
+                    or chunk.notion_path
+                    or "unknown source",
+                    "locator": chunk.locator
+                    or chunk.notion_path
+                    or f"chunk {chunk.chunk_index + 1}",
+                }
+            )
+        return evidence
 
     def _build_citations(self, retrieved_chunks: List[RetrievedChunk]) -> List[QACitationResult]:
         citations: List[QACitationResult] = []

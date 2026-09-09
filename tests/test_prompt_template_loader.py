@@ -2,12 +2,32 @@ from __future__ import annotations
 
 from src.services import (
     PROMPT_ID_QA_ANSWER,
+    PROMPT_ID_QA_ANSWER_V4,
     PROMPT_ID_SCREENSHOT_BODY_REPAIR,
     PROMPT_ID_SCREENSHOT_SUMMARY_REPAIR,
     PROMPT_ID_SCREENSHOT_TITLE_REPAIR,
     PROMPT_ID_SUPPLEMENT_PROPOSAL,
     PromptTemplateLoader,
 )
+
+
+def test_prompt_template_loader_loads_ready_only_qa_prompt() -> None:
+    loader = PromptTemplateLoader()
+
+    bundle = loader.load_bundle(PROMPT_ID_QA_ANSWER_V4)
+    system_message, user_message = bundle.render_messages(
+        variables={
+            "query": "What does positional encoding do?",
+            "context_text": "[C1] path=Knowledge/NLP/Week5\nPositional encoding adds order.",
+        }
+    )
+
+    assert bundle.prompt_id == PROMPT_ID_QA_ANSWER_V4
+    assert bundle.version == "qa_answer_v4"
+    assert bundle.path.name == "qa_answer_v4.md"
+    assert "backend has already confirmed" in system_message
+    assert "Do not output `INSUFFICIENT_INFO`" in system_message
+    assert "What does positional encoding do?" in user_message
 
 
 def test_prompt_template_loader_loads_and_renders_qa_prompt() -> None:

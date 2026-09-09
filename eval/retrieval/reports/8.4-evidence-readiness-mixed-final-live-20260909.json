@@ -1,0 +1,592 @@
+{
+  "artifact_type": "evidence_readiness_mixed_final_targeted_live_verification",
+  "attempt_history": [
+    {
+      "artifact": {
+        "artifact_type": "evidence_readiness_mixed_final_targeted_live_verification",
+        "boundary_confirmation": {
+          "before_evidence_readiness": true,
+          "evidence_readiness_called": false,
+          "memory_resolution_signal_produced": false,
+          "production_8_4_contract_affected": false
+        },
+        "citations": {
+          "count": 0,
+          "knowledge_only_pdf": true,
+          "metadata": []
+        },
+        "classification": "LOCAL_HARNESS_DEFECT",
+        "context_requirement_result": {
+          "called": false,
+          "contextual_facets": [],
+          "needs_knowledge": null,
+          "needs_memory": null
+        },
+        "controls": {
+          "candidate_pool": 20,
+          "chunk_max_chars": 1200,
+          "chunk_overlap_chars": 0,
+          "embedding_dimensions": 1536,
+          "embedding_model": "text-embedding-3-small",
+          "evidence_readiness_contract": "v1",
+          "full_chunks_or_embeddings_persisted": false,
+          "knowledge_relevance_floor": 0.3,
+          "one_pass": true,
+          "parser": "pypdf",
+          "permanent_memory_written": false,
+          "qa_prompt": "qa_answer_v4",
+          "raw_provider_responses_persisted": false,
+          "retrieval": "pgvector cosine",
+          "top_k": 5
+        },
+        "diagnostic": {
+          "classification": "LOCAL_HARNESS_DEFECT",
+          "failure_reason": "CAPABILITY_UNAVAILABLE",
+          "harness_difference": "The failed RecordingEmbeddingClient did not delegate get_capabilities() to OpenAIEmbeddingClient; the previous successful harness did.",
+          "outbound_request_input_count": null,
+          "planned_first_batch_input_count": 22,
+          "provider_error_category": null,
+          "provider_http_status": null,
+          "provider_request_sent": false,
+          "requested_dimensions": 1536,
+          "requested_embedding_model": "text-embedding-3-small",
+          "retries_exhausted": false,
+          "retry_attempts": 0,
+          "successful_batch_count": 0
+        },
+        "execution": {
+          "disposable_database_cleanup": true,
+          "error_code": "CAPABILITY_UNAVAILABLE",
+          "error_message": "Embedding batch execution failed",
+          "error_type": "EmbeddingBatchError",
+          "failure_boundary": "EmbeddingBatchService construction -> capability validation",
+          "live_case_started": false,
+          "outer_failure_reason": "EMBEDDING_PROVIDER_ERROR",
+          "scenario_steps_executed": []
+        },
+        "final_synthesis": {
+          "called": false,
+          "insufficient_info": null,
+          "used_saved_memory": false
+        },
+        "final_user_visible_answer": null,
+        "knowledge_retrieval_result": {
+          "accepted_count": null,
+          "best_score": null,
+          "bounded_evidence_metadata": [],
+          "candidate_count": null,
+          "relevance_floor": 0.3
+        },
+        "latency_ms_total": null,
+        "memory_resolution": {
+          "memory_dependencies_resolved": null,
+          "memory_dependency_required_count": null,
+          "memory_dependency_resolved_count": null
+        },
+        "memory_retrieval_result": {
+          "deduplicated_memory_record_count": null,
+          "facets": []
+        },
+        "model": "gpt-4o-mini",
+        "owner_scope": "local",
+        "pass": false,
+        "provider": "openai",
+        "provider_calls": [],
+        "readiness": {
+          "called": false,
+          "input_boundary": null,
+          "ready": null
+        },
+        "recommended_next_action": "Repair the live harness by delegating get_capabilities() and verify that adapter contract offline before requesting a separately authorized rerun.",
+        "request_contract_comparison": {
+          "difference": "The OpenAI model/dimension and planned batch contract matched prior successful runs, but the failed harness adapter did not expose the capability contract required by EmbeddingBatchService before any request could be sent.",
+          "intended_provider_request": {
+            "batch_input_counts": [
+              22,
+              17,
+              40
+            ],
+            "corpus_sha256": [
+              "c88c995d6d6deb5d350f12621cabc9dbfa2323047491ad66771989f58100f074",
+              "eec40e93d8adb8755f89378dc9778a9219786b4f4b466e696a6aa8e1f54b2591",
+              "c22fe67748782b2dfe8bff364a9ea3fa852a0eba9da22f100cbe43cd73cbba36"
+            ],
+            "database_target": "disposable PostgreSQL",
+            "dimensions": 1536,
+            "first_batch_input_count": 22,
+            "model": "text-embedding-3-small",
+            "provider": "openai"
+          },
+          "result": "REQUEST_CONTRACT_CHANGED"
+        },
+        "retry_policy": {
+          "base_delay_seconds": 1.0,
+          "execute_batch_reached": false,
+          "matches_existing_contract": true,
+          "max_attempts": 3,
+          "max_delay_seconds": 30.0,
+          "retries_exhausted": false,
+          "retry_attempts": 0,
+          "retryable_categories": [
+            "timeout",
+            "transport_unavailable",
+            "request_timeout",
+            "rate_limited",
+            "upstream_server_error"
+          ]
+        },
+        "scenario_id": "mixed-knowledge-memory-final-20260909",
+        "task": "Based on the indexed production-agent notes, which practices should an organization of our size prioritize, given our preference for staged development?",
+        "token_input_total": null,
+        "token_output_total": null,
+        "verification_date": "2026-09-09"
+      },
+      "attempt_id": "20260909-local-harness-defect",
+      "classification": "LOCAL_HARNESS_DEFECT",
+      "failure_boundary": "EmbeddingBatchService construction -> capability validation",
+      "run_status": "failed"
+    }
+  ],
+  "case_record": {
+    "accepted_evidence_count": 5,
+    "answerable": true,
+    "case_id": "mixed-knowledge-memory",
+    "category": "mixed_knowledge_memory",
+    "checks": {
+      "accepted_evidence_gt_0": true,
+      "citation_count": 0,
+      "context_requirement_called": true,
+      "final_called": false,
+      "insufficient_info": true,
+      "knowledge_citations_only": true,
+      "needs_knowledge": true,
+      "needs_memory": true,
+      "pass": false,
+      "readiness_called": true,
+      "ready": false,
+      "used_saved_memory": false
+    },
+    "citation_count": 0,
+    "citations": [],
+    "final_answer": "I do not have enough information in production notes to answer safely.",
+    "final_called": false,
+    "insufficient_info": true,
+    "knowledge_query": "Based on the indexed production-agent notes, which practices should an organization of our size prioritize, given our preference for staged development?",
+    "memory_search_calls": [
+      {
+        "accepted_memory_hit": true,
+        "candidate_count": 1,
+        "dependency": "organization size",
+        "owner_id": "local",
+        "retrieval_mode": "contextual",
+        "search_executed": true,
+        "top_k": 3
+      },
+      {
+        "accepted_memory_hit": true,
+        "candidate_count": 1,
+        "dependency": "staged development",
+        "owner_id": "local",
+        "retrieval_mode": "contextual",
+        "search_executed": true,
+        "top_k": 3
+      }
+    ],
+    "memory_status": null,
+    "model": null,
+    "owner_scope": "local",
+    "provider": null,
+    "provider_calls": [
+      {
+        "latency_ms": 2979.969,
+        "model": "gpt-4o-mini",
+        "operation": "reference_binding_resolution",
+        "provider": "openai",
+        "token_input": 341,
+        "token_output": 6
+      },
+      {
+        "latency_ms": 1730.901,
+        "model": "gpt-4o-mini",
+        "needs_knowledge": true,
+        "needs_memory": true,
+        "operation": "context_requirement_selection",
+        "provider": "openai",
+        "token_input": 565,
+        "token_output": 45
+      },
+      {
+        "latency_ms": 1421.281,
+        "model": "gpt-4o-mini",
+        "operation": "evidence_readiness",
+        "provider": "openai",
+        "ready": false,
+        "token_input": 1832,
+        "token_output": 5
+      }
+    ],
+    "query": "Based on the indexed production-agent notes, which practices should an organization of our size prioritize, given our preference for staged development?",
+    "readiness_called": true,
+    "readiness_ready": false,
+    "retrieval": {
+      "accepted_evidence_count": 5,
+      "best_score": 0.531268,
+      "candidate_count": 10,
+      "evidence": [
+        {
+          "locator": "page 2",
+          "page": 2,
+          "rank": 1,
+          "score": 0.531268,
+          "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+          "source_id": "production_agents",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 11",
+          "page": 11,
+          "rank": 2,
+          "score": 0.528683,
+          "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+          "source_id": "production_agents",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 10",
+          "page": 10,
+          "rank": 3,
+          "score": 0.49558,
+          "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+          "source_id": "production_agents",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 3",
+          "page": 3,
+          "rank": 4,
+          "score": 0.49254,
+          "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+          "source_id": "production_agents",
+          "source_kind": "pdf"
+        },
+        {
+          "locator": "page 12",
+          "page": 12,
+          "rank": 5,
+          "score": 0.490399,
+          "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+          "source_id": "production_agents",
+          "source_kind": "pdf"
+        }
+      ],
+      "relevance_floor": 0.3,
+      "retrieval_mode": "pgvector_exact_cosine"
+    },
+    "token_input": null,
+    "token_output": null,
+    "tool_calls_used": 3,
+    "used_saved_memory": false
+  },
+  "checks": {
+    "final_synthesis_called": false,
+    "grounded_answer": false,
+    "indexing_completed": true,
+    "knowledge_evidence_accepted": true,
+    "knowledge_only_citations": true,
+    "memory_dependencies_resolved": true,
+    "memory_terms_in_answer": {
+      "company_size_present": false,
+      "development_preference_present": false
+    },
+    "memory_used": false,
+    "needs_knowledge": true,
+    "needs_memory": true,
+    "no_memory_as_knowledge_evidence": true,
+    "owner_scope_local": true,
+    "readiness_ready": false,
+    "readiness_received_resolved_true": true
+  },
+  "citations": [],
+  "classification": "PERSISTENT_MIXED_READINESS_FALSE_NEGATIVE",
+  "context_requirement": {
+    "provider_calls": [
+      {
+        "latency_ms": 1730.901,
+        "model": "gpt-4o-mini",
+        "needs_knowledge": true,
+        "needs_memory": true,
+        "operation": "context_requirement_selection",
+        "provider": "openai",
+        "token_input": 565,
+        "token_output": 45
+      }
+    ],
+    "provider_result": {
+      "contextual_facets": [
+        {
+          "id": "company_size",
+          "text": "organization size"
+        },
+        {
+          "id": "development_preferences",
+          "text": "staged development"
+        }
+      ],
+      "memory_query_present": false,
+      "needs_knowledge": true,
+      "needs_memory": true
+    }
+  },
+  "controls": {
+    "case": "mixed Knowledge + Memory",
+    "chunk_max_chars": 1200,
+    "chunk_overlap_chars": 0,
+    "embedding_dimensions": 1536,
+    "embedding_model": "text-embedding-3-small",
+    "embeddings_persisted": false,
+    "full_memory_content_persisted": false,
+    "full_pdf_chunks_persisted": false,
+    "hidden_prompts_or_reasoning_persisted": false,
+    "knowledge_relevance_floor": 0.3,
+    "one_targeted_case_only": true,
+    "parser": "pypdf",
+    "permanent_memory_written": false,
+    "raw_provider_responses_persisted": false,
+    "retrieval": "pgvector cosine",
+    "top_k": 5
+  },
+  "final_synthesis": {
+    "answer": "I do not have enough information in production notes to answer safely.",
+    "called": false,
+    "insufficient_info": true,
+    "model": null,
+    "provider": null,
+    "token_input": null,
+    "token_output": null
+  },
+  "indexing": {
+    "capability_validation_passed": true,
+    "corpus_chunk_counts": [
+      22,
+      17,
+      40
+    ],
+    "corpus_manifest": [
+      {
+        "filename": "Best Practices for Building AI Agents That Work in Production.pdf",
+        "page_count": 14,
+        "sha256": "c88c995d6d6deb5d350f12621cabc9dbfa2323047491ad66771989f58100f074",
+        "source_id": "production_agents"
+      },
+      {
+        "filename": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+        "page_count": 17,
+        "sha256": "eec40e93d8adb8755f89378dc9778a9219786b4f4b466e696a6aa8e1f54b2591",
+        "source_id": "chatgpt_tasks_week3"
+      },
+      {
+        "filename": "Choose a design pattern for your agentic AI system  _  Cloud Architecture Center  _  Google Cloud Documentation.pdf",
+        "page_count": 21,
+        "sha256": "c22fe67748782b2dfe8bff364a9ea3fa852a0eba9da22f100cbe43cd73cbba36",
+        "source_id": "google_agent_patterns"
+      }
+    ],
+    "dimensions": 1536,
+    "embedding_calls": [
+      {
+        "input_count": 22,
+        "latency_ms": 3813.284,
+        "model": "text-embedding-3-small",
+        "token_input": 3532
+      },
+      {
+        "input_count": 17,
+        "latency_ms": 908.111,
+        "model": "text-embedding-3-small",
+        "token_input": 4619
+      },
+      {
+        "input_count": 40,
+        "latency_ms": 678.105,
+        "model": "text-embedding-3-small",
+        "token_input": 7014
+      },
+      {
+        "input_count": 1,
+        "latency_ms": 238.228,
+        "model": "text-embedding-3-small",
+        "token_input": 25
+      }
+    ],
+    "indexing_completed": true,
+    "model": "text-embedding-3-small",
+    "provider": "openai",
+    "sources": [
+      {
+        "embedded_chunk_count": 22,
+        "indexed_chunk_count": 22,
+        "source_id": "production_agents"
+      },
+      {
+        "embedded_chunk_count": 17,
+        "indexed_chunk_count": 17,
+        "source_id": "chatgpt_tasks_week3"
+      },
+      {
+        "embedded_chunk_count": 40,
+        "indexed_chunk_count": 40,
+        "source_id": "google_agent_patterns"
+      }
+    ]
+  },
+  "knowledge_retrieval": {
+    "accepted_evidence_count": 5,
+    "best_score": 0.531268,
+    "candidate_count": 10,
+    "evidence": [
+      {
+        "locator": "page 2",
+        "page": 2,
+        "rank": 1,
+        "score": 0.531268,
+        "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+        "source_id": "production_agents",
+        "source_kind": "pdf"
+      },
+      {
+        "locator": "page 11",
+        "page": 11,
+        "rank": 2,
+        "score": 0.528683,
+        "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+        "source_id": "production_agents",
+        "source_kind": "pdf"
+      },
+      {
+        "locator": "page 10",
+        "page": 10,
+        "rank": 3,
+        "score": 0.49558,
+        "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+        "source_id": "production_agents",
+        "source_kind": "pdf"
+      },
+      {
+        "locator": "page 3",
+        "page": 3,
+        "rank": 4,
+        "score": 0.49254,
+        "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+        "source_id": "production_agents",
+        "source_kind": "pdf"
+      },
+      {
+        "locator": "page 12",
+        "page": 12,
+        "rank": 5,
+        "score": 0.490399,
+        "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+        "source_id": "production_agents",
+        "source_kind": "pdf"
+      }
+    ],
+    "query_present": true,
+    "relevance_floor": 0.3,
+    "retrieval_mode": "pgvector_exact_cosine"
+  },
+  "memory_resolution_signal": {
+    "memory_dependencies_resolved": true,
+    "memory_required_dependency_count": 2,
+    "memory_resolved_dependency_count": 2,
+    "source": "backend runtime state"
+  },
+  "memory_retrieval": {
+    "dependencies": [
+      {
+        "accepted_memory_hit": true,
+        "candidate_count": 1,
+        "dependency": "organization size",
+        "owner_id": "local",
+        "retrieval_mode": "contextual",
+        "search_executed": true,
+        "top_k": 3
+      },
+      {
+        "accepted_memory_hit": true,
+        "candidate_count": 1,
+        "dependency": "staged development",
+        "owner_id": "local",
+        "retrieval_mode": "contextual",
+        "search_executed": true,
+        "top_k": 3
+      }
+    ],
+    "required_dependency_count": 2,
+    "resolved_dependency_count": 2
+  },
+  "memory_usage": {
+    "memory_terms_in_answer": {
+      "company_size_present": false,
+      "development_preference_present": false
+    },
+    "used_saved_memory": false
+  },
+  "model": "gpt-4o-mini",
+  "owner_scope": "local",
+  "pass": false,
+  "provider": "openai",
+  "provider_calls": [
+    {
+      "latency_ms": 2979.969,
+      "model": "gpt-4o-mini",
+      "operation": "reference_binding_resolution",
+      "provider": "openai",
+      "token_input": 341,
+      "token_output": 6
+    },
+    {
+      "latency_ms": 1730.901,
+      "model": "gpt-4o-mini",
+      "needs_knowledge": true,
+      "needs_memory": true,
+      "operation": "context_requirement_selection",
+      "provider": "openai",
+      "token_input": 565,
+      "token_output": 45
+    },
+    {
+      "latency_ms": 1421.281,
+      "model": "gpt-4o-mini",
+      "operation": "evidence_readiness",
+      "provider": "openai",
+      "ready": false,
+      "token_input": 1832,
+      "token_output": 5
+    }
+  ],
+  "readiness": {
+    "called": true,
+    "ready": false
+  },
+  "readiness_input": {
+    "accepted_knowledge_evidence_count": 5,
+    "accepted_knowledge_source_kinds": [
+      "pdf"
+    ],
+    "memory_as_knowledge_evidence": false,
+    "memory_side_dependencies": {
+      "facet_labels": [
+        "organization size",
+        "staged development"
+      ],
+      "memory_dependencies_resolved": true,
+      "needs_memory": true
+    },
+    "reference_binding_count": 0,
+    "task_present": true
+  },
+  "run_id": "20260909-repaired-harness-mixed-live",
+  "run_status": "completed",
+  "scenario_id": "mixed-knowledge-memory-final-20260909",
+  "verification_date": "2026-09-09"
+}
