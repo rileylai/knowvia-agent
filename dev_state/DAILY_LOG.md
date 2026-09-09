@@ -3762,3 +3762,21 @@ Final-QA evaluation now separates live automated classification from explicit of
 
 - `8.6` diagnosis complete，roadmap status 更新為 `done`。`8.5`、`8.4`、`7.0` 與 D027 維持原狀；
   Readiness Usability Study 仍是下一個 evidence-supported direction，不新增 `8.7` 或 implementation ID。
+
+## 2026-09-09 8.6.1 Context Requirement Provider Wire Contract Design
+
+- 依 8.6 evidence 完成 backend valid-state truth table：Knowledge-only、mixed Knowledge + Memory、
+  direct Memory-only 與 neither。`ContextualFacet` bounds、atomic facet rule、owner/authority
+  separation、最多 2 個 facets、direct `memory_query` compatibility、max 3 tool calls 與
+  backend fail-closed validation 均維持不變。
+- OpenAI Structured Outputs supported-subset inspection 確認：root object、nested `anyOf`、branch
+  required fields、enum discriminator、array/string bounds 與 `additionalProperties=false` 可用；
+  root-level `anyOf` 與 `if/then/else`、`dependentSchemas` 等跨欄位方式不可用。既有四欄位 root
+  shape 因而不能完整表達 domain cross-field state space。
+- Design freeze 選定 provider wire DTO：strict root object 的 `selection` nested union，四個 modes
+  為 `knowledge_only`、`mixed`、`memory_only`、`neither`。Backend 以 deterministic structural
+  mapping 產生既有 `ContextRequirementDecision`；mapping 不得 repair、猜測、刪除、截斷、補預設值
+  或 retry。Provider DTO / mapping invalid 仍為 provider/contract failure。
+- 新增 D035（Accepted），但不修改 D027 historical product semantics。8.6.1 roadmap status 為
+  `planned`；本輪只完成 architecture / contract design，implementation、TDD 與 UQ-003/UQ-007/
+  UQ-010 bounded selector-only actual-provider verification 留待下一輪。

@@ -192,12 +192,19 @@ tool calls 保持不變；partial 或 zero contextual Memory hit 時，若 Knowl
 仍可退化為 Knowledge-only 或 partial-personalized synthesis。Malformed decision、provider failure
 或超過 tool budget 仍依既有規則 fail closed。
 
+8.6.1 的 planned boundary 將 provider wire contract 與 backend domain contract 分離。Provider
+使用 strict root object 與 nested `selection` union，backend 再以 deterministic structural mapping
+產生既有 `ContextRequirementDecision`。這個 internal DTO 不取得 semantic、authority 或 execution
+權限；backend validator、Knowledge/Memory authority、retrieval topology 與 termination control
+保持不變。Implementation 尚未開始。
+
 5.0.3.3 的 architecture implementation 與 automated verification 已完成；unresolved
 actual-provider stability probe 與 browser acceptance deferred。這項 stability work 不列為
-目前主線；目前下一個唯一主線 priority 是 `8.5 User-Facing Answer Quality Diagnostic`，只做
-user-facing failure diagnosis，後續 retrieval、readiness 與 synthesis work 依 evidence 再決定。
+目前主線；目前下一個唯一主線 priority 是 `8.6.1 Context Requirement Provider Wire Contract`，
+只做 provider/domain contract design 與後續 bounded implementation，Readiness Usability Study
+排在此 slice implementation 後。
 `7.0 Evaluation and Demo Hardening` 維持 `manual_verification`，Formal Browser Demo Story
-保留但暫排在 `8.5` diagnosis 後。
+保留但暫排在 `8.6.1` contract implementation 後。
 
 ## Evidence Readiness（8.4 current implementation）
 

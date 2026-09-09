@@ -234,6 +234,25 @@ Knowledge evidence。
 Malformed decision、extra field、空 facet 或超過 facet 上限直接 fail closed，不用 keyword 或
 regex 重新猜測。
 
+### Context Requirement Provider Wire Contract（8.6.1 planned）
+
+8.6 的 actual-provider evidence 顯示，既有四個 root fields 的 provider schema 可以接受
+backend cross-field validator 必拒絕的組合。8.6.1 將 provider wire contract 與 domain contract
+分開：provider 只產生 strict root object 的 `selection` nested union，backend 再以 deterministic
+structural mapping 產生既有 `ContextRequirementDecision`。
+
+Provider wire branches 固定為 `knowledge_only`、`mixed`、`memory_only` 與 `neither`。Branch
+使用 `mode` enum discriminator；`mixed` 只帶 1 至 2 個 `contextual_facets`，`memory_only`
+只帶 bounded non-empty `memory_query`，其他 branch 不帶對應 dependency field。每個 branch
+使用 `additionalProperties=false` 並要求其欄位。這是 planned contract；current runtime 仍使用
+既有 selector response format，implementation 留待下一輪。
+
+Mapping 只做 structural conversion，不猜測 `needs_memory`、刪除 facet、截斷內容、補預設值或
+retry。Provider DTO 或 mapping 不合法時維持 provider/contract failure；`ContextRequirementDecision`
+validator 仍是最後 authority。此設計只消除已確認的 top-level cross-field state mismatch；
+`ContextualFacet` 的 atomic、bounds 與其他 backend semantic validators 仍可能拒絕 wire DTO，
+因此不宣稱所有 provider-schema-valid output 都必然通過 backend。
+
 Reference Binding provider 可以讀取本次 bounded resolver-visible、identity-bearing same-session
 history；previous assistant answer 不是本輪 Knowledge evidence，previous assistant 提到的 saved
 fact 也不是本輪 LongTermMemory retrieval。Selector 對新的 substantive request 只接 exact current
