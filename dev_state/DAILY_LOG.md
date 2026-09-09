@@ -3654,3 +3654,11 @@ Final-QA evaluation now separates live automated classification from explicit of
 - 沒有 `Generating answer...` phase：PASS
 - 沒有 `Request failed` / `AGENT_RUNTIME_FAILED`：PASS
 - Deterministic explicit-save browser behavior：PASS
+
+## 2026-09-09 8.5 Roadmap Reprioritization
+
+- 新增 `8.5 User-Facing Answer Quality Diagnostic`，status 為 `planned`，並設為下一個唯一主線
+  priority。
+- `7.0 Formal Browser Demo Story` 維持 `manual_verification`，暫排在 `8.5` diagnosis 後。
+- 本輪只有 documentation / roadmap planning；沒有 runtime、test、prompt、retrieval 或 provider
+  changes。

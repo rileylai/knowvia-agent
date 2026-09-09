@@ -194,7 +194,10 @@ tool calls 保持不變；partial 或 zero contextual Memory hit 時，若 Knowl
 
 5.0.3.3 的 architecture implementation 與 automated verification 已完成；unresolved
 actual-provider stability probe 與 browser acceptance deferred。這項 stability work 不列為
-目前主線，`7.0 Evaluation and Demo Hardening` 是下一個唯一主線 priority。
+目前主線；目前下一個唯一主線 priority 是 `8.5 User-Facing Answer Quality Diagnostic`，只做
+user-facing failure diagnosis，後續 retrieval、readiness 與 synthesis work 依 evidence 再決定。
+`7.0 Evaluation and Demo Hardening` 維持 `manual_verification`，Formal Browser Demo Story
+保留但暫排在 `8.5` diagnosis 後。
 
 ## Evidence Readiness（8.4 current implementation）
 

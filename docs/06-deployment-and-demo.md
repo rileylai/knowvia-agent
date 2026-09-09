@@ -123,7 +123,9 @@ Preflight 會檢查 frontend `dist/` build artifact；如果 frontend 或 API �
 | 8 | Refresh browser，查看目前 session 與 Memory Inspector。 | conversation、citation disclosure 與 memory indicator 保留。 | Durable state。 | 重新開啟同一個 `session_id`。 |
 | 9 | （Technical appendix）執行 `initialize` 與 `tools/list`。 | 只列出三個 Agent tools。 | Native MCP boundary。 | 使用 deterministic eval report。 |
 
-正式 browser 驗證尚未完成；`7.0` 維持 `manual_verification`，並且是下一個唯一主線 priority。
+正式 browser 驗證尚未完成；目前下一個唯一主線 priority 是 `8.5 User-Facing Answer Quality Diagnostic`，
+只做 user-facing failure diagnosis，後續 retrieval、readiness 與 synthesis work 依 evidence 再決定。
+`7.0` 維持 `manual_verification`，Formal Browser Demo Story 保留但暫排在 `8.5` diagnosis 後。
 5.0.3.1 未完成的 query-side semantic normalization，以及 5.0.3.3 unresolved actual-provider
 stability 已 deferred，不是本次 Demo Story 的前置 implementation。
 
