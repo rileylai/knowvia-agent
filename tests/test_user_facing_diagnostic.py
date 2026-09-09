@@ -4,14 +4,17 @@ import json
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from eval.user_facing_diagnostic import (
     DiagnosticReportError,
     build_report,
+    build_safe_contract_fingerprint,
     classify_trace,
     load_diagnostic_set,
     write_json_report,
 )
+from src.agent.models import ContextRequirementDecision
 from eval.run_provider_failure_triage import classify_repeats
 
 
@@ -259,3 +262,40 @@ def test_provider_triage_marks_success_and_failure_as_intermittent() -> None:
         "intermittent_provider_failure",
         "intermittent",
     )
+
+
+def test_selector_fingerprint_is_safe_and_maps_field_rule() -> None:
+    returned = {
+        "needs_knowledge": True,
+        "needs_memory": True,
+        "contextual_facets": [
+            {"id": "facet-1", "text": "private provider text"},
+            {"id": "facet-2", "text": "private provider text"},
+            {"id": "facet-3", "text": "private provider text"},
+        ],
+        "memory_query": None,
+    }
+    with pytest.raises(ValidationError) as error:
+        ContextRequirementDecision.model_validate(returned)
+
+    fingerprint = build_safe_contract_fingerprint(error.value, returned)
+    serialized = json.dumps(fingerprint, ensure_ascii=False)
+    assert fingerprint["error_stage"] == "pydantic_validation"
+    assert fingerprint["field_path"] == "contextual_facets"
+    assert fingerprint["validation_rule"] == "too_many_items"
+    assert "private provider text" not in serialized
+
+
+def test_selector_fingerprint_maps_cross_field_rule() -> None:
+    returned = {
+        "needs_knowledge": True,
+        "needs_memory": False,
+        "contextual_facets": [{"id": "facet-1", "text": "context"}],
+        "memory_query": None,
+    }
+    with pytest.raises(ValidationError) as error:
+        ContextRequirementDecision.model_validate(returned)
+
+    fingerprint = build_safe_contract_fingerprint(error.value, returned)
+    assert fingerprint["error_stage"] == "cross_field_validation"
+    assert fingerprint["validation_rule"] == "invalid_cross_field_combination"

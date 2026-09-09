@@ -3723,3 +3723,42 @@ Final-QA evaluation now separates live automated classification from explicit of
   contract failure。下一步不能直接把 Readiness Usability Study 當成唯一 provider reliability 前置假設；
   需先由 owner 決定是否建立 bounded selector contract stability slice。本輪沒有修改 production
   behavior、provider config、retry policy、roadmap status 或 architecture decision。
+
+## 2026-09-09 8.6 Context Requirement Selector Contract Stability Started
+
+- 已完成 current structured-output path、effective JSON Schema、backend Pydantic validator 與
+  provider adapter 的 deterministic inspection。Current mechanism 是 OpenAI
+  `response_format.type=json_schema`，adapter 只做 JSON object extraction，之後由
+  `ContextRequirementDecision.model_validate` 執行 backend validation；目前沒有 intermediate
+  field normalization。
+- 新增 evaluation-only safe contract fingerprint harness，僅保存 error stage、validation type、
+  bounded field path/rule、top-level field presence/type 與 `contextual_facets` count，不保存 provider
+  field values、prompt 或 raw response。
+- Selector-only actual-provider probe 尚未執行。安全審核要求對 UQ-003/UQ-007/UQ-010 各 3 次及
+  UQ-004/UQ-005/UQ-008 各 1 次的具體 call scope 重新明確批准；本輪未嘗試繞過，也未修改 production
+  selector、schema、provider config、retry、retrieval、readiness 或 final synthesis。
+
+## 2026-09-09 8.6 Context Requirement Selector Contract Stability Complete
+
+- 依一次性 bounded authorization，完成 12 次 selector-only actual-provider calls：UQ-003、UQ-007、
+  UQ-010 各 3 次；UQ-004、UQ-005、UQ-008 各 1 次。只執行既有 Context Requirement Selection、
+  JSON extraction 與 `ContextRequirementDecision.model_validate()`；沒有呼叫 retrieval、Memory、
+  Evidence Readiness、Final Synthesis、SSE 或 persistence。
+- Artifact：[8.6-selector-contract-probe-20260909.json](../eval/retrieval/reports/8.6-selector-contract-probe-20260909.json)。Artifact 只保存 bounded operation status、safe contract fingerprint 與 shape metadata，未保存 provider values、raw response、prompt、source text、Memory content 或 secrets。
+- UQ-003、UQ-007、UQ-010 的 9/9 failure fingerprints 完全相同：`error_stage=cross_field_validation`、
+  `validation_error_type=value_error`、root-level `invalid_cross_field_combination`；四個必要 top-level
+  fields 均存在且型別正確，`contextual_facets_count=2`。Primary selector shape 是
+  `needs_knowledge=true`、`needs_memory=false`，但 non-empty `contextual_facets` 違反 backend
+  的 no-Memory cross-field invariant。
+- UQ-004、UQ-005、UQ-008 的 3/3 control calls 均 completed；shape 相同但
+  `contextual_facets_count=0`。UQ-003 在本次 isolated selector-only probe 為 3/3 failure；上一輪
+  end-to-end triage 的 intermittent outcome 仍保留，但每次已觀察到的 failure 都是同一條 contract rule。
+- Primary finding：`BACKEND_SCHEMA_MISMATCH`。Provider-visible JSON Schema 未表達 cross-field
+  invariant，因而接受 backend Pydantic 會拒絕的組合。Secondary finding：
+  `CROSS_FIELD_CONTRACT_TOO_FRAGILE`。本輪沒有 evidence 支持 transport retry、adapter parse fix、
+  prompt change 或 production schema change；沒有修改 production behavior。
+
+### 8.6 State
+
+- `8.6` diagnosis complete，roadmap status 更新為 `done`。`8.5`、`8.4`、`7.0` 與 D027 維持原狀；
+  Readiness Usability Study 仍是下一個 evidence-supported direction，不新增 `8.7` 或 implementation ID。

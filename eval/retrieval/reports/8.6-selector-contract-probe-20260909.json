@@ -1,0 +1,539 @@
+{
+  "artifact_type": "selector_contract_stability_probe",
+  "results": [
+    {
+      "outcomes": [
+        {
+          "operation": "context_requirement_selection",
+          "outcome": "contract_failure",
+          "probe_index": 1,
+          "provider_operation": {
+            "error_type": null,
+            "failure_fingerprint": {
+              "contextual_facets_count": 2,
+              "error_stage": "cross_field_validation",
+              "field_path": null,
+              "field_presence": {
+                "contextual_facets": true,
+                "memory_query": true,
+                "needs_knowledge": true,
+                "needs_memory": true
+              },
+              "returned_top_level_fields": [
+                "contextual_facets",
+                "memory_query",
+                "needs_knowledge",
+                "needs_memory"
+              ],
+              "returned_top_level_types": {
+                "contextual_facets": "list",
+                "memory_query": "null",
+                "needs_knowledge": "bool",
+                "needs_memory": "bool"
+              },
+              "validation_error_type": "value_error",
+              "validation_rule": "invalid_cross_field_combination"
+            },
+            "operation": "context_requirement_selection",
+            "provider_error_kind": "provider_contract_failure",
+            "shape_metadata": null,
+            "status": "contract_error",
+            "structured_output_contract": "invalid"
+          },
+          "query_id": "UQ-003",
+          "termination_reason": "provider_contract_error"
+        },
+        {
+          "operation": "context_requirement_selection",
+          "outcome": "contract_failure",
+          "probe_index": 2,
+          "provider_operation": {
+            "error_type": null,
+            "failure_fingerprint": {
+              "contextual_facets_count": 2,
+              "error_stage": "cross_field_validation",
+              "field_path": null,
+              "field_presence": {
+                "contextual_facets": true,
+                "memory_query": true,
+                "needs_knowledge": true,
+                "needs_memory": true
+              },
+              "returned_top_level_fields": [
+                "contextual_facets",
+                "memory_query",
+                "needs_knowledge",
+                "needs_memory"
+              ],
+              "returned_top_level_types": {
+                "contextual_facets": "list",
+                "memory_query": "null",
+                "needs_knowledge": "bool",
+                "needs_memory": "bool"
+              },
+              "validation_error_type": "value_error",
+              "validation_rule": "invalid_cross_field_combination"
+            },
+            "operation": "context_requirement_selection",
+            "provider_error_kind": "provider_contract_failure",
+            "shape_metadata": null,
+            "status": "contract_error",
+            "structured_output_contract": "invalid"
+          },
+          "query_id": "UQ-003",
+          "termination_reason": "provider_contract_error"
+        },
+        {
+          "operation": "context_requirement_selection",
+          "outcome": "contract_failure",
+          "probe_index": 3,
+          "provider_operation": {
+            "error_type": null,
+            "failure_fingerprint": {
+              "contextual_facets_count": 2,
+              "error_stage": "cross_field_validation",
+              "field_path": null,
+              "field_presence": {
+                "contextual_facets": true,
+                "memory_query": true,
+                "needs_knowledge": true,
+                "needs_memory": true
+              },
+              "returned_top_level_fields": [
+                "contextual_facets",
+                "memory_query",
+                "needs_knowledge",
+                "needs_memory"
+              ],
+              "returned_top_level_types": {
+                "contextual_facets": "list",
+                "memory_query": "null",
+                "needs_knowledge": "bool",
+                "needs_memory": "bool"
+              },
+              "validation_error_type": "value_error",
+              "validation_rule": "invalid_cross_field_combination"
+            },
+            "operation": "context_requirement_selection",
+            "provider_error_kind": "provider_contract_failure",
+            "shape_metadata": null,
+            "status": "contract_error",
+            "structured_output_contract": "invalid"
+          },
+          "query_id": "UQ-003",
+          "termination_reason": "provider_contract_error"
+        }
+      ],
+      "primary_classification": "provider_failure",
+      "probe_repeat_count": 3,
+      "query_id": "UQ-003"
+    },
+    {
+      "outcomes": [
+        {
+          "operation": "context_requirement_selection",
+          "outcome": "contract_failure",
+          "probe_index": 1,
+          "provider_operation": {
+            "error_type": null,
+            "failure_fingerprint": {
+              "contextual_facets_count": 2,
+              "error_stage": "cross_field_validation",
+              "field_path": null,
+              "field_presence": {
+                "contextual_facets": true,
+                "memory_query": true,
+                "needs_knowledge": true,
+                "needs_memory": true
+              },
+              "returned_top_level_fields": [
+                "contextual_facets",
+                "memory_query",
+                "needs_knowledge",
+                "needs_memory"
+              ],
+              "returned_top_level_types": {
+                "contextual_facets": "list",
+                "memory_query": "null",
+                "needs_knowledge": "bool",
+                "needs_memory": "bool"
+              },
+              "validation_error_type": "value_error",
+              "validation_rule": "invalid_cross_field_combination"
+            },
+            "operation": "context_requirement_selection",
+            "provider_error_kind": "provider_contract_failure",
+            "shape_metadata": null,
+            "status": "contract_error",
+            "structured_output_contract": "invalid"
+          },
+          "query_id": "UQ-007",
+          "termination_reason": "provider_contract_error"
+        },
+        {
+          "operation": "context_requirement_selection",
+          "outcome": "contract_failure",
+          "probe_index": 2,
+          "provider_operation": {
+            "error_type": null,
+            "failure_fingerprint": {
+              "contextual_facets_count": 2,
+              "error_stage": "cross_field_validation",
+              "field_path": null,
+              "field_presence": {
+                "contextual_facets": true,
+                "memory_query": true,
+                "needs_knowledge": true,
+                "needs_memory": true
+              },
+              "returned_top_level_fields": [
+                "contextual_facets",
+                "memory_query",
+                "needs_knowledge",
+                "needs_memory"
+              ],
+              "returned_top_level_types": {
+                "contextual_facets": "list",
+                "memory_query": "null",
+                "needs_knowledge": "bool",
+                "needs_memory": "bool"
+              },
+              "validation_error_type": "value_error",
+              "validation_rule": "invalid_cross_field_combination"
+            },
+            "operation": "context_requirement_selection",
+            "provider_error_kind": "provider_contract_failure",
+            "shape_metadata": null,
+            "status": "contract_error",
+            "structured_output_contract": "invalid"
+          },
+          "query_id": "UQ-007",
+          "termination_reason": "provider_contract_error"
+        },
+        {
+          "operation": "context_requirement_selection",
+          "outcome": "contract_failure",
+          "probe_index": 3,
+          "provider_operation": {
+            "error_type": null,
+            "failure_fingerprint": {
+              "contextual_facets_count": 2,
+              "error_stage": "cross_field_validation",
+              "field_path": null,
+              "field_presence": {
+                "contextual_facets": true,
+                "memory_query": true,
+                "needs_knowledge": true,
+                "needs_memory": true
+              },
+              "returned_top_level_fields": [
+                "contextual_facets",
+                "memory_query",
+                "needs_knowledge",
+                "needs_memory"
+              ],
+              "returned_top_level_types": {
+                "contextual_facets": "list",
+                "memory_query": "null",
+                "needs_knowledge": "bool",
+                "needs_memory": "bool"
+              },
+              "validation_error_type": "value_error",
+              "validation_rule": "invalid_cross_field_combination"
+            },
+            "operation": "context_requirement_selection",
+            "provider_error_kind": "provider_contract_failure",
+            "shape_metadata": null,
+            "status": "contract_error",
+            "structured_output_contract": "invalid"
+          },
+          "query_id": "UQ-007",
+          "termination_reason": "provider_contract_error"
+        }
+      ],
+      "primary_classification": "provider_failure",
+      "probe_repeat_count": 3,
+      "query_id": "UQ-007"
+    },
+    {
+      "outcomes": [
+        {
+          "operation": "context_requirement_selection",
+          "outcome": "contract_failure",
+          "probe_index": 1,
+          "provider_operation": {
+            "error_type": null,
+            "failure_fingerprint": {
+              "contextual_facets_count": 2,
+              "error_stage": "cross_field_validation",
+              "field_path": null,
+              "field_presence": {
+                "contextual_facets": true,
+                "memory_query": true,
+                "needs_knowledge": true,
+                "needs_memory": true
+              },
+              "returned_top_level_fields": [
+                "contextual_facets",
+                "memory_query",
+                "needs_knowledge",
+                "needs_memory"
+              ],
+              "returned_top_level_types": {
+                "contextual_facets": "list",
+                "memory_query": "null",
+                "needs_knowledge": "bool",
+                "needs_memory": "bool"
+              },
+              "validation_error_type": "value_error",
+              "validation_rule": "invalid_cross_field_combination"
+            },
+            "operation": "context_requirement_selection",
+            "provider_error_kind": "provider_contract_failure",
+            "shape_metadata": null,
+            "status": "contract_error",
+            "structured_output_contract": "invalid"
+          },
+          "query_id": "UQ-010",
+          "termination_reason": "provider_contract_error"
+        },
+        {
+          "operation": "context_requirement_selection",
+          "outcome": "contract_failure",
+          "probe_index": 2,
+          "provider_operation": {
+            "error_type": null,
+            "failure_fingerprint": {
+              "contextual_facets_count": 2,
+              "error_stage": "cross_field_validation",
+              "field_path": null,
+              "field_presence": {
+                "contextual_facets": true,
+                "memory_query": true,
+                "needs_knowledge": true,
+                "needs_memory": true
+              },
+              "returned_top_level_fields": [
+                "contextual_facets",
+                "memory_query",
+                "needs_knowledge",
+                "needs_memory"
+              ],
+              "returned_top_level_types": {
+                "contextual_facets": "list",
+                "memory_query": "null",
+                "needs_knowledge": "bool",
+                "needs_memory": "bool"
+              },
+              "validation_error_type": "value_error",
+              "validation_rule": "invalid_cross_field_combination"
+            },
+            "operation": "context_requirement_selection",
+            "provider_error_kind": "provider_contract_failure",
+            "shape_metadata": null,
+            "status": "contract_error",
+            "structured_output_contract": "invalid"
+          },
+          "query_id": "UQ-010",
+          "termination_reason": "provider_contract_error"
+        },
+        {
+          "operation": "context_requirement_selection",
+          "outcome": "contract_failure",
+          "probe_index": 3,
+          "provider_operation": {
+            "error_type": null,
+            "failure_fingerprint": {
+              "contextual_facets_count": 2,
+              "error_stage": "cross_field_validation",
+              "field_path": null,
+              "field_presence": {
+                "contextual_facets": true,
+                "memory_query": true,
+                "needs_knowledge": true,
+                "needs_memory": true
+              },
+              "returned_top_level_fields": [
+                "contextual_facets",
+                "memory_query",
+                "needs_knowledge",
+                "needs_memory"
+              ],
+              "returned_top_level_types": {
+                "contextual_facets": "list",
+                "memory_query": "null",
+                "needs_knowledge": "bool",
+                "needs_memory": "bool"
+              },
+              "validation_error_type": "value_error",
+              "validation_rule": "invalid_cross_field_combination"
+            },
+            "operation": "context_requirement_selection",
+            "provider_error_kind": "provider_contract_failure",
+            "shape_metadata": null,
+            "status": "contract_error",
+            "structured_output_contract": "invalid"
+          },
+          "query_id": "UQ-010",
+          "termination_reason": "provider_contract_error"
+        }
+      ],
+      "primary_classification": "provider_failure",
+      "probe_repeat_count": 3,
+      "query_id": "UQ-010"
+    },
+    {
+      "outcomes": [
+        {
+          "operation": "context_requirement_selection",
+          "outcome": "completed",
+          "probe_index": 1,
+          "provider_operation": {
+            "error_type": null,
+            "failure_fingerprint": null,
+            "operation": "context_requirement_selection",
+            "provider_error_kind": null,
+            "shape_metadata": {
+              "contextual_facets_count": 0,
+              "field_presence": {
+                "contextual_facets": true,
+                "memory_query": true,
+                "needs_knowledge": true,
+                "needs_memory": true
+              },
+              "returned_top_level_fields": [
+                "contextual_facets",
+                "memory_query",
+                "needs_knowledge",
+                "needs_memory"
+              ],
+              "returned_top_level_types": {
+                "contextual_facets": "list",
+                "memory_query": "null",
+                "needs_knowledge": "bool",
+                "needs_memory": "bool"
+              }
+            },
+            "status": "completed",
+            "structured_output_contract": "valid"
+          },
+          "query_id": "UQ-004",
+          "termination_reason": "completed"
+        }
+      ],
+      "primary_classification": "completed",
+      "probe_repeat_count": 1,
+      "query_id": "UQ-004"
+    },
+    {
+      "outcomes": [
+        {
+          "operation": "context_requirement_selection",
+          "outcome": "completed",
+          "probe_index": 1,
+          "provider_operation": {
+            "error_type": null,
+            "failure_fingerprint": null,
+            "operation": "context_requirement_selection",
+            "provider_error_kind": null,
+            "shape_metadata": {
+              "contextual_facets_count": 0,
+              "field_presence": {
+                "contextual_facets": true,
+                "memory_query": true,
+                "needs_knowledge": true,
+                "needs_memory": true
+              },
+              "returned_top_level_fields": [
+                "contextual_facets",
+                "memory_query",
+                "needs_knowledge",
+                "needs_memory"
+              ],
+              "returned_top_level_types": {
+                "contextual_facets": "list",
+                "memory_query": "null",
+                "needs_knowledge": "bool",
+                "needs_memory": "bool"
+              }
+            },
+            "status": "completed",
+            "structured_output_contract": "valid"
+          },
+          "query_id": "UQ-005",
+          "termination_reason": "completed"
+        }
+      ],
+      "primary_classification": "completed",
+      "probe_repeat_count": 1,
+      "query_id": "UQ-005"
+    },
+    {
+      "outcomes": [
+        {
+          "operation": "context_requirement_selection",
+          "outcome": "completed",
+          "probe_index": 1,
+          "provider_operation": {
+            "error_type": null,
+            "failure_fingerprint": null,
+            "operation": "context_requirement_selection",
+            "provider_error_kind": null,
+            "shape_metadata": {
+              "contextual_facets_count": 0,
+              "field_presence": {
+                "contextual_facets": true,
+                "memory_query": true,
+                "needs_knowledge": true,
+                "needs_memory": true
+              },
+              "returned_top_level_fields": [
+                "contextual_facets",
+                "memory_query",
+                "needs_knowledge",
+                "needs_memory"
+              ],
+              "returned_top_level_types": {
+                "contextual_facets": "list",
+                "memory_query": "null",
+                "needs_knowledge": "bool",
+                "needs_memory": "bool"
+              }
+            },
+            "status": "completed",
+            "structured_output_contract": "valid"
+          },
+          "query_id": "UQ-008",
+          "termination_reason": "completed"
+        }
+      ],
+      "primary_classification": "completed",
+      "probe_repeat_count": 1,
+      "query_id": "UQ-008"
+    }
+  ],
+  "run_metadata": {
+    "control_repeats": 1,
+    "diagnostic_id": "knowvia-user-facing-answer-quality-8.6",
+    "failure_case_repeats": 3,
+    "failure_cases": [
+      "UQ-003",
+      "UQ-007",
+      "UQ-010"
+    ],
+    "final_synthesis_called": false,
+    "memory_called": false,
+    "model": "gpt-4o-mini",
+    "probe_run_id": "20260909T114951Z",
+    "production_behavior_changed": false,
+    "provider": "openai",
+    "raw_provider_response_recorded": false,
+    "readiness_called": false,
+    "retrieval_called": false,
+    "successful_controls": [
+      "UQ-004",
+      "UQ-005",
+      "UQ-008"
+    ]
+  }
+}

@@ -100,6 +100,86 @@ def classify_safe_provider_error(exc: BaseException) -> str:
     return "unresolved_provider_failure"
 
 
+def _safe_value_type(value: object) -> str:
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "bool"
+    if isinstance(value, str):
+        return "string"
+    if isinstance(value, list):
+        return "list"
+    if isinstance(value, dict):
+        return "object"
+    if isinstance(value, (int, float)):
+        return "number"
+    return "unknown"
+
+
+def _safe_shape_metadata(value: object) -> dict[str, object]:
+    if not isinstance(value, Mapping):
+        return {
+            "returned_top_level_fields": [],
+            "field_presence": {},
+            "returned_top_level_types": {},
+        }
+    fields = sorted(str(key) for key in value.keys() if isinstance(key, str))
+    metadata: dict[str, object] = {
+        "returned_top_level_fields": fields,
+        "field_presence": {field: field in value for field in (
+            "needs_knowledge",
+            "needs_memory",
+            "contextual_facets",
+            "memory_query",
+        )},
+        "returned_top_level_types": {
+            field: _safe_value_type(value.get(field)) for field in fields
+        },
+    }
+    facets = value.get("contextual_facets")
+    if isinstance(facets, list):
+        metadata["contextual_facets_count"] = len(facets)
+    return metadata
+
+
+def build_safe_contract_fingerprint(
+    exc: ValidationError,
+    returned: object,
+) -> dict[str, object]:
+    errors = exc.errors()
+    first = errors[0] if errors else {}
+    raw_loc = first.get("loc", ()) if isinstance(first, Mapping) else ()
+    loc = raw_loc if isinstance(raw_loc, tuple) else tuple(raw_loc or ())
+    field_path = ".".join(str(part) for part in loc) or None
+    validation_error_type = str(first.get("type") or "unknown")
+    if validation_error_type == "missing":
+        validation_rule = "missing"
+    elif validation_error_type == "extra_forbidden":
+        validation_rule = "extra_forbidden"
+    elif validation_error_type in {"bool_type", "string_type", "list_type"}:
+        validation_rule = validation_error_type
+    elif validation_error_type in {"string_too_long", "too_long"}:
+        validation_rule = (
+            "too_many_items" if field_path == "contextual_facets" else "too_long"
+        )
+    elif validation_error_type in {"value_error", "assertion_error"} and not field_path:
+        validation_rule = "invalid_cross_field_combination"
+    else:
+        validation_rule = "unknown"
+    fingerprint: dict[str, object] = {
+        "error_stage": (
+            "cross_field_validation"
+            if validation_rule == "invalid_cross_field_combination"
+            else "pydantic_validation"
+        ),
+        "validation_error_type": validation_error_type,
+        "field_path": field_path,
+        "validation_rule": validation_rule,
+    }
+    fingerprint.update(_safe_shape_metadata(returned))
+    return fingerprint
+
+
 def load_diagnostic_set(path: Path) -> dict[str, object]:
     try:
         payload = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -313,6 +393,13 @@ class RecordingProvider(LLMProvider):
                 error_type=type(exc).__name__,
                 provider_error_kind=classify_safe_provider_error(exc),
             )
+            if event["provider_error_kind"] == "structured_output_parse_failure":
+                event["failure_fingerprint"] = {
+                    "error_stage": "provider_parse",
+                    "validation_error_type": type(exc).__name__,
+                    "field_path": None,
+                    "validation_rule": "invalid_json",
+                }
             self.events.append(event)
             raise
         structured = response.structured_output
@@ -327,15 +414,19 @@ class RecordingProvider(LLMProvider):
         if contract_model is not None:
             try:
                 contract_model.model_validate(structured)
-            except ValidationError:
+            except ValidationError as validation_error:
                 event.update(
                     status="contract_error",
                     contract_error=True,
                     structured_output_contract="invalid",
                     provider_error_kind="provider_contract_failure",
+                    failure_fingerprint=build_safe_contract_fingerprint(
+                        validation_error, structured
+                    ),
                 )
             else:
                 event["structured_output_contract"] = "valid"
+                event["shape_metadata"] = _safe_shape_metadata(structured)
         if operation == "reference_binding_resolution" and isinstance(structured, Mapping):
             bindings = structured.get("reference_bindings")
             event["binding_count"] = len(bindings) if isinstance(bindings, list) else None
