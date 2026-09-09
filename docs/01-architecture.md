@@ -199,10 +199,10 @@ tool calls 保持不變；partial 或 zero contextual Memory hit 時，若 Knowl
 保持不變。
 
 5.0.3.3 的 architecture implementation 與 automated verification 已完成；unresolved
-actual-provider stability probe 與 browser acceptance deferred。這項 stability work 不列為
-目前主線；目前下一個唯一主線 priority 是 `8.6.1 Context Requirement Provider Wire Contract`，
-automated implementation 已完成，尚待 bounded actual-provider verification。Readiness Usability Study
-排在此 slice 後。
+actual-provider stability probe 與 browser acceptance deferred。`8.6.1 Context Requirement Provider
+Wire Contract` 的 automated implementation 與 bounded actual-provider verification 已完成：UQ-003、
+UQ-007、UQ-010 各一次均通過 OpenAI Structured Output schema acceptance、wire validation、
+deterministic mapping 與 domain validation。Readiness Usability Study 排在此 slice 後。
 `7.0 Evaluation and Demo Hardening` 維持 `manual_verification`，Formal Browser Demo Story
 保留但暫排在 `8.6.1` 後。
 

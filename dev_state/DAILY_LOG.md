@@ -3803,3 +3803,17 @@ Final-QA evaluation now separates live automated classification from explicit of
 - `8.6.1` 維持 `in_progress`。Automated implementation complete；本輪未使用舊的 live-call
   authorization。Completion 前仍需 owner 授權 UQ-003、UQ-007、UQ-010 各一次 selector-only
   actual-provider verification，總計 3 calls。Readiness Usability Study 排在此 slice 後。
+
+## 2026-09-09 8.6.1 Context Requirement Provider Wire Contract Closure
+
+- 依 bounded authorization 完成 3 次 selector-only actual-provider calls：UQ-003、UQ-007、
+  UQ-010 各一次，無 retry、無額外 case。三次均完成，沒有 transport/provider failure。
+- 三次 call 均接受 current strict root object + nested `selection` `anyOf` schema；wire DTO
+  validation、deterministic DTO-to-domain mapping 與 `ContextRequirementDecision.model_validate()`
+  均通過。三個結果均為 `knowledge_only`，domain flags 為 `needs_knowledge=true`、
+  `needs_memory=false`、zero contextual facets、無 direct `memory_query`。
+- 本次只執行 exact frozen query、current Context Requirement Selection、OpenAI Structured Output、
+  wire validation、mapping 與 domain validation。沒有執行 Reference Binding、retrieval、Memory、
+  Evidence Readiness、Final Synthesis、SSE 或 database mutation；沒有修改 runtime code。
+- `8.6.1` closure complete，roadmap status 更新為 `done`。Readiness Usability Study 排在此 slice
+  後。

@@ -98,9 +98,10 @@ Backend 在每一步檢查 timeout、argument、permission、context budget 與 
 ### Current: 5.0.3.3 Context Authority Consolidation
 
 這是已完成 implementation 的 current workflow。Unresolved actual-provider stability 與 browser
-acceptance deferred；目前下一個唯一主線 priority 是 `8.6.1 Context Requirement Provider Wire Contract`，
-automated implementation 已完成，尚待 bounded actual-provider verification。Readiness Usability Study
-排在此 slice 後。
+acceptance deferred；`8.6.1 Context Requirement Provider Wire Contract` 的 automated implementation
+與 bounded actual-provider verification 已完成。UQ-003、UQ-007、UQ-010 各一次均通過 OpenAI
+Structured Output schema acceptance、wire validation、deterministic mapping 與 domain validation。
+Readiness Usability Study 排在此 slice 後。
 `7.0 Evaluation and Demo Hardening` 維持 `manual_verification`，Formal Browser Demo Story 保留但暫排在
 `8.6.1` 後。Explicit save、conversation
 recall、conversation transform 與 direct Memory compatibility 先走既有 dedicated routes；其餘
