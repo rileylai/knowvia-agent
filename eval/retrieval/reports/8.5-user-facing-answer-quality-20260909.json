@@ -1,0 +1,1971 @@
+{
+  "aggregate": {
+    "acceptance_failure": 1,
+    "completed": 4,
+    "evidence_coverage_failure": 0,
+    "expected_insufficient": 1,
+    "false_insufficient_count": 4,
+    "false_insufficient_root_causes": {
+      "acceptance_failure": 1,
+      "readiness_false_negative": 2,
+      "retrieval_failure": 1
+    },
+    "final_synthesis_failure": 0,
+    "invalid_test_setup": 0,
+    "provider_failure": 3,
+    "readiness_false_negative": 2,
+    "retrieval_failure": 1,
+    "selector_failure": 0,
+    "total": 12
+  },
+  "artifact_type": "user_facing_answer_quality_diagnostic",
+  "corpus_snapshot": {
+    "database": {
+      "name": "knowvia",
+      "port": 5432,
+      "user": "knowvia"
+    },
+    "embedding_dimensions": 1536,
+    "embedding_model": "text-embedding-3-small",
+    "owner_scope": "local",
+    "production_retrieval_settings": {
+      "candidate_pool": "production",
+      "chunk_max_chars": 1200,
+      "chunk_overlap_chars": 0,
+      "embedding_dimensions": 1536,
+      "embedding_model": "text-embedding-3-small",
+      "knowledge_relevance_floor": 0.3,
+      "similarity": "pgvector_cosine",
+      "top_k": 5
+    },
+    "source_count": 11,
+    "sources": [
+      {
+        "indexed_chunk_count": 34,
+        "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+        "source_id": 19,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 22,
+        "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+        "source_id": 18,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 19,
+        "source_display_name": "In-House LLM Serving at Netflix. By AI Platform’s Model Runtime team and… _ by Netflix Technology Blog _ Jul, 2026 _ Netflix TechBlog.pdf",
+        "source_id": 17,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 14,
+        "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+        "source_id": 16,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 5,
+        "source_display_name": "Screenshots · Y Context Engineering",
+        "source_id": 15,
+        "source_kind": "image",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 2,
+        "source_display_name": "Schema Evolution: Changing the Contract Without Breaking What Runs",
+        "source_id": 9,
+        "source_kind": "url",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 36,
+        "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+        "source_id": 8,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 14,
+        "source_display_name": "How to let AI agents act on behalf of users without handing them access tokens — WorkOS.pdf",
+        "source_id": 7,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 40,
+        "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+        "source_id": 6,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 17,
+        "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+        "source_id": 2,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 22,
+        "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+        "source_id": 1,
+        "source_kind": "pdf",
+        "status": "indexed"
+      }
+    ],
+    "total_indexed_chunk_count": 225
+  },
+  "per_query_traces": [
+    {
+      "categories": [
+        "zh_to_en",
+        "broad_open_ended",
+        "multi_document"
+      ],
+      "classification": "readiness_false_negative",
+      "context_requirement": {
+        "contextual_facet_count": 0,
+        "needs_knowledge": true,
+        "needs_memory": false,
+        "selector_status": "completed"
+      },
+      "expected_outcome": "SHOULD_ANSWER",
+      "final": {
+        "citation_count": 0,
+        "completed": false,
+        "insufficient_info": true,
+        "synthesis_called": false,
+        "termination_reason": "insufficient_info"
+      },
+      "gold_evidence_groups": [
+        {
+          "group_id": "permission_controls",
+          "locations": [
+            {
+              "locators": [
+                "page 1",
+                "page 2",
+                "page 4",
+                "page 5",
+                "page 6"
+              ],
+              "source_id": 7
+            },
+            {
+              "locators": [
+                "page 7",
+                "page 10"
+              ],
+              "source_id": 1
+            }
+          ],
+          "match": "any"
+        }
+      ],
+      "knowledge_retrieval": {
+        "accepted": [
+          {
+            "locator": "page 1",
+            "rank": 1,
+            "score": 0.412181,
+            "source_display_name": "How to let AI agents act on behalf of users without handing them access tokens — WorkOS.pdf",
+            "source_id": 7
+          },
+          {
+            "locator": "page 15",
+            "rank": 2,
+            "score": 0.380017,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          },
+          {
+            "locator": "page 4",
+            "rank": 3,
+            "score": 0.374726,
+            "source_display_name": "How to let AI agents act on behalf of users without handing them access tokens — WorkOS.pdf",
+            "source_id": 7
+          },
+          {
+            "locator": "page 9",
+            "rank": 4,
+            "score": 0.37398,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          },
+          {
+            "locator": "Image 3 · chunk 1",
+            "rank": 5,
+            "score": 0.364257,
+            "source_display_name": "Screenshots · Y Context Engineering",
+            "source_id": 15
+          }
+        ],
+        "accepted_evidence_count": 5,
+        "actual_query_used": "agentic system 有哪些權限管理要做",
+        "candidates": [
+          {
+            "locator": "page 1",
+            "rank": 1,
+            "score": 0.412181,
+            "source_display_name": "How to let AI agents act on behalf of users without handing them access tokens — WorkOS.pdf",
+            "source_id": 7
+          },
+          {
+            "locator": "page 15",
+            "rank": 2,
+            "score": 0.380017,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          },
+          {
+            "locator": "page 4",
+            "rank": 3,
+            "score": 0.374726,
+            "source_display_name": "How to let AI agents act on behalf of users without handing them access tokens — WorkOS.pdf",
+            "source_id": 7
+          },
+          {
+            "locator": "page 9",
+            "rank": 4,
+            "score": 0.37398,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          },
+          {
+            "locator": "Image 3 · chunk 1",
+            "rank": 5,
+            "score": 0.364257,
+            "source_display_name": "Screenshots · Y Context Engineering",
+            "source_id": 15
+          },
+          {
+            "locator": "page 1",
+            "rank": 6,
+            "score": 0.360608,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          },
+          {
+            "locator": "page 1",
+            "rank": 7,
+            "score": 0.355695,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 4",
+            "rank": 8,
+            "score": 0.354414,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "Image 1 · chunk 1",
+            "rank": 9,
+            "score": 0.352115,
+            "source_display_name": "Screenshots · Y Context Engineering",
+            "source_id": 15
+          },
+          {
+            "locator": "page 21",
+            "rank": 10,
+            "score": 0.35031,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          }
+        ],
+        "raw_candidate_count": 10,
+        "raw_observation_status": "observed",
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "manual_review": {
+        "answer_scope": "bounded_grounded_answer_not_exhaustive",
+        "corpus_support": "SUFFICIENT_FOR_BOUNDED_ANSWER",
+        "natural_user_wording": true,
+        "status": "REVIEWED"
+      },
+      "memory": {
+        "query_count": 0,
+        "resolved_count": 0,
+        "searched": false,
+        "used_saved_memory": false
+      },
+      "query_id": "UQ-001",
+      "readiness": {
+        "called": true,
+        "contract_error": false,
+        "provider_error": false,
+        "ready": false
+      },
+      "reference_binding": {
+        "binding_count": 0,
+        "valid": true
+      },
+      "test_setup_valid": true,
+      "user_query": "agentic system 有哪些權限管理要做"
+    },
+    {
+      "categories": [
+        "zh_to_en",
+        "broad_open_ended",
+        "multi_evidence",
+        "multi_document"
+      ],
+      "classification": "acceptance_failure",
+      "context_requirement": {
+        "contextual_facet_count": 0,
+        "needs_knowledge": true,
+        "needs_memory": false,
+        "selector_status": "completed"
+      },
+      "expected_outcome": "SHOULD_ANSWER",
+      "final": {
+        "citation_count": 0,
+        "completed": false,
+        "insufficient_info": true,
+        "synthesis_called": false,
+        "termination_reason": "insufficient_info"
+      },
+      "gold_evidence_groups": [
+        {
+          "group_id": "production_risks_and_practices",
+          "locations": [
+            {
+              "locators": [
+                "page 2",
+                "page 3",
+                "page 5",
+                "page 7",
+                "page 10"
+              ],
+              "source_id": 1
+            },
+            {
+              "locators": [
+                "page 2",
+                "page 3",
+                "page 4",
+                "page 6"
+              ],
+              "source_id": 7
+            },
+            {
+              "locators": [
+                "page 2",
+                "page 3",
+                "page 4"
+              ],
+              "source_id": 6
+            }
+          ],
+          "match": "any"
+        }
+      ],
+      "knowledge_retrieval": {
+        "accepted": [
+          {
+            "locator": "page 1",
+            "rank": 1,
+            "score": 0.421189,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 1",
+            "rank": 2,
+            "score": 0.406687,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 19",
+            "rank": 3,
+            "score": 0.394569,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "Image 1 · chunk 1",
+            "rank": 4,
+            "score": 0.389802,
+            "source_display_name": "Screenshots · Y Context Engineering",
+            "source_id": 15
+          },
+          {
+            "locator": "Image 3 · chunk 1",
+            "rank": 5,
+            "score": 0.385147,
+            "source_display_name": "Screenshots · Y Context Engineering",
+            "source_id": 15
+          }
+        ],
+        "accepted_evidence_count": 5,
+        "actual_query_used": "agentic system 要注意什麼地方",
+        "candidates": [
+          {
+            "locator": "page 1",
+            "rank": 1,
+            "score": 0.421189,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 1",
+            "rank": 2,
+            "score": 0.406687,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 19",
+            "rank": 3,
+            "score": 0.394569,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "Image 1 · chunk 1",
+            "rank": 4,
+            "score": 0.389802,
+            "source_display_name": "Screenshots · Y Context Engineering",
+            "source_id": 15
+          },
+          {
+            "locator": "Image 3 · chunk 1",
+            "rank": 5,
+            "score": 0.385147,
+            "source_display_name": "Screenshots · Y Context Engineering",
+            "source_id": 15
+          },
+          {
+            "locator": "page 4",
+            "rank": 6,
+            "score": 0.383866,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 2",
+            "rank": 7,
+            "score": 0.377494,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 2",
+            "rank": 8,
+            "score": 0.366733,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 3",
+            "rank": 9,
+            "score": 0.365006,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "Image 4 · chunk 1",
+            "rank": 10,
+            "score": 0.362148,
+            "source_display_name": "Screenshots · Y Context Engineering",
+            "source_id": 15
+          }
+        ],
+        "raw_candidate_count": 10,
+        "raw_observation_status": "observed",
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "manual_review": {
+        "answer_scope": "bounded_grounded_answer_not_exhaustive",
+        "corpus_support": "SUFFICIENT_FOR_BOUNDED_ANSWER",
+        "natural_user_wording": true,
+        "status": "REVIEWED"
+      },
+      "memory": {
+        "query_count": 0,
+        "resolved_count": 0,
+        "searched": false,
+        "used_saved_memory": false
+      },
+      "query_id": "UQ-002",
+      "readiness": {
+        "called": true,
+        "contract_error": false,
+        "provider_error": false,
+        "ready": false
+      },
+      "reference_binding": {
+        "binding_count": 0,
+        "valid": true
+      },
+      "test_setup_valid": true,
+      "user_query": "agentic system 要注意什麼地方"
+    },
+    {
+      "categories": [
+        "zh_to_en",
+        "semantic_paraphrase",
+        "technical_identifier"
+      ],
+      "classification": "provider_failure",
+      "context_requirement": {
+        "contextual_facet_count": 2,
+        "needs_knowledge": true,
+        "needs_memory": false,
+        "selector_status": "completed"
+      },
+      "expected_outcome": "SHOULD_ANSWER",
+      "final": {
+        "citation_count": 0,
+        "completed": false,
+        "insufficient_info": false,
+        "synthesis_called": false,
+        "termination_reason": "provider_error"
+      },
+      "gold_evidence_groups": [
+        {
+          "group_id": "delegated_access_boundary",
+          "locations": [
+            {
+              "locators": [
+                "page 4",
+                "page 5",
+                "page 6"
+              ],
+              "source_id": 7
+            }
+          ],
+          "match": "any"
+        }
+      ],
+      "knowledge_retrieval": {
+        "accepted": [],
+        "accepted_evidence_count": 0,
+        "actual_query_used": null,
+        "candidates": [],
+        "raw_candidate_count": 0,
+        "raw_observation_status": "not_called",
+        "retrieval_mode": null
+      },
+      "manual_review": {
+        "answer_scope": "direct",
+        "corpus_support": "SUFFICIENT",
+        "natural_user_wording": true,
+        "status": "REVIEWED"
+      },
+      "memory": {
+        "query_count": 0,
+        "resolved_count": 0,
+        "searched": false,
+        "used_saved_memory": false
+      },
+      "query_id": "UQ-003",
+      "readiness": {
+        "called": false,
+        "contract_error": false,
+        "provider_error": false,
+        "ready": null
+      },
+      "reference_binding": {
+        "binding_count": 0,
+        "valid": true
+      },
+      "test_setup_valid": true,
+      "user_query": "AI agent 代表使用者呼叫第三方 API 時，怎麼避免把 access token 直接交給它？"
+    },
+    {
+      "categories": [
+        "zh_to_en",
+        "semantic_paraphrase",
+        "narrow_source_supported_enumeration"
+      ],
+      "classification": "completed",
+      "context_requirement": {
+        "contextual_facet_count": 0,
+        "needs_knowledge": true,
+        "needs_memory": false,
+        "selector_status": "completed"
+      },
+      "expected_outcome": "SHOULD_ANSWER",
+      "final": {
+        "citation_count": 4,
+        "completed": true,
+        "insufficient_info": false,
+        "synthesis_called": true,
+        "termination_reason": "completed"
+      },
+      "gold_evidence_groups": [
+        {
+          "group_id": "pattern_selection_process",
+          "locations": [
+            {
+              "locators": [
+                "page 1",
+                "page 2",
+                "page 3"
+              ],
+              "source_id": 6
+            }
+          ],
+          "match": "any"
+        }
+      ],
+      "knowledge_retrieval": {
+        "accepted": [
+          {
+            "locator": "page 2",
+            "rank": 1,
+            "score": 0.608019,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 16",
+            "rank": 2,
+            "score": 0.585051,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 17",
+            "rank": 3,
+            "score": 0.576335,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 1",
+            "rank": 4,
+            "score": 0.559447,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 1",
+            "rank": 5,
+            "score": 0.537071,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          }
+        ],
+        "accepted_evidence_count": 5,
+        "actual_query_used": "這份 agent design pattern guide 建議怎麼選適合的 pattern？",
+        "candidates": [
+          {
+            "locator": "page 2",
+            "rank": 1,
+            "score": 0.608019,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 16",
+            "rank": 2,
+            "score": 0.585051,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 17",
+            "rank": 3,
+            "score": 0.576335,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 1",
+            "rank": 4,
+            "score": 0.559447,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 1",
+            "rank": 5,
+            "score": 0.537071,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 19",
+            "rank": 6,
+            "score": 0.518723,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 12",
+            "rank": 7,
+            "score": 0.507109,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 8",
+            "rank": 8,
+            "score": 0.506366,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "page 4",
+            "rank": 9,
+            "score": 0.503369,
+            "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+            "source_id": 1
+          },
+          {
+            "locator": "page 18",
+            "rank": 10,
+            "score": 0.50187,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          }
+        ],
+        "raw_candidate_count": 10,
+        "raw_observation_status": "observed",
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "manual_review": {
+        "answer_scope": "direct",
+        "corpus_support": "SUFFICIENT",
+        "natural_user_wording": true,
+        "status": "REVIEWED"
+      },
+      "memory": {
+        "query_count": 0,
+        "resolved_count": 0,
+        "searched": false,
+        "used_saved_memory": false
+      },
+      "query_id": "UQ-004",
+      "readiness": {
+        "called": true,
+        "contract_error": false,
+        "provider_error": false,
+        "ready": true
+      },
+      "reference_binding": {
+        "binding_count": 0,
+        "valid": true
+      },
+      "test_setup_valid": true,
+      "user_query": "這份 agent design pattern guide 建議怎麼選適合的 pattern？"
+    },
+    {
+      "categories": [
+        "zh_to_en",
+        "exact_factual"
+      ],
+      "classification": "completed",
+      "context_requirement": {
+        "contextual_facet_count": 0,
+        "needs_knowledge": true,
+        "needs_memory": false,
+        "selector_status": "completed"
+      },
+      "expected_outcome": "SHOULD_ANSWER",
+      "final": {
+        "citation_count": 4,
+        "completed": true,
+        "insufficient_info": false,
+        "synthesis_called": true,
+        "termination_reason": "completed"
+      },
+      "gold_evidence_groups": [
+        {
+          "group_id": "table_count",
+          "locations": [
+            {
+              "locators": [
+                "page 2"
+              ],
+              "source_id": 8
+            }
+          ],
+          "match": "any"
+        }
+      ],
+      "knowledge_retrieval": {
+        "accepted": [
+          {
+            "locator": "page 21",
+            "rank": 1,
+            "score": 0.646467,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 3",
+            "rank": 2,
+            "score": 0.58805,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 2",
+            "rank": 3,
+            "score": 0.57945,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 5",
+            "rank": 4,
+            "score": 0.561061,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 2",
+            "rank": 5,
+            "score": 0.554887,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          }
+        ],
+        "accepted_evidence_count": 5,
+        "actual_query_used": "OpenAI 的 data agent 要在大約多少張資料表中找資料？",
+        "candidates": [
+          {
+            "locator": "page 21",
+            "rank": 1,
+            "score": 0.646467,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 3",
+            "rank": 2,
+            "score": 0.58805,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 2",
+            "rank": 3,
+            "score": 0.57945,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 5",
+            "rank": 4,
+            "score": 0.561061,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 2",
+            "rank": 5,
+            "score": 0.554887,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 10",
+            "rank": 6,
+            "score": 0.551974,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 7",
+            "rank": 7,
+            "score": 0.540888,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 8",
+            "rank": 8,
+            "score": 0.53771,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 22",
+            "rank": 9,
+            "score": 0.507596,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 4",
+            "rank": 10,
+            "score": 0.495672,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          }
+        ],
+        "raw_candidate_count": 10,
+        "raw_observation_status": "observed",
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "manual_review": {
+        "answer_scope": "direct",
+        "corpus_support": "SUFFICIENT",
+        "natural_user_wording": true,
+        "status": "REVIEWED"
+      },
+      "memory": {
+        "query_count": 0,
+        "resolved_count": 0,
+        "searched": false,
+        "used_saved_memory": false
+      },
+      "query_id": "UQ-005",
+      "readiness": {
+        "called": true,
+        "contract_error": false,
+        "provider_error": false,
+        "ready": true
+      },
+      "reference_binding": {
+        "binding_count": 0,
+        "valid": true
+      },
+      "test_setup_valid": true,
+      "user_query": "OpenAI 的 data agent 要在大約多少張資料表中找資料？"
+    },
+    {
+      "categories": [
+        "semantic_paraphrase",
+        "technical_identifier"
+      ],
+      "classification": "readiness_false_negative",
+      "context_requirement": {
+        "contextual_facet_count": 0,
+        "needs_knowledge": true,
+        "needs_memory": false,
+        "selector_status": "completed"
+      },
+      "expected_outcome": "SHOULD_ANSWER",
+      "final": {
+        "citation_count": 0,
+        "completed": false,
+        "insufficient_info": true,
+        "synthesis_called": false,
+        "termination_reason": "insufficient_info"
+      },
+      "gold_evidence_groups": [
+        {
+          "group_id": "concurrent_schema_versions",
+          "locations": [
+            {
+              "locators": [
+                "chunk 1",
+                "chunk 2"
+              ],
+              "source_id": 9
+            }
+          ],
+          "match": "any"
+        }
+      ],
+      "knowledge_retrieval": {
+        "accepted": [
+          {
+            "locator": "chunk 2",
+            "rank": 1,
+            "score": 0.697787,
+            "source_display_name": "Schema Evolution: Changing the Contract Without Breaking What Runs",
+            "source_id": 9
+          },
+          {
+            "locator": "chunk 1",
+            "rank": 2,
+            "score": 0.571575,
+            "source_display_name": "Schema Evolution: Changing the Contract Without Breaking What Runs",
+            "source_id": 9
+          },
+          {
+            "locator": "page 5",
+            "rank": 3,
+            "score": 0.444966,
+            "source_display_name": "In-House LLM Serving at Netflix. By AI Platform’s Model Runtime team and… _ by Netflix Technology Blog _ Jul, 2026 _ Netflix TechBlog.pdf",
+            "source_id": 17
+          },
+          {
+            "locator": "page 8",
+            "rank": 4,
+            "score": 0.36645,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 12",
+            "rank": 5,
+            "score": 0.345995,
+            "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+            "source_id": 19
+          }
+        ],
+        "accepted_evidence_count": 5,
+        "actual_query_used": "schema evolution 為什麼要假設多個 schema version 會同時存在？",
+        "candidates": [
+          {
+            "locator": "chunk 2",
+            "rank": 1,
+            "score": 0.697787,
+            "source_display_name": "Schema Evolution: Changing the Contract Without Breaking What Runs",
+            "source_id": 9
+          },
+          {
+            "locator": "chunk 1",
+            "rank": 2,
+            "score": 0.571575,
+            "source_display_name": "Schema Evolution: Changing the Contract Without Breaking What Runs",
+            "source_id": 9
+          },
+          {
+            "locator": "page 5",
+            "rank": 3,
+            "score": 0.444966,
+            "source_display_name": "In-House LLM Serving at Netflix. By AI Platform’s Model Runtime team and… _ by Netflix Technology Blog _ Jul, 2026 _ Netflix TechBlog.pdf",
+            "source_id": 17
+          },
+          {
+            "locator": "page 8",
+            "rank": 4,
+            "score": 0.36645,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 12",
+            "rank": 5,
+            "score": 0.345995,
+            "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+            "source_id": 19
+          },
+          {
+            "locator": "page 3",
+            "rank": 6,
+            "score": 0.326285,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          },
+          {
+            "locator": "page 10",
+            "rank": 7,
+            "score": 0.323993,
+            "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+            "source_id": 6
+          },
+          {
+            "locator": "Image 5 · chunk 1",
+            "rank": 8,
+            "score": 0.31863,
+            "source_display_name": "Screenshots · Y Context Engineering",
+            "source_id": 15
+          },
+          {
+            "locator": "page 17",
+            "rank": 9,
+            "score": 0.317078,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 12",
+            "rank": 10,
+            "score": 0.316087,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          }
+        ],
+        "raw_candidate_count": 10,
+        "raw_observation_status": "observed",
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "manual_review": {
+        "answer_scope": "direct",
+        "corpus_support": "SUFFICIENT",
+        "natural_user_wording": true,
+        "status": "REVIEWED"
+      },
+      "memory": {
+        "query_count": 0,
+        "resolved_count": 0,
+        "searched": false,
+        "used_saved_memory": false
+      },
+      "query_id": "UQ-006",
+      "readiness": {
+        "called": true,
+        "contract_error": false,
+        "provider_error": false,
+        "ready": false
+      },
+      "reference_binding": {
+        "binding_count": 0,
+        "valid": true
+      },
+      "test_setup_valid": true,
+      "user_query": "schema evolution 為什麼要假設多個 schema version 會同時存在？"
+    },
+    {
+      "categories": [
+        "zh_to_en",
+        "exact_factual",
+        "technical_identifier",
+        "multi_evidence"
+      ],
+      "classification": "provider_failure",
+      "context_requirement": {
+        "contextual_facet_count": 2,
+        "needs_knowledge": true,
+        "needs_memory": false,
+        "selector_status": "completed"
+      },
+      "expected_outcome": "SHOULD_ANSWER",
+      "final": {
+        "citation_count": 0,
+        "completed": false,
+        "insufficient_info": false,
+        "synthesis_called": false,
+        "termination_reason": "provider_error"
+      },
+      "gold_evidence_groups": [
+        {
+          "group_id": "cpu_and_gpu_serving_paths",
+          "locations": [
+            {
+              "locators": [
+                "page 2"
+              ],
+              "source_id": 17
+            }
+          ],
+          "match": "any"
+        }
+      ],
+      "knowledge_retrieval": {
+        "accepted": [],
+        "accepted_evidence_count": 0,
+        "actual_query_used": null,
+        "candidates": [],
+        "raw_candidate_count": 0,
+        "raw_observation_status": "not_called",
+        "retrieval_mode": null
+      },
+      "manual_review": {
+        "answer_scope": "direct_comparison",
+        "corpus_support": "SUFFICIENT",
+        "natural_user_wording": true,
+        "status": "REVIEWED"
+      },
+      "memory": {
+        "query_count": 0,
+        "resolved_count": 0,
+        "searched": false,
+        "used_saved_memory": false
+      },
+      "query_id": "UQ-007",
+      "readiness": {
+        "called": false,
+        "contract_error": false,
+        "provider_error": false,
+        "ready": null
+      },
+      "reference_binding": {
+        "binding_count": 0,
+        "valid": true
+      },
+      "test_setup_valid": true,
+      "user_query": "Netflix 的小型 CPU model 和大型 GPU model，inference 路徑有什麼不同？"
+    },
+    {
+      "categories": [
+        "zh_to_en",
+        "exact_factual",
+        "narrow_source_supported_enumeration"
+      ],
+      "classification": "completed",
+      "context_requirement": {
+        "contextual_facet_count": 0,
+        "needs_knowledge": true,
+        "needs_memory": false,
+        "selector_status": "completed"
+      },
+      "expected_outcome": "SHOULD_ANSWER",
+      "final": {
+        "citation_count": 4,
+        "completed": true,
+        "insufficient_info": false,
+        "synthesis_called": true,
+        "termination_reason": "completed"
+      },
+      "gold_evidence_groups": [
+        {
+          "group_id": "efficiency_layers",
+          "locations": [
+            {
+              "locators": [
+                "page 2",
+                "page 3"
+              ],
+              "source_id": 18
+            }
+          ],
+          "match": "any"
+        }
+      ],
+      "knowledge_retrieval": {
+        "accepted": [
+          {
+            "locator": "page 1",
+            "rank": 1,
+            "score": 0.725984,
+            "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+            "source_id": 18
+          },
+          {
+            "locator": "page 2",
+            "rank": 2,
+            "score": 0.680424,
+            "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+            "source_id": 18
+          },
+          {
+            "locator": "page 3",
+            "rank": 3,
+            "score": 0.672071,
+            "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+            "source_id": 19
+          },
+          {
+            "locator": "page 2",
+            "rank": 4,
+            "score": 0.646245,
+            "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+            "source_id": 18
+          },
+          {
+            "locator": "page 1",
+            "rank": 5,
+            "score": 0.63399,
+            "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+            "source_id": 19
+          }
+        ],
+        "accepted_evidence_count": 5,
+        "actual_query_used": "OpenAI 擴展 Codex 和 ChatGPT Work 時，agent efficiency 分成哪三層？",
+        "candidates": [
+          {
+            "locator": "page 1",
+            "rank": 1,
+            "score": 0.725984,
+            "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+            "source_id": 18
+          },
+          {
+            "locator": "page 2",
+            "rank": 2,
+            "score": 0.680424,
+            "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+            "source_id": 18
+          },
+          {
+            "locator": "page 3",
+            "rank": 3,
+            "score": 0.672071,
+            "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+            "source_id": 19
+          },
+          {
+            "locator": "page 2",
+            "rank": 4,
+            "score": 0.646245,
+            "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+            "source_id": 18
+          },
+          {
+            "locator": "page 1",
+            "rank": 5,
+            "score": 0.63399,
+            "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+            "source_id": 19
+          },
+          {
+            "locator": "page 2",
+            "rank": 6,
+            "score": 0.63323,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 2",
+            "rank": 7,
+            "score": 0.632977,
+            "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+            "source_id": 19
+          },
+          {
+            "locator": "page 16",
+            "rank": 8,
+            "score": 0.625588,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 5",
+            "rank": 9,
+            "score": 0.615766,
+            "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+            "source_id": 18
+          },
+          {
+            "locator": "page 7",
+            "rank": 10,
+            "score": 0.611892,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          }
+        ],
+        "raw_candidate_count": 10,
+        "raw_observation_status": "observed",
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "manual_review": {
+        "answer_scope": "direct_enumeration",
+        "corpus_support": "SUFFICIENT",
+        "natural_user_wording": true,
+        "status": "REVIEWED"
+      },
+      "memory": {
+        "query_count": 0,
+        "resolved_count": 0,
+        "searched": false,
+        "used_saved_memory": false
+      },
+      "query_id": "UQ-008",
+      "readiness": {
+        "called": true,
+        "contract_error": false,
+        "provider_error": false,
+        "ready": true
+      },
+      "reference_binding": {
+        "binding_count": 0,
+        "valid": true
+      },
+      "test_setup_valid": true,
+      "user_query": "OpenAI 擴展 Codex 和 ChatGPT Work 時，agent efficiency 分成哪三層？"
+    },
+    {
+      "categories": [
+        "zh_to_en",
+        "technical_identifier",
+        "multi_evidence"
+      ],
+      "classification": "retrieval_failure",
+      "context_requirement": {
+        "contextual_facet_count": 0,
+        "needs_knowledge": true,
+        "needs_memory": false,
+        "selector_status": "completed"
+      },
+      "expected_outcome": "SHOULD_ANSWER",
+      "final": {
+        "citation_count": 0,
+        "completed": false,
+        "insufficient_info": true,
+        "synthesis_called": false,
+        "termination_reason": "insufficient_info"
+      },
+      "gold_evidence_groups": [
+        {
+          "group_id": "harness_optimizations",
+          "locations": [
+            {
+              "locators": [
+                "page 2",
+                "page 6",
+                "page 12"
+              ],
+              "source_id": 19
+            }
+          ],
+          "match": "any"
+        },
+        {
+          "group_id": "api_and_inference_optimizations",
+          "locations": [
+            {
+              "locators": [
+                "page 2",
+                "page 15"
+              ],
+              "source_id": 19
+            }
+          ],
+          "match": "any"
+        }
+      ],
+      "knowledge_retrieval": {
+        "accepted": [
+          {
+            "locator": "page 1",
+            "rank": 1,
+            "score": 0.598776,
+            "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+            "source_id": 19
+          },
+          {
+            "locator": "page 7",
+            "rank": 2,
+            "score": 0.565783,
+            "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+            "source_id": 19
+          },
+          {
+            "locator": "page 1",
+            "rank": 3,
+            "score": 0.564869,
+            "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+            "source_id": 18
+          },
+          {
+            "locator": "page 23",
+            "rank": 4,
+            "score": 0.549987,
+            "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+            "source_id": 19
+          },
+          {
+            "locator": "page 7",
+            "rank": 5,
+            "score": 0.523601,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          }
+        ],
+        "accepted_evidence_count": 5,
+        "actual_query_used": "ChatGPT 的 agent loop 在 harness、API 和 inference 三層各做了哪些優化？",
+        "candidates": [
+          {
+            "locator": "page 1",
+            "rank": 1,
+            "score": 0.598776,
+            "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+            "source_id": 19
+          },
+          {
+            "locator": "page 7",
+            "rank": 2,
+            "score": 0.565783,
+            "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+            "source_id": 19
+          },
+          {
+            "locator": "page 1",
+            "rank": 3,
+            "score": 0.564869,
+            "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+            "source_id": 18
+          },
+          {
+            "locator": "page 23",
+            "rank": 4,
+            "score": 0.549987,
+            "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+            "source_id": 19
+          },
+          {
+            "locator": "page 7",
+            "rank": 5,
+            "score": 0.523601,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          },
+          {
+            "locator": "page 3",
+            "rank": 6,
+            "score": 0.522928,
+            "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+            "source_id": 18
+          },
+          {
+            "locator": "page 2",
+            "rank": 7,
+            "score": 0.517683,
+            "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+            "source_id": 18
+          },
+          {
+            "locator": "page 4",
+            "rank": 8,
+            "score": 0.511379,
+            "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+            "source_id": 18
+          },
+          {
+            "locator": "page 1",
+            "rank": 9,
+            "score": 0.507784,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          },
+          {
+            "locator": "page 6",
+            "rank": 10,
+            "score": 0.501861,
+            "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+            "source_id": 8
+          }
+        ],
+        "raw_candidate_count": 10,
+        "raw_observation_status": "observed",
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "manual_review": {
+        "answer_scope": "bounded_three_layer_summary",
+        "corpus_support": "SUFFICIENT",
+        "natural_user_wording": true,
+        "status": "REVIEWED"
+      },
+      "memory": {
+        "query_count": 0,
+        "resolved_count": 0,
+        "searched": false,
+        "used_saved_memory": false
+      },
+      "query_id": "UQ-009",
+      "readiness": {
+        "called": true,
+        "contract_error": false,
+        "provider_error": false,
+        "ready": false
+      },
+      "reference_binding": {
+        "binding_count": 0,
+        "valid": true
+      },
+      "test_setup_valid": true,
+      "user_query": "ChatGPT 的 agent loop 在 harness、API 和 inference 三層各做了哪些優化？"
+    },
+    {
+      "categories": [
+        "multi_evidence",
+        "narrow_source_supported_enumeration"
+      ],
+      "classification": "provider_failure",
+      "context_requirement": {
+        "contextual_facet_count": 2,
+        "needs_knowledge": true,
+        "needs_memory": false,
+        "selector_status": "completed"
+      },
+      "expected_outcome": "SHOULD_ANSWER",
+      "final": {
+        "citation_count": 0,
+        "completed": false,
+        "insufficient_info": false,
+        "synthesis_called": false,
+        "termination_reason": "provider_error"
+      },
+      "gold_evidence_groups": [
+        {
+          "group_id": "compression",
+          "locations": [
+            {
+              "locators": [
+                "Image 1 · chunk 1",
+                "Image 2 · chunk 1"
+              ],
+              "source_id": 15
+            }
+          ],
+          "match": "any"
+        },
+        {
+          "group_id": "memory",
+          "locations": [
+            {
+              "locators": [
+                "Image 3 · chunk 1"
+              ],
+              "source_id": 15
+            }
+          ],
+          "match": "any"
+        },
+        {
+          "group_id": "filtering",
+          "locations": [
+            {
+              "locators": [
+                "Image 4 · chunk 1"
+              ],
+              "source_id": 15
+            }
+          ],
+          "match": "any"
+        }
+      ],
+      "knowledge_retrieval": {
+        "accepted": [],
+        "accepted_evidence_count": 0,
+        "actual_query_used": null,
+        "candidates": [],
+        "raw_candidate_count": 0,
+        "raw_observation_status": "not_called",
+        "retrieval_mode": null
+      },
+      "manual_review": {
+        "answer_scope": "direct_enumeration",
+        "corpus_support": "SUFFICIENT",
+        "natural_user_wording": true,
+        "status": "REVIEWED"
+      },
+      "memory": {
+        "query_count": 0,
+        "resolved_count": 0,
+        "searched": false,
+        "used_saved_memory": false
+      },
+      "query_id": "UQ-010",
+      "readiness": {
+        "called": false,
+        "contract_error": false,
+        "provider_error": false,
+        "ready": null
+      },
+      "reference_binding": {
+        "binding_count": 0,
+        "valid": true
+      },
+      "test_setup_valid": true,
+      "user_query": "Context Engineering 裡，壓縮、memory 和 filtering 分別怎麼控制 context？"
+    },
+    {
+      "categories": [
+        "technical_identifier",
+        "semantic_paraphrase",
+        "multi_evidence"
+      ],
+      "classification": "completed",
+      "context_requirement": {
+        "contextual_facet_count": 0,
+        "needs_knowledge": true,
+        "needs_memory": false,
+        "selector_status": "completed"
+      },
+      "expected_outcome": "SHOULD_ANSWER",
+      "final": {
+        "citation_count": 5,
+        "completed": true,
+        "insufficient_info": false,
+        "synthesis_called": true,
+        "termination_reason": "completed"
+      },
+      "gold_evidence_groups": [
+        {
+          "group_id": "retrieval_path_comparison",
+          "locations": [
+            {
+              "locators": [
+                "page 3",
+                "page 5",
+                "page 6"
+              ],
+              "source_id": 16
+            }
+          ],
+          "match": "any"
+        }
+      ],
+      "knowledge_retrieval": {
+        "accepted": [
+          {
+            "locator": "page 1",
+            "rank": 1,
+            "score": 0.655605,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 8",
+            "rank": 2,
+            "score": 0.594189,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 6",
+            "rank": 3,
+            "score": 0.521074,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 3",
+            "rank": 4,
+            "score": 0.519176,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 9",
+            "rank": 5,
+            "score": 0.487635,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          }
+        ],
+        "accepted_evidence_count": 5,
+        "actual_query_used": "Markdown KB 和 Vector RAG 的 retrieval 流程有什麼差別？",
+        "candidates": [
+          {
+            "locator": "page 1",
+            "rank": 1,
+            "score": 0.655605,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 8",
+            "rank": 2,
+            "score": 0.594189,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 6",
+            "rank": 3,
+            "score": 0.521074,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 3",
+            "rank": 4,
+            "score": 0.519176,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 9",
+            "rank": 5,
+            "score": 0.487635,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 5",
+            "rank": 6,
+            "score": 0.452049,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 14",
+            "rank": 7,
+            "score": 0.448044,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 10",
+            "rank": 8,
+            "score": 0.425384,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 13",
+            "rank": 9,
+            "score": 0.421569,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 4",
+            "rank": 10,
+            "score": 0.391934,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          }
+        ],
+        "raw_candidate_count": 10,
+        "raw_observation_status": "observed",
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "manual_review": {
+        "answer_scope": "direct_comparison",
+        "corpus_support": "SUFFICIENT",
+        "natural_user_wording": true,
+        "status": "REVIEWED"
+      },
+      "memory": {
+        "query_count": 0,
+        "resolved_count": 0,
+        "searched": false,
+        "used_saved_memory": false
+      },
+      "query_id": "UQ-011",
+      "readiness": {
+        "called": true,
+        "contract_error": false,
+        "provider_error": false,
+        "ready": true
+      },
+      "reference_binding": {
+        "binding_count": 0,
+        "valid": true
+      },
+      "test_setup_valid": true,
+      "user_query": "Markdown KB 和 Vector RAG 的 retrieval 流程有什麼差別？"
+    },
+    {
+      "categories": [
+        "unsupported_negative_control"
+      ],
+      "classification": "expected_insufficient",
+      "context_requirement": {
+        "contextual_facet_count": 0,
+        "needs_knowledge": true,
+        "needs_memory": false,
+        "selector_status": "completed"
+      },
+      "expected_outcome": "SHOULD_FAIL_CLOSED",
+      "final": {
+        "citation_count": 0,
+        "completed": false,
+        "insufficient_info": true,
+        "synthesis_called": false,
+        "termination_reason": "insufficient_info"
+      },
+      "gold_evidence_groups": [],
+      "knowledge_retrieval": {
+        "accepted": [],
+        "accepted_evidence_count": 0,
+        "actual_query_used": "我們 2027 年的併購預算是多少？",
+        "candidates": [
+          {
+            "locator": "page 17",
+            "rank": 1,
+            "score": 0.288524,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          },
+          {
+            "locator": "page 15",
+            "rank": 2,
+            "score": 0.262828,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          },
+          {
+            "locator": "page 16",
+            "rank": 3,
+            "score": 0.246556,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          },
+          {
+            "locator": "page 8",
+            "rank": 4,
+            "score": 0.24157,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 12",
+            "rank": 5,
+            "score": 0.229908,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          },
+          {
+            "locator": "Image 3 · chunk 1",
+            "rank": 6,
+            "score": 0.224343,
+            "source_display_name": "Screenshots · Y Context Engineering",
+            "source_id": 15
+          },
+          {
+            "locator": "page 4",
+            "rank": 7,
+            "score": 0.222681,
+            "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+            "source_id": 16
+          },
+          {
+            "locator": "page 2",
+            "rank": 8,
+            "score": 0.218392,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          },
+          {
+            "locator": "page 1",
+            "rank": 9,
+            "score": 0.21623,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          },
+          {
+            "locator": "page 14",
+            "rank": 10,
+            "score": 0.215493,
+            "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+            "source_id": 2
+          }
+        ],
+        "raw_candidate_count": 10,
+        "raw_observation_status": "observed",
+        "retrieval_mode": "pgvector_exact_cosine"
+      },
+      "manual_review": {
+        "answer_scope": "unsupported",
+        "corpus_support": "NONE",
+        "natural_user_wording": true,
+        "status": "REVIEWED"
+      },
+      "memory": {
+        "query_count": 0,
+        "resolved_count": 0,
+        "searched": false,
+        "used_saved_memory": false
+      },
+      "query_id": "UQ-012",
+      "readiness": {
+        "called": false,
+        "contract_error": false,
+        "provider_error": false,
+        "ready": null
+      },
+      "reference_binding": {
+        "binding_count": 0,
+        "valid": true
+      },
+      "test_setup_valid": true,
+      "user_query": "我們 2027 年的併購預算是多少？"
+    }
+  ],
+  "run_metadata": {
+    "diagnostic_id": "knowvia-user-facing-answer-quality-8.5",
+    "diagnostic_version": "1.0",
+    "execution_levels": [
+      "deterministic_local_trace",
+      "actual_provider_trace"
+    ],
+    "model": "gpt-4o-mini",
+    "openai_api_key_available": true,
+    "primary_runs_per_query": 1,
+    "production_behavior_changed": false,
+    "provider": "openai",
+    "repeated_probe_count": 0,
+    "run_id": "20260909T111007Z"
+  }
+}

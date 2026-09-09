@@ -3662,3 +3662,50 @@ Final-QA evaluation now separates live automated classification from explicit of
 - `7.0 Formal Browser Demo Story` 維持 `manual_verification`，暫排在 `8.5` diagnosis 後。
 - 本輪只有 documentation / roadmap planning；沒有 runtime、test、prompt、retrieval 或 provider
   changes。
+
+## 2026-09-09 8.5 User-Facing Answer Quality Diagnostic
+
+### Scope and artifact
+
+- 完成 12 題人工 review 的 bounded diagnostic set；UQ-001「agentic system 有哪些權限管理要做」與
+  UQ-002「agentic system 要注意什麼地方」均完成一次 primary actual-provider run，沒有 repeat。
+- 使用 current local Knowvia database、owner scope `local` 與既有 production flow。Corpus snapshot
+  為 11 個 indexed sources、225 個 eligible chunks；retrieval settings 維持
+  `text-embedding-3-small / 1536`、pgvector cosine、`knowledge_relevance_floor=0.30`、candidate
+  pool production behavior 與 `top_k=5`。
+- Bounded machine-readable artifact：[8.5-user-facing-answer-quality-20260909.json](../eval/retrieval/reports/8.5-user-facing-answer-quality-20260909.json)。Artifact 只保存 query、selector、retrieval metadata、accepted evidence metadata、readiness/final state 與 classification；未保存 secret、raw provider response、hidden prompt、CoT、embedding、vector、full source text 或 raw Memory content。
+
+### Findings
+
+- 12 題 aggregate：`completed=4`、`expected_insufficient=1`、`provider_failure=3`、
+  `readiness_false_negative=2`、`acceptance_failure=1`、`retrieval_failure=1`；selector、evidence
+  coverage、final synthesis failure 與 invalid setup 均為 `0`。
+- 11 題 `SHOULD_ANSWER` 中有 4 題最後 `insufficient_info=true`。False Insufficient root-cause
+  distribution：readiness false negative `2`、acceptance failure `1`、retrieval failure `1`。
+- UQ-001 的 10 個 raw candidates 中已有可支撐 bounded answer 的 accepted evidence（5 個 accepted），
+  但 Evidence Readiness 回傳 `ready=false`，未呼叫 Final Synthesis；分類為
+  `readiness_false_negative`。
+- UQ-002 的 raw candidate pool 已包含 Gold source 的 supporting pages，但必要 evidence 位於未被
+  acceptance top-5 接受的 candidates；之後 readiness 亦為 `false`，primary stop boundary 為
+  `acceptance_failure`，未呼叫 Final Synthesis。
+- UQ-003、UQ-007、UQ-010 在 provider boundary 以 `provider_error` 結束；未將 provider failure
+  當成 semantic insufficient，也沒有 retry。
+- Broad/open-ended 的兩題均未完成：一題為 readiness false negative、一題為 acceptance failure。
+  Technical identifier、中文 query 對英文 Knowledge 與 multi-evidence cases 顯示 mixed boundaries；
+  sample 與 provider failures 不足以支持單獨的 language 或 identifier optimization 結論。
+
+### Verification and decision
+
+- `tests/test_user_facing_diagnostic.py`：`10 passed`；Agent Golden Set：`29/29`；compile 與
+  `git diff --check`：PASS。
+- Primary recommendation：`READINESS_WORK_SUPPORTED`，僅限後續 evaluation / owner decision；
+  acceptance 與 retrieval 各有單一 case evidence，尚不支持 BM25/RRF、reranker、embedding
+  migration 或 production optimization。Final Synthesis work：`NO EVIDENCE`。
+- 本輪沒有修改 runtime、tests 以外的 production behavior、parser、chunking、embedding、threshold、
+  candidate pool、prompt、provider config、Knowledge data 或 Memory data；沒有 stage、commit 或 push。
+
+### State
+
+- `8.5` diagnosis complete，roadmap status 更新為 `done`；不自行建立下一個 implementation ID。
+- `7.0` 維持 `manual_verification`，Formal Browser Demo Story 保留；`8.4` historical outcome 與
+  D032 / D033 不變。

@@ -1,0 +1,220 @@
+diagnostic_id: knowvia-user-facing-answer-quality-8.5
+version: "1.0"
+owner_scope: local
+production_contract:
+  chunk_max_chars: 1200
+  chunk_overlap_chars: 0
+  embedding_model: text-embedding-3-small
+  embedding_dimensions: 1536
+  similarity: pgvector_cosine
+  candidate_pool: production
+  top_k: 5
+  knowledge_relevance_floor: 0.30
+cases:
+  - id: UQ-001
+    query: agentic system 有哪些權限管理要做
+    categories: [zh_to_en, broad_open_ended, multi_document]
+    expected_outcome: SHOULD_ANSWER
+    manual_review:
+      status: REVIEWED
+      natural_user_wording: true
+      corpus_support: SUFFICIENT_FOR_BOUNDED_ANSWER
+      answer_scope: bounded_grounded_answer_not_exhaustive
+    evidence_groups:
+      - group_id: permission_controls
+        match: any
+        locations:
+          - source_id: 7
+            locators: [page 1, page 2, page 4, page 5, page 6]
+          - source_id: 1
+            locators: [page 7, page 10]
+
+  - id: UQ-002
+    query: agentic system 要注意什麼地方
+    categories: [zh_to_en, broad_open_ended, multi_evidence, multi_document]
+    expected_outcome: SHOULD_ANSWER
+    manual_review:
+      status: REVIEWED
+      natural_user_wording: true
+      corpus_support: SUFFICIENT_FOR_BOUNDED_ANSWER
+      answer_scope: bounded_grounded_answer_not_exhaustive
+    evidence_groups:
+      - group_id: production_risks_and_practices
+        match: any
+        locations:
+          - source_id: 1
+            locators: [page 2, page 3, page 5, page 7, page 10]
+          - source_id: 7
+            locators: [page 2, page 3, page 4, page 6]
+          - source_id: 6
+            locators: [page 2, page 3, page 4]
+
+  - id: UQ-003
+    query: AI agent 代表使用者呼叫第三方 API 時，怎麼避免把 access token 直接交給它？
+    categories: [zh_to_en, semantic_paraphrase, technical_identifier]
+    expected_outcome: SHOULD_ANSWER
+    manual_review:
+      status: REVIEWED
+      natural_user_wording: true
+      corpus_support: SUFFICIENT
+      answer_scope: direct
+    evidence_groups:
+      - group_id: delegated_access_boundary
+        match: any
+        locations:
+          - source_id: 7
+            locators: [page 4, page 5, page 6]
+
+  - id: UQ-004
+    query: 這份 agent design pattern guide 建議怎麼選適合的 pattern？
+    categories: [zh_to_en, semantic_paraphrase, narrow_source_supported_enumeration]
+    expected_outcome: SHOULD_ANSWER
+    manual_review:
+      status: REVIEWED
+      natural_user_wording: true
+      corpus_support: SUFFICIENT
+      answer_scope: direct
+    evidence_groups:
+      - group_id: pattern_selection_process
+        match: any
+        locations:
+          - source_id: 6
+            locators: [page 1, page 2, page 3]
+
+  - id: UQ-005
+    query: OpenAI 的 data agent 要在大約多少張資料表中找資料？
+    categories: [zh_to_en, exact_factual]
+    expected_outcome: SHOULD_ANSWER
+    manual_review:
+      status: REVIEWED
+      natural_user_wording: true
+      corpus_support: SUFFICIENT
+      answer_scope: direct
+    evidence_groups:
+      - group_id: table_count
+        match: any
+        locations:
+          - source_id: 8
+            locators: [page 2]
+
+  - id: UQ-006
+    query: schema evolution 為什麼要假設多個 schema version 會同時存在？
+    categories: [semantic_paraphrase, technical_identifier]
+    expected_outcome: SHOULD_ANSWER
+    manual_review:
+      status: REVIEWED
+      natural_user_wording: true
+      corpus_support: SUFFICIENT
+      answer_scope: direct
+    evidence_groups:
+      - group_id: concurrent_schema_versions
+        match: any
+        locations:
+          - source_id: 9
+            locators: [chunk 1, chunk 2]
+
+  - id: UQ-007
+    query: Netflix 的小型 CPU model 和大型 GPU model，inference 路徑有什麼不同？
+    categories: [zh_to_en, exact_factual, technical_identifier, multi_evidence]
+    expected_outcome: SHOULD_ANSWER
+    manual_review:
+      status: REVIEWED
+      natural_user_wording: true
+      corpus_support: SUFFICIENT
+      answer_scope: direct_comparison
+    evidence_groups:
+      - group_id: cpu_and_gpu_serving_paths
+        match: any
+        locations:
+          - source_id: 17
+            locators: [page 2]
+
+  - id: UQ-008
+    query: OpenAI 擴展 Codex 和 ChatGPT Work 時，agent efficiency 分成哪三層？
+    categories: [zh_to_en, exact_factual, narrow_source_supported_enumeration]
+    expected_outcome: SHOULD_ANSWER
+    manual_review:
+      status: REVIEWED
+      natural_user_wording: true
+      corpus_support: SUFFICIENT
+      answer_scope: direct_enumeration
+    evidence_groups:
+      - group_id: efficiency_layers
+        match: any
+        locations:
+          - source_id: 18
+            locators: [page 2, page 3]
+
+  - id: UQ-009
+    query: ChatGPT 的 agent loop 在 harness、API 和 inference 三層各做了哪些優化？
+    categories: [zh_to_en, technical_identifier, multi_evidence]
+    expected_outcome: SHOULD_ANSWER
+    manual_review:
+      status: REVIEWED
+      natural_user_wording: true
+      corpus_support: SUFFICIENT
+      answer_scope: bounded_three_layer_summary
+    evidence_groups:
+      - group_id: harness_optimizations
+        match: any
+        locations:
+          - source_id: 19
+            locators: [page 2, page 6, page 12]
+      - group_id: api_and_inference_optimizations
+        match: any
+        locations:
+          - source_id: 19
+            locators: [page 2, page 15]
+
+  - id: UQ-010
+    query: Context Engineering 裡，壓縮、memory 和 filtering 分別怎麼控制 context？
+    categories: [multi_evidence, narrow_source_supported_enumeration]
+    expected_outcome: SHOULD_ANSWER
+    manual_review:
+      status: REVIEWED
+      natural_user_wording: true
+      corpus_support: SUFFICIENT
+      answer_scope: direct_enumeration
+    evidence_groups:
+      - group_id: compression
+        match: any
+        locations:
+          - source_id: 15
+            locators: [Image 1 · chunk 1, Image 2 · chunk 1]
+      - group_id: memory
+        match: any
+        locations:
+          - source_id: 15
+            locators: [Image 3 · chunk 1]
+      - group_id: filtering
+        match: any
+        locations:
+          - source_id: 15
+            locators: [Image 4 · chunk 1]
+
+  - id: UQ-011
+    query: Markdown KB 和 Vector RAG 的 retrieval 流程有什麼差別？
+    categories: [technical_identifier, semantic_paraphrase, multi_evidence]
+    expected_outcome: SHOULD_ANSWER
+    manual_review:
+      status: REVIEWED
+      natural_user_wording: true
+      corpus_support: SUFFICIENT
+      answer_scope: direct_comparison
+    evidence_groups:
+      - group_id: retrieval_path_comparison
+        match: any
+        locations:
+          - source_id: 16
+            locators: [page 3, page 5, page 6]
+
+  - id: UQ-012
+    query: 我們 2027 年的併購預算是多少？
+    categories: [unsupported_negative_control]
+    expected_outcome: SHOULD_FAIL_CLOSED
+    manual_review:
+      status: REVIEWED
+      natural_user_wording: true
+      corpus_support: NONE
+      answer_scope: unsupported
+    evidence_groups: []
