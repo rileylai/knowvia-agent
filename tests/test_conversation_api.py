@@ -1122,7 +1122,7 @@ def test_previous_assistant_claim_does_not_become_enterprise_evidence() -> None:
         app.dependency_overrides.clear()
 
 
-def test_tool_capable_explicit_save_uses_backend_intent_and_persists_memory() -> None:
+def test_explicit_save_uses_deterministic_backend_path_and_persists_memory() -> None:
     session_factory = _build_session_factory()
     provider = ExplicitSaveProvider()
     _override_database(session_factory)
@@ -1141,16 +1141,128 @@ def test_tool_capable_explicit_save_uses_backend_intent_and_persists_memory() ->
         payload = response.json()
         assert payload["memory_status"] == "saved"
         assert payload["answer"] == "已儲存記憶"
-        assert any(
-            tool["function"]["name"] == "save_memory"
-            for tool in provider.requests[0].tools or []
-        )
+        assert provider.requests == []
         session = session_factory()
         try:
             memories = session.query(LongTermMemory).all()
             assert [(memory.memory_type, memory.content) for memory in memories] == [
                 ("preference", "我偏好所有 API response 使用 snake_case。")
             ]
+        finally:
+            session.close()
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.parametrize(
+    ("query", "expected_content"),
+    [
+        (
+            "記住，我們公司的 AI Agent 主要用來協助員工搜尋企業知識、整理資訊並回答內部問題",
+            "我們公司的 AI Agent 主要用來協助員工搜尋企業知識、整理資訊並回答內部問題",
+        ),
+        (
+            "記住，我們的 Agent 需要整合 PDF、網站、圖片以及公司內部文件等不同知識來源",
+            "我們的 Agent 需要整合 PDF、網站、圖片以及公司內部文件等不同知識來源",
+        ),
+        (
+            "記住，我們希望 Agent 回答企業問題時要有資料來源，不能只依靠模型自己的知識回答",
+            "我們希望 Agent 回答企業問題時要有資料來源，不能只依靠模型自己的知識回答",
+        ),
+    ],
+)
+def test_explicit_save_sync_a_b_c_use_same_backend_path(
+    query: str,
+    expected_content: str,
+) -> None:
+    session_factory = _build_session_factory()
+    provider = ExplicitSaveProvider()
+    _override_database(session_factory)
+    _override_provider(provider, embedding_client=FakeEmbeddingClient())
+    app.dependency_overrides[get_current_owner_id] = lambda: "local"
+
+    try:
+        client = TestClient(app)
+        session_id = _create_conversation(client)
+        response = client.post(
+            f"/api/conversations/{session_id}/messages",
+            json={"query": query},
+        )
+
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["memory_status"] == "saved"
+        assert payload["provider"] is None
+        assert payload["model"] is None
+        assert provider.requests == []
+        session = session_factory()
+        try:
+            memories = session.query(LongTermMemory).all()
+            assert [(memory.memory_type, memory.content) for memory in memories] == [
+                (
+                    "preference"
+                    if "偏好" in expected_content
+                    else "project_context",
+                    expected_content,
+                )
+            ]
+        finally:
+            session.close()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_explicit_save_non_tool_provider_has_same_backend_path() -> None:
+    session_factory = _build_session_factory()
+    provider = FailingProvider()
+    _override_database(session_factory)
+    _override_provider(provider, embedding_client=FakeEmbeddingClient())
+    app.dependency_overrides[get_current_owner_id] = lambda: "local"
+
+    try:
+        client = TestClient(app)
+        session_id = _create_conversation(client)
+        response = client.post(
+            f"/api/conversations/{session_id}/messages",
+            json={"query": "記住，我們希望 Agent 回答企業問題時要有資料來源，不能只依靠模型自己的知識回答"},
+        )
+
+        assert response.status_code == 200, response.text
+        assert response.json()["memory_status"] == "saved"
+        assert response.json()["provider"] is None
+        assert provider.requests == []
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_explicit_save_duplicate_uses_backend_path_without_provider() -> None:
+    session_factory = _build_session_factory()
+    provider = ExplicitSaveProvider()
+    _override_database(session_factory)
+    _override_provider(provider, embedding_client=FakeEmbeddingClient())
+    app.dependency_overrides[get_current_owner_id] = lambda: "local"
+
+    try:
+        client = TestClient(app)
+        session_id = _create_conversation(client)
+        query = "記住，我偏好所有 API response 使用 snake_case。"
+        first = client.post(
+            f"/api/conversations/{session_id}/messages",
+            json={"query": query},
+        )
+        second = client.post(
+            f"/api/conversations/{session_id}/messages",
+            json={"query": query},
+        )
+
+        assert first.status_code == 200, first.text
+        assert second.status_code == 200, second.text
+        assert first.json()["memory_status"] == "saved"
+        assert second.json()["memory_status"] == "already_saved"
+        assert provider.requests == []
+        session = session_factory()
+        try:
+            assert session.query(LongTermMemory).count() == 1
         finally:
             session.close()
     finally:
@@ -1200,6 +1312,7 @@ def test_explicit_save_failure_does_not_create_fake_assistant_success() -> None:
         )
 
         assert response.status_code == 502
+        assert provider.requests == []
         session = session_factory()
         try:
             assert session.query(LongTermMemory).count() == 0

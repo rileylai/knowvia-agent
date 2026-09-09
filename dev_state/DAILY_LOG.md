@@ -3616,3 +3616,41 @@ Final-QA evaluation now separates live automated classification from explicit of
   another verifier；不阻塞其他 MVP priority。
 - D025、D027、D033 unchanged；既有 bounded artifacts 保留，不重跑、不改寫 historical
   outcomes。未 stage、commit 或 push。
+
+## 2026-09-09 6.0.3.1 Deterministic Explicit Save Command
+
+### Scope
+
+- Public conversation 在 backend 產生有效 `ExplicitSaveIntent` 後，統一直接使用
+  `MemoryService.save_memory`。Tool-capable provider 不再決定 public explicit save 是否寫入。
+- `save_memory` tool 保留給 MCP 與其他 tool execution boundary；trusted explicit-save
+  authorization、owner scope、provider/MCP argument protection 與既有 persistence policy 不變。
+- Mixed explicit-save 加 substantive task 仍沒有 typed split contract，本 slice 不支援；
+  `detect_explicit_save_intent` semantics 未修改。
+
+### Implementation
+
+- `ConversationOrchestrator.send_message` 的 explicit-save branch 不再進
+  `BoundedAgentRuntime`，沿用既有 direct `MemoryService` path。
+- Pure explicit save 不呼叫 final-answer provider，SSE 只發 `saving_memory` execution status，
+  完成後送 `done`；save failure 送 safe `error`，不建立 fake assistant success。
+- Deterministic public save 沿用既有 `workflow_run_id=0`、provider/model 為 null 的 direct-save
+  metadata semantics，沒有偽造 provider tool call。
+
+### Automated verification
+
+- Public conversation API/SSE A、B、C parity、tool-capable/non-tool provider parity、duplicate、
+  embedding failure、ordinary statement、6.0.3 trusted type/content safeguard 與 Native MCP
+  regression 已完成 focused verification。Backend full suite：`958 passed, 6 skipped`；
+  frontend：`62 passed`；production build、compileall 與 `git diff --check`：PASS。
+- Mixed parser contract、Knowledge、Memory relevance threshold 與 frontend event mapping 未修改。
+
+### Manual verification
+
+- Exact C 第一次 save：PASS
+- 顯示「已儲存記憶」：PASS
+- 同一句第二次 save：PASS
+- 顯示「記憶已存在 / ALREADY SAVED」：PASS
+- 沒有 `Generating answer...` phase：PASS
+- 沒有 `Request failed` / `AGENT_RUNTIME_FAILED`：PASS
+- Deterministic explicit-save browser behavior：PASS

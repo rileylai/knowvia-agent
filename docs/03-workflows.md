@@ -223,17 +223,23 @@ Memory 結果不能被引用成 enterprise document citation。
 
 ```text
 User explicitly asks to remember something
-  -> Agent selects save_memory
-  -> backend validates type and owner
+  -> backend validates ExplicitSaveIntent
+  -> deterministic trusted save through MemoryService
   -> build bounded retrieval_text
   -> embed retrieval_text
   -> persist original content and retrieval_text
   -> return saved status
 ```
 
-第一版只接受 `decision`、`preference` 與 `project_context`。一般對話內容不會
-自動轉成 persistent memory。Agent 可用自然問題搜尋已保存的 personal、company 或 project
-context，不要求 query 包含 `memory`、`remember` 或 `saved`。
+第一版只接受 `decision`、`preference` 與 `project_context`。Public conversation 的
+explicit save 不依賴 provider tool selection，也不進 final-answer generation。一般對話內容
+不會自動轉成 persistent memory。`save_memory` tool 保留給 MCP 與其他 tool execution
+boundary；沒有 trusted explicit-save authorization 時仍 fail closed。Agent 可用自然問題搜尋
+已保存的 personal、company 或 project context，不要求 query 包含 `memory`、`remember` 或
+`saved`。
+
+Mixed explicit-save 加 substantive task 目前沒有 typed split contract，本 slice 不支援；
+目前 parser 會將 `記住` 後的 remainder 視為同一段 memory content。
 
 ## Session isolation 與 New Chat
 

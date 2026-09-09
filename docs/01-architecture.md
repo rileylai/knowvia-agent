@@ -107,6 +107,16 @@ User message
 write permission、memory policy、citation 與 termination。LLM 不得自行取得新
 權限或改寫 Agent state。
 
+### Public explicit save
+
+Public conversation 在 backend 產生有效 `ExplicitSaveIntent` 後，直接執行既有的
+trusted save path。這條 path 不進 `BoundedAgentRuntime`，也不呼叫 final-answer provider；
+`MemoryService` 負責 validation、retrieval representation、embedding、duplicate 與
+persistence。`save_memory` tool 保留給 MCP 與其他 tool execution boundary，且仍要求
+trusted explicit-save authorization。
+
+Mixed explicit-save 加 substantive task 目前沒有 typed split contract，本 slice 不支援。
+
 ## Context Authority Consolidation（5.0.3.3 current implementation）
 
 以下是已 freeze 並完成 implementation 的 replacement architecture。核心原則是：LLM 只做 bounded

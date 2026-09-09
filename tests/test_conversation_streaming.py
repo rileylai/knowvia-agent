@@ -5,6 +5,7 @@ import json
 from types import SimpleNamespace
 from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
 
 from src.app.dependencies import get_current_owner_id
@@ -292,14 +293,16 @@ def test_streaming_explicit_save_reports_save_status_and_safe_metadata() -> None
         )
 
         events = _events(response)
-        assert any(
-            tool["function"]["name"] == "save_memory"
-            for tool in provider.requests[0].tools or []
-        )
+        assert provider.requests == []
         assert [event["payload"]["phase"] for event in events if event["event_type"] == "execution_status"] == [
             "saving_memory",
-            "generating",
         ]
+        assert not any(
+            event["payload"].get("phase") == "generating"
+            for event in events
+            if event["event_type"] == "execution_status"
+        )
+        assert events[-1]["event_type"] == "done"
         assert events[-1]["payload"]["memory_saved"] is True
         assert events[-1]["payload"]["used_saved_memory"] is False
     finally:
@@ -325,13 +328,9 @@ def test_streaming_explicit_save_uses_backend_intent_for_company_statement() -> 
         )
 
         events = _events(response)
-        assert any(
-            tool["function"]["name"] == "save_memory"
-            for tool in provider.requests[0].tools or []
-        )
+        assert provider.requests == []
         assert [event["payload"]["phase"] for event in events if event["event_type"] == "execution_status"] == [
             "saving_memory",
-            "generating",
         ]
         assert events[-1]["event_type"] == "done"
         assert events[-1]["payload"]["memory_saved"] is True
@@ -351,6 +350,99 @@ def test_streaming_explicit_save_uses_backend_intent_for_company_statement() -> 
             ]
         finally:
             session.close()
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.parametrize(
+    ("query", "expected_content"),
+    [
+        (
+            "記住，我們公司的 AI Agent 主要用來協助員工搜尋企業知識、整理資訊並回答內部問題",
+            "我們公司的 AI Agent 主要用來協助員工搜尋企業知識、整理資訊並回答內部問題",
+        ),
+        (
+            "記住，我們的 Agent 需要整合 PDF、網站、圖片以及公司內部文件等不同知識來源",
+            "我們的 Agent 需要整合 PDF、網站、圖片以及公司內部文件等不同知識來源",
+        ),
+        (
+            "記住，我們希望 Agent 回答企業問題時要有資料來源，不能只依靠模型自己的知識回答",
+            "我們希望 Agent 回答企業問題時要有資料來源，不能只依靠模型自己的知識回答",
+        ),
+    ],
+)
+def test_streaming_explicit_save_uses_same_deterministic_path_for_a_b_c(
+    query: str,
+    expected_content: str,
+) -> None:
+    session_factory = _build_session_factory()
+    provider = ExplicitSaveProvider()
+    _override_database(session_factory)
+    _override_provider(provider, embedding_client=FakeEmbeddingClient())
+    app.dependency_overrides[get_current_owner_id] = lambda: "local"
+
+    try:
+        client = TestClient(app)
+        session_id = _create_conversation(client)
+        response = client.post(
+            f"/api/conversations/{session_id}/messages/stream",
+            json={"query": query},
+        )
+
+        assert response.status_code == 200, response.text
+        events = _events(response)
+        assert provider.requests == []
+        assert [
+            event["payload"]["phase"]
+            for event in events
+            if event["event_type"] == "execution_status"
+        ] == ["saving_memory"]
+        assert not any(
+            event["payload"].get("phase") == "generating"
+            for event in events
+            if event["event_type"] == "execution_status"
+        )
+        assert events[-1]["event_type"] == "done"
+        assert events[-1]["payload"]["memory_saved"] is True
+
+        session = session_factory()
+        try:
+            memories = session.query(LongTermMemory).all()
+            assert [(memory.memory_type, memory.content) for memory in memories] == [
+                ("project_context", expected_content)
+            ]
+        finally:
+            session.close()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_streaming_explicit_save_failure_does_not_call_provider_or_fake_success() -> None:
+    session_factory = _build_session_factory()
+    provider = ExplicitSaveProvider()
+    _override_database(session_factory)
+    _override_provider(provider)
+    app.dependency_overrides[get_current_owner_id] = lambda: "local"
+
+    try:
+        client = TestClient(app)
+        session_id = _create_conversation(client)
+        response = client.post(
+            f"/api/conversations/{session_id}/messages/stream",
+            json={"query": "記住，我偏好所有 API response 使用 snake_case。"},
+        )
+
+        assert response.status_code == 200
+        events = _events(response)
+        assert provider.requests == []
+        assert [
+            event["payload"]["phase"]
+            for event in events
+            if event["event_type"] == "execution_status"
+        ] == ["saving_memory"]
+        assert events[-1]["event_type"] == "error"
+        assert events[-1]["payload"]["error_code"] == "MEMORY_EMBEDDING_FAILED"
+        assert not any(event["event_type"] == "done" for event in events)
     finally:
         app.dependency_overrides.clear()
 

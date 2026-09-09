@@ -198,6 +198,12 @@ embedding 可以使用它，但不能覆寫 `content` 或取得 persistence auth
 Semantic search 使用 embedding、`owner_id` filter 與 top-k，再交給既有 relevance gate；
 不加入 automatic consolidation、temporal ranking 或 semantic dedup。
 
+Public conversation 在 backend 產生有效 `ExplicitSaveIntent` 後，直接使用 trusted
+`MemoryService` save path，不由 provider tool selection 決定是否 persistence。`save_memory`
+tool 仍是 MCP 與其他 tool execution boundary 的受控 adapter，沒有 trusted explicit-save
+authorization 時不得寫入。Mixed explicit-save 加 substantive task 目前沒有 typed split
+contract，本 slice 不支援。
+
 在單一 bounded Agent run 中，具備 structured output capability 的 provider 先產生內部的
 `ContextRequirementDecision`：
 

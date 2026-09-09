@@ -92,6 +92,11 @@ project_context
 一般對話、tool result 或模型推測不會自動寫入 LongTermMemory。寫入前由
 backend 驗證 owner、類型、內容長度與 persistence policy。
 
+Public conversation 一旦產生有效 `ExplicitSaveIntent`，由 backend deterministic 執行
+trusted save path，不等待 provider 選擇 `save_memory`。`save_memory` tool 保留給 MCP 與
+其他 tool execution boundary；沒有 trusted explicit-save authorization 時仍 fail closed。
+Mixed explicit-save 加 substantive task 目前沒有 typed split contract，本 slice 不支援。
+
 Exact duplicate 可以被拒絕或回傳既有 memory。MVP 不做 semantic dedup、
 automatic consolidation、memory graph、importance ranking 或 temporal ranking。
 
