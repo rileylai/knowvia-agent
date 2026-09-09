@@ -1,0 +1,283 @@
+{
+  "artifact_type": "user_facing_provider_failure_triage",
+  "corpus_snapshot": {
+    "database": {
+      "name": "knowvia",
+      "port": 5432,
+      "user": "knowvia"
+    },
+    "embedding_dimensions": 1536,
+    "embedding_model": "text-embedding-3-small",
+    "owner_scope": "local",
+    "production_retrieval_settings": {
+      "candidate_pool": "production",
+      "chunk_max_chars": 1200,
+      "chunk_overlap_chars": 0,
+      "embedding_dimensions": 1536,
+      "embedding_model": "text-embedding-3-small",
+      "knowledge_relevance_floor": 0.3,
+      "similarity": "pgvector_cosine",
+      "top_k": 5
+    },
+    "source_count": 11,
+    "sources": [
+      {
+        "indexed_chunk_count": 34,
+        "source_display_name": "How ChatGPT Optimizes its Agent Loop_ Harness, API, and Inference.pdf",
+        "source_id": 19,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 22,
+        "source_display_name": "How OpenAI Optimized AI Agents For Scale.pdf",
+        "source_id": 18,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 19,
+        "source_display_name": "In-House LLM Serving at Netflix. By AI Platform’s Model Runtime team and… _ by Netflix Technology Blog _ Jul, 2026 _ Netflix TechBlog.pdf",
+        "source_id": 17,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 14,
+        "source_display_name": "Knowledge Base Q_A Bot：Week 5 Prototype - Slidev.pdf",
+        "source_id": 16,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 5,
+        "source_display_name": "Screenshots · Y Context Engineering",
+        "source_id": 15,
+        "source_kind": "image",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 2,
+        "source_display_name": "Schema Evolution: Changing the Contract Without Breaking What Runs",
+        "source_id": 9,
+        "source_kind": "url",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 36,
+        "source_display_name": "How OpenAI Built Its Data Agent - ByteByteGo Newsletter.pdf",
+        "source_id": 8,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 14,
+        "source_display_name": "How to let AI agents act on behalf of users without handing them access tokens — WorkOS.pdf",
+        "source_id": 7,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 40,
+        "source_display_name": "Choose a design pattern for your agentic AI system.pdf",
+        "source_id": 6,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 17,
+        "source_display_name": "ChatGPT Tasks (MCP) — Week 3 Prototype - Slidev.pdf",
+        "source_id": 2,
+        "source_kind": "pdf",
+        "status": "indexed"
+      },
+      {
+        "indexed_chunk_count": 22,
+        "source_display_name": "Best Practices for Building AI Agents That Work in Production.pdf",
+        "source_id": 1,
+        "source_kind": "pdf",
+        "status": "indexed"
+      }
+    ],
+    "total_indexed_chunk_count": 225
+  },
+  "failed_cases": [
+    {
+      "deterministic_or_intermittent": "intermittent",
+      "failure_category": "intermittent_provider_failure",
+      "original_failure_operation": "not_recorded_in_primary_artifact",
+      "primary_observation": {
+        "final_synthesis_called": false,
+        "readiness_called": false,
+        "retrieval_observed": false,
+        "selector_status": "completed",
+        "termination_reason": "provider_error"
+      },
+      "query_id": "UQ-003",
+      "repeat_count": 2,
+      "repeat_outcomes": [
+        {
+          "failing_operation": "context_requirement_selection",
+          "failure_boundary": "context_requirement_selection",
+          "last_successful_operation": "reference_binding_resolution",
+          "operation_statuses": [
+            {
+              "operation": "reference_binding_resolution",
+              "status": "completed"
+            },
+            {
+              "operation": "context_requirement_selection",
+              "status": "contract_error"
+            }
+          ],
+          "provider_error_kind": "provider_contract_failure",
+          "repeat_index": 1,
+          "termination_reason": "provider_error"
+        },
+        {
+          "failing_operation": null,
+          "failure_boundary": null,
+          "last_successful_operation": "bounded_agent_final",
+          "operation_statuses": [
+            {
+              "operation": "reference_binding_resolution",
+              "status": "completed"
+            },
+            {
+              "operation": "context_requirement_selection",
+              "status": "completed"
+            },
+            {
+              "operation": "evidence_readiness",
+              "status": "completed"
+            },
+            {
+              "operation": "bounded_agent_final",
+              "status": "completed"
+            }
+          ],
+          "provider_error_kind": "unresolved_provider_failure",
+          "repeat_index": 2,
+          "termination_reason": "completed"
+        }
+      ],
+      "user_query": "AI agent 代表使用者呼叫第三方 API 時，怎麼避免把 access token 直接交給它？"
+    },
+    {
+      "deterministic_or_intermittent": "deterministic",
+      "failure_category": "selector_provider_failure",
+      "original_failure_operation": "not_recorded_in_primary_artifact",
+      "primary_observation": {
+        "final_synthesis_called": false,
+        "readiness_called": false,
+        "retrieval_observed": false,
+        "selector_status": "completed",
+        "termination_reason": "provider_error"
+      },
+      "query_id": "UQ-007",
+      "repeat_count": 2,
+      "repeat_outcomes": [
+        {
+          "failing_operation": "context_requirement_selection",
+          "failure_boundary": "context_requirement_selection",
+          "last_successful_operation": "reference_binding_resolution",
+          "operation_statuses": [
+            {
+              "operation": "reference_binding_resolution",
+              "status": "completed"
+            },
+            {
+              "operation": "context_requirement_selection",
+              "status": "contract_error"
+            }
+          ],
+          "provider_error_kind": "provider_contract_failure",
+          "repeat_index": 1,
+          "termination_reason": "provider_error"
+        },
+        {
+          "failing_operation": "context_requirement_selection",
+          "failure_boundary": "context_requirement_selection",
+          "last_successful_operation": "reference_binding_resolution",
+          "operation_statuses": [
+            {
+              "operation": "reference_binding_resolution",
+              "status": "completed"
+            },
+            {
+              "operation": "context_requirement_selection",
+              "status": "contract_error"
+            }
+          ],
+          "provider_error_kind": "provider_contract_failure",
+          "repeat_index": 2,
+          "termination_reason": "provider_error"
+        }
+      ],
+      "user_query": "Netflix 的小型 CPU model 和大型 GPU model，inference 路徑有什麼不同？"
+    },
+    {
+      "deterministic_or_intermittent": "deterministic",
+      "failure_category": "selector_provider_failure",
+      "original_failure_operation": "not_recorded_in_primary_artifact",
+      "primary_observation": {
+        "final_synthesis_called": false,
+        "readiness_called": false,
+        "retrieval_observed": false,
+        "selector_status": "completed",
+        "termination_reason": "provider_error"
+      },
+      "query_id": "UQ-010",
+      "repeat_count": 2,
+      "repeat_outcomes": [
+        {
+          "failing_operation": "context_requirement_selection",
+          "failure_boundary": "context_requirement_selection",
+          "last_successful_operation": "reference_binding_resolution",
+          "operation_statuses": [
+            {
+              "operation": "reference_binding_resolution",
+              "status": "completed"
+            },
+            {
+              "operation": "context_requirement_selection",
+              "status": "contract_error"
+            }
+          ],
+          "provider_error_kind": "provider_contract_failure",
+          "repeat_index": 1,
+          "termination_reason": "provider_error"
+        },
+        {
+          "failing_operation": "context_requirement_selection",
+          "failure_boundary": "context_requirement_selection",
+          "last_successful_operation": "reference_binding_resolution",
+          "operation_statuses": [
+            {
+              "operation": "reference_binding_resolution",
+              "status": "completed"
+            },
+            {
+              "operation": "context_requirement_selection",
+              "status": "contract_error"
+            }
+          ],
+          "provider_error_kind": "provider_contract_failure",
+          "repeat_index": 2,
+          "termination_reason": "provider_error"
+        }
+      ],
+      "user_query": "Context Engineering 裡，壓縮、memory 和 filtering 分別怎麼控制 context？"
+    }
+  ],
+  "run_metadata": {
+    "diagnostic_id": "knowvia-user-facing-answer-quality-8.5",
+    "primary_failures_only": true,
+    "primary_report": "eval/retrieval/reports/8.5-user-facing-answer-quality-20260909.json",
+    "production_behavior_changed": false,
+    "provider": "openai",
+    "raw_provider_response_recorded": false,
+    "repeats_per_case": 2,
+    "triage_run_id": "20260909T112801Z"
+  }
+}

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from collections import Counter
 from datetime import datetime, timezone
@@ -7,15 +8,22 @@ from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence
 
 import yaml
+from pydantic import ValidationError
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.agent import BoundedAgentRuntime, build_agent_tool_registry
+from src.agent.models import (
+    ContextRequirementDecision,
+    EvidenceReadinessDecision,
+    ReferenceBindingDecision,
+)
 from src.db.models import KnowledgeChunk
 from src.db.unit_of_work import SqlAlchemyUnitOfWork
 from src.orchestrators.qa_orchestrator import DEFAULT_QA_MODEL, DEFAULT_QA_PROVIDER_NAME
 from src.providers import (
     LLMProvider,
+    LLMClientError,
     LLMRequest,
     LLMResponse,
     OpenAIClient,
@@ -72,6 +80,24 @@ class DiagnosticReportError(ValueError):
 
 class DiagnosticSetError(ValueError):
     pass
+
+
+def classify_safe_provider_error(exc: BaseException) -> str:
+    """Map provider exceptions to bounded categories without retaining messages."""
+    text_value = str(exc).casefold()
+    if isinstance(exc, LLMClientError):
+        if "429" in text_value or "rate limit" in text_value:
+            return "rate_limit_failure"
+        if "timeout" in text_value or "timed out" in text_value:
+            return "provider_timeout"
+        if "response schema is invalid" in text_value or "structured output" in text_value:
+            return "structured_output_parse_failure"
+        if "request failed" in text_value:
+            return "transient_transport_failure"
+        return "provider_contract_failure"
+    if isinstance(exc, (TimeoutError, asyncio.TimeoutError)):
+        return "provider_timeout"
+    return "unresolved_provider_failure"
 
 
 def load_diagnostic_set(path: Path) -> dict[str, object]:
@@ -282,10 +308,34 @@ class RecordingProvider(LLMProvider):
         try:
             response = await self._delegate.generate(request)
         except Exception as exc:
-            event.update(status="provider_error", error_type=type(exc).__name__)
+            event.update(
+                status="provider_error",
+                error_type=type(exc).__name__,
+                provider_error_kind=classify_safe_provider_error(exc),
+            )
             self.events.append(event)
             raise
         structured = response.structured_output
+        if operation == "reference_binding_resolution":
+            contract_model = ReferenceBindingDecision
+        elif operation == "context_requirement_selection":
+            contract_model = ContextRequirementDecision
+        elif operation == "evidence_readiness":
+            contract_model = EvidenceReadinessDecision
+        else:
+            contract_model = None
+        if contract_model is not None:
+            try:
+                contract_model.model_validate(structured)
+            except ValidationError:
+                event.update(
+                    status="contract_error",
+                    contract_error=True,
+                    structured_output_contract="invalid",
+                    provider_error_kind="provider_contract_failure",
+                )
+            else:
+                event["structured_output_contract"] = "valid"
         if operation == "reference_binding_resolution" and isinstance(structured, Mapping):
             bindings = structured.get("reference_bindings")
             event["binding_count"] = len(bindings) if isinstance(bindings, list) else None
@@ -394,6 +444,7 @@ async def run_live_diagnostic(
     database_url: str,
     openai_api_key: str,
     model: str = DEFAULT_QA_MODEL,
+    include_provider_operations: bool = False,
 ) -> dict[str, object]:
     if not database_url.strip():
         raise DiagnosticReportError("DATABASE_URL is required")
@@ -506,6 +557,7 @@ async def run_live_diagnostic(
                 provider_events=provider.events,
                 retrieval_trace=retriever.trace,
                 memory_searches=memory.searches,
+                include_provider_operations=include_provider_operations,
             )
             trace["classification"] = classify_trace(case, trace)
             traces.append(trace)
@@ -543,6 +595,7 @@ def _trace_from_run(
     provider_events: Sequence[Mapping[str, object]],
     retrieval_trace: Optional[Mapping[str, object]],
     memory_searches: Sequence[Mapping[str, object]],
+    include_provider_operations: bool = False,
 ) -> dict[str, object]:
     resolver = _operation_event(provider_events, "reference_binding_resolution")
     selector = _operation_event(provider_events, "context_requirement_selection")
@@ -604,6 +657,8 @@ def _trace_from_run(
             "completed": termination_reason == "completed",
         },
     }
+    if include_provider_operations:
+        trace["provider_operations"] = [dict(event) for event in provider_events]
     return trace
 
 

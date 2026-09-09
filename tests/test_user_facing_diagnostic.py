@@ -12,6 +12,7 @@ from eval.user_facing_diagnostic import (
     load_diagnostic_set,
     write_json_report,
 )
+from eval.run_provider_failure_triage import classify_repeats
 
 
 FIXTURE_PATH = Path("eval/user_facing_diagnostic.yaml")
@@ -214,3 +215,47 @@ def test_report_serialization_is_deterministic(tmp_path: Path) -> None:
     payload = json.loads(first.read_text(encoding="utf-8"))
     assert payload["aggregate"]["total"] == 1
     assert payload["aggregate"]["false_insufficient_count"] == 0
+
+
+def test_provider_triage_classifies_stable_selector_contract_failure() -> None:
+    outcomes = [
+        {
+            "failing_operation": "context_requirement_selection",
+            "failure_boundary": "context_requirement_selection",
+            "provider_error_kind": "provider_contract_failure",
+            "termination_reason": "provider_error",
+        },
+        {
+            "failing_operation": "context_requirement_selection",
+            "failure_boundary": "context_requirement_selection",
+            "provider_error_kind": "provider_contract_failure",
+            "termination_reason": "provider_error",
+        },
+    ]
+
+    assert classify_repeats(outcomes) == (
+        "selector_provider_failure",
+        "deterministic",
+    )
+
+
+def test_provider_triage_marks_success_and_failure_as_intermittent() -> None:
+    outcomes = [
+        {
+            "failing_operation": "context_requirement_selection",
+            "failure_boundary": "context_requirement_selection",
+            "provider_error_kind": "transient_transport_failure",
+            "termination_reason": "provider_error",
+        },
+        {
+            "failing_operation": None,
+            "failure_boundary": None,
+            "provider_error_kind": "unresolved_provider_failure",
+            "termination_reason": "completed",
+        },
+    ]
+
+    assert classify_repeats(outcomes) == (
+        "intermittent_provider_failure",
+        "intermittent",
+    )

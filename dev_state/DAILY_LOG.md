@@ -3709,3 +3709,17 @@ Final-QA evaluation now separates live automated classification from explicit of
 - `8.5` diagnosis complete，roadmap status 更新為 `done`；不自行建立下一個 implementation ID。
 - `7.0` 維持 `manual_verification`，Formal Browser Demo Story 保留；`8.4` historical outcome 與
   D032 / D033 不變。
+
+## 2026-09-09 8.5 Provider-Failure Triage
+
+- 只針對 primary run 的 `provider_failure` cases UQ-003、UQ-007、UQ-010 各執行 2 次 bounded repeat；
+  沒有重跑其他 diagnostic cases。Artifact：[8.5-provider-failure-triage-20260909.json](../eval/retrieval/reports/8.5-provider-failure-triage-20260909.json)。
+- 三題的 repeat failure 都集中在 `Context Requirement Selection`；每次 failure 都是
+  `provider_contract_failure`，沒有 rate limit、timeout 或 transport category。Reference Binding
+  在 failure repeat 中先成功；Evidence Readiness 與 Final Synthesis 沒有在這些 failure repeat 中被呼叫。
+- UQ-007、UQ-010 兩次 repeat 都是 deterministic `selector_provider_failure`。UQ-003 第一次是相同
+  selector contract failure，第二次完整完成，分類為 `intermittent_provider_failure`。
+- 這批 provider failures 不是單純 transport robustness 問題；存在可重現的 selector structured-output
+  contract failure。下一步不能直接把 Readiness Usability Study 當成唯一 provider reliability 前置假設；
+  需先由 owner 決定是否建立 bounded selector contract stability slice。本輪沒有修改 production
+  behavior、provider config、retry policy、roadmap status 或 architecture decision。
