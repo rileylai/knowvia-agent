@@ -11,7 +11,7 @@ from src.providers import (
     OpenAIClient,
     ProviderRouter,
 )
-from src.agent.models import ContextRequirementDecision, ReferenceBindingDecision
+from src.agent.models import ContextRequirementWireDecision, ReferenceBindingDecision
 
 
 def test_openai_client_returns_llm_response_with_mock_transport() -> None:
@@ -169,9 +169,9 @@ def test_openai_client_sends_and_parses_context_requirement_structured_output() 
                     "message": {
                         "role": "assistant",
                         "content": (
-                            '{"needs_knowledge":true,"needs_memory":true,'
+                            '{"selection":{"mode":"mixed",'
                             '"contextual_facets":[{"id":"c1",'
-                            '"text":"company size"}],"memory_query":null}'
+                            '"text":"company size"}]}}'
                         ),
                     },
                     "finish_reason": "stop",
@@ -183,7 +183,7 @@ def test_openai_client_sends_and_parses_context_requirement_structured_output() 
     request = LLMRequest(
         model="gpt-4o-mini",
         messages=[LLMMessage(role="user", content="Which practices fit us?")],
-        response_format=ContextRequirementDecision.response_format(),
+        response_format=ContextRequirementWireDecision.response_format(),
     )
 
     response = asyncio.run(client.generate(request))
@@ -191,10 +191,10 @@ def test_openai_client_sends_and_parses_context_requirement_structured_output() 
     assert captured_payload["response_format"]["type"] == "json_schema"
     assert captured_payload["response_format"]["json_schema"]["strict"] is True
     assert response.structured_output == {
-        "needs_knowledge": True,
-        "needs_memory": True,
-        "contextual_facets": [{"id": "c1", "text": "company size"}],
-        "memory_query": None,
+        "selection": {
+            "mode": "mixed",
+            "contextual_facets": [{"id": "c1", "text": "company size"}],
+        }
     }
 
 
@@ -218,7 +218,7 @@ def test_openai_client_rejects_invalid_context_requirement_structured_output() -
     request = LLMRequest(
         model="gpt-4o-mini",
         messages=[LLMMessage(role="user", content="Which practices fit us?")],
-        response_format=ContextRequirementDecision.response_format(),
+        response_format=ContextRequirementWireDecision.response_format(),
     )
 
     with pytest.raises(LLMClientError):

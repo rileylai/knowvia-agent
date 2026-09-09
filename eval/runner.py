@@ -726,13 +726,13 @@ def _provider_script(scenario: GoldenScenario) -> List[LLMResponse]:
         "repeated-standalone-reference-binding-empty",
     }:
         decision = {
-            "needs_knowledge": True,
-            "needs_memory": True,
-            "contextual_facets": [
-                {"id": "c1", "text": "company size"},
-                {"id": "c2", "text": "development preferences"},
-            ],
-            "memory_query": None,
+            "selection": {
+                "mode": "mixed",
+                "contextual_facets": [
+                    {"id": "c1", "text": "company size"},
+                    {"id": "c2", "text": "development preferences"},
+                ],
+            }
         }
         count = 4 if scenario.id.startswith("repeated-") else 1
         return [
@@ -754,23 +754,19 @@ def _provider_script(scenario: GoldenScenario) -> List[LLMResponse]:
                 provider="eval-scripted",
                 model="eval-scripted-1",
                 output_text="",
-                structured_output={
-                    "needs_knowledge": True,
-                    "needs_memory": False,
-                    "contextual_facets": [],
-                    "memory_query": None,
-                },
+                structured_output={"selection": {"mode": "knowledge_only"}},
             ),
             _final("The referential answer is grounded."),
         ]
     if scenario.id.startswith("contextual-facet-"):
         decision = {
-            "needs_knowledge": True,
-            "needs_memory": True,
-            "contextual_facets": [
-                {"id": "c1", "text": "company size"},
-                {"id": "c2", "text": "development preferences"},
-            ],
+            "selection": {
+                "mode": "mixed",
+                "contextual_facets": [
+                    {"id": "c1", "text": "company size"},
+                    {"id": "c2", "text": "development preferences"},
+                ],
+            }
         }
         return [
             LLMResponse(
@@ -782,15 +778,18 @@ def _provider_script(scenario: GoldenScenario) -> List[LLMResponse]:
             _final("The bounded contextual answer is grounded in Knowledge."),
         ]
     if scenario.id.startswith("context-requirement-"):
-        decision = {
-            "needs_knowledge": scenario.id != "context-requirement-memory-only",
-            "needs_memory": scenario.id != "context-requirement-knowledge-only",
-            "memory_query": (
-                "company size and development preferences relevant to prioritization"
-                if scenario.id != "context-requirement-knowledge-only"
-                else None
-            ),
-        }
+        decision = (
+            {"selection": {"mode": "knowledge_only"}}
+            if scenario.id == "context-requirement-knowledge-only"
+            else {
+                "selection": {
+                    "mode": "memory_only",
+                    "memory_query": (
+                        "company size and development preferences relevant to prioritization"
+                    ),
+                }
+            }
+        )
         return [
             LLMResponse(
                 provider="eval-scripted",
@@ -823,11 +822,7 @@ def _provider_script(scenario: GoldenScenario) -> List[LLMResponse]:
                 provider="eval-scripted",
                 model="eval-scripted-1",
                 output_text="",
-                structured_output={
-                    "needs_knowledge": True,
-                    "needs_memory": False,
-                    "memory_query": None,
-                },
+                structured_output={"selection": {"mode": "knowledge_only"}},
             ),
             _final("The final provider must not be called."),
         ]

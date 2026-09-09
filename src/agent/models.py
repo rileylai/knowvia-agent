@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import (
     BaseModel,
@@ -72,6 +72,140 @@ class ContextualFacet(BaseModel):
         return normalized
 
 
+class ContextualFacetWire(BaseModel):
+    """Provider-visible structural bounds for one contextual facet."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: StrictStr = Field(min_length=1, max_length=MAX_CONTEXTUAL_FACET_ID_CHARS)
+    text: StrictStr = Field(min_length=1, max_length=MAX_CONTEXTUAL_FACET_TEXT_CHARS)
+
+
+class KnowledgeOnlySelection(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["knowledge_only"]
+
+
+class MixedSelection(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["mixed"]
+    contextual_facets: List[ContextualFacetWire] = Field(
+        min_length=1,
+        max_length=MAX_CONTEXTUAL_FACETS,
+    )
+
+
+class MemoryOnlySelection(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["memory_only"]
+    memory_query: StrictStr = Field(
+        min_length=1,
+        max_length=MAX_CONTEXT_MEMORY_QUERY_CHARS,
+    )
+
+
+class NeitherSelection(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["neither"]
+
+
+ContextRequirementWireSelection = Union[
+    KnowledgeOnlySelection,
+    MixedSelection,
+    MemoryOnlySelection,
+    NeitherSelection,
+]
+
+
+class ContextRequirementWireDecision(BaseModel):
+    """Provider-only representation of a valid context requirement state."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    selection: ContextRequirementWireSelection
+
+    @classmethod
+    def response_format(cls) -> Dict[str, Any]:
+        facet_schema = {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": MAX_CONTEXTUAL_FACET_ID_CHARS,
+                },
+                "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": MAX_CONTEXTUAL_FACET_TEXT_CHARS,
+                },
+            },
+            "required": ["id", "text"],
+        }
+        selection_schema = {
+            "anyOf": [
+                _wire_selection_schema(mode="knowledge_only"),
+                _wire_selection_schema(
+                    mode="mixed",
+                    properties={
+                        "contextual_facets": {
+                            "type": "array",
+                            "items": facet_schema,
+                            "minItems": 1,
+                            "maxItems": MAX_CONTEXTUAL_FACETS,
+                        }
+                    },
+                ),
+                _wire_selection_schema(
+                    mode="memory_only",
+                    properties={
+                        "memory_query": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": MAX_CONTEXT_MEMORY_QUERY_CHARS,
+                        }
+                    },
+                ),
+                _wire_selection_schema(mode="neither"),
+            ]
+        }
+        return {
+            "type": "json_schema",
+            "json_schema": {
+                "name": CONTEXT_REQUIREMENT_DECISION_SCHEMA_NAME,
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {"selection": selection_schema},
+                    "required": ["selection"],
+                },
+            },
+        }
+
+
+def _wire_selection_schema(
+    *,
+    mode: str,
+    properties: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    branch_properties = {
+        "mode": {"type": "string", "enum": [mode]},
+        **(properties or {}),
+    }
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": branch_properties,
+        "required": list(branch_properties),
+    }
+
+
 class ContextRequirementDecision(BaseModel):
     """The bounded context authorities required for one agent task."""
 
@@ -126,24 +260,45 @@ class ContextRequirementDecision(BaseModel):
             self.memory_query = None
         return self
 
-    @classmethod
-    def response_format(cls) -> Dict[str, Any]:
-        schema = cls.model_json_schema()
-        schema["required"] = [
-            "needs_knowledge",
-            "needs_memory",
-            "contextual_facets",
-            "memory_query",
-        ]
-        schema["properties"]["memory_query"].pop("default", None)
-        return {
-            "type": "json_schema",
-            "json_schema": {
-                "name": CONTEXT_REQUIREMENT_DECISION_SCHEMA_NAME,
-                "strict": True,
-                "schema": schema,
-            },
+
+
+def map_context_requirement_wire_decision(
+    wire_decision: ContextRequirementWireDecision,
+) -> ContextRequirementDecision:
+    selection = wire_decision.selection
+    if isinstance(selection, KnowledgeOnlySelection):
+        payload = {
+            "needs_knowledge": True,
+            "needs_memory": False,
+            "contextual_facets": [],
+            "memory_query": None,
         }
+    elif isinstance(selection, MixedSelection):
+        payload = {
+            "needs_knowledge": True,
+            "needs_memory": True,
+            "contextual_facets": [
+                facet.model_dump() for facet in selection.contextual_facets
+            ],
+            "memory_query": None,
+        }
+    elif isinstance(selection, MemoryOnlySelection):
+        payload = {
+            "needs_knowledge": False,
+            "needs_memory": True,
+            "contextual_facets": [],
+            "memory_query": selection.memory_query,
+        }
+    elif isinstance(selection, NeitherSelection):
+        payload = {
+            "needs_knowledge": False,
+            "needs_memory": False,
+            "contextual_facets": [],
+            "memory_query": None,
+        }
+    else:
+        raise ValueError("unsupported context requirement wire selection")
+    return ContextRequirementDecision.model_validate(payload)
 
 
 class EvidenceReadinessDecision(BaseModel):

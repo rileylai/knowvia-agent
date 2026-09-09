@@ -15,8 +15,10 @@ from sqlalchemy.orm import Session, sessionmaker
 from src.agent import BoundedAgentRuntime, build_agent_tool_registry
 from src.agent.models import (
     ContextRequirementDecision,
+    ContextRequirementWireDecision,
     EvidenceReadinessDecision,
     ReferenceBindingDecision,
+    map_context_requirement_wire_decision,
 )
 from src.db.models import KnowledgeChunk
 from src.db.unit_of_work import SqlAlchemyUnitOfWork
@@ -403,17 +405,28 @@ class RecordingProvider(LLMProvider):
             self.events.append(event)
             raise
         structured = response.structured_output
-        if operation == "reference_binding_resolution":
-            contract_model = ReferenceBindingDecision
-        elif operation == "context_requirement_selection":
-            contract_model = ContextRequirementDecision
-        elif operation == "evidence_readiness":
-            contract_model = EvidenceReadinessDecision
-        else:
-            contract_model = None
-        if contract_model is not None:
+        mapped_context_decision: Optional[ContextRequirementDecision] = None
+        wire_mode: Optional[str] = None
+        contract_model = (
+            ReferenceBindingDecision
+            if operation == "reference_binding_resolution"
+            else EvidenceReadinessDecision
+            if operation == "evidence_readiness"
+            else None
+        )
+        if contract_model is not None or operation == "context_requirement_selection":
             try:
-                contract_model.model_validate(structured)
+                if operation == "context_requirement_selection":
+                    wire_decision = ContextRequirementWireDecision.model_validate(
+                        structured
+                    )
+                    wire_mode = wire_decision.selection.mode
+                    mapped_context_decision = map_context_requirement_wire_decision(
+                        wire_decision
+                    )
+                else:
+                    assert contract_model is not None
+                    contract_model.model_validate(structured)
             except ValidationError as validation_error:
                 event.update(
                     status="contract_error",
@@ -433,12 +446,16 @@ class RecordingProvider(LLMProvider):
         elif operation == "context_requirement_selection" and isinstance(
             structured, Mapping
         ):
-            facets = structured.get("contextual_facets")
-            event["needs_knowledge"] = structured.get("needs_knowledge")
-            event["needs_memory"] = structured.get("needs_memory")
-            event["contextual_facet_count"] = (
-                len(facets) if isinstance(facets, list) else None
-            )
+            event["wire_mode"] = wire_mode
+            if mapped_context_decision is not None:
+                event["needs_knowledge"] = mapped_context_decision.needs_knowledge
+                event["needs_memory"] = mapped_context_decision.needs_memory
+                event["contextual_facet_count"] = len(
+                    mapped_context_decision.contextual_facets
+                )
+                event["memory_query_present"] = (
+                    mapped_context_decision.memory_query is not None
+                )
         elif operation == "evidence_readiness" and isinstance(structured, Mapping):
             event["ready"] = structured.get("ready")
         elif operation == "bounded_agent_final":

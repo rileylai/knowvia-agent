@@ -234,7 +234,7 @@ Knowledge evidence。
 Malformed decision、extra field、空 facet 或超過 facet 上限直接 fail closed，不用 keyword 或
 regex 重新猜測。
 
-### Context Requirement Provider Wire Contract（8.6.1 planned）
+### Context Requirement Provider Wire Contract（8.6.1 current implementation）
 
 8.6 的 actual-provider evidence 顯示，既有四個 root fields 的 provider schema 可以接受
 backend cross-field validator 必拒絕的組合。8.6.1 將 provider wire contract 與 domain contract
@@ -244,8 +244,8 @@ structural mapping 產生既有 `ContextRequirementDecision`。
 Provider wire branches 固定為 `knowledge_only`、`mixed`、`memory_only` 與 `neither`。Branch
 使用 `mode` enum discriminator；`mixed` 只帶 1 至 2 個 `contextual_facets`，`memory_only`
 只帶 bounded non-empty `memory_query`，其他 branch 不帶對應 dependency field。每個 branch
-使用 `additionalProperties=false` 並要求其欄位。這是 planned contract；current runtime 仍使用
-既有 selector response format，implementation 留待下一輪。
+使用 `additionalProperties=false` 並要求其欄位。Current selector runtime 使用這個 wire schema，
+完成 wire validation 後才建立 domain decision。
 
 Mapping 只做 structural conversion，不猜測 `needs_memory`、刪除 facet、截斷內容、補預設值或
 retry。Provider DTO 或 mapping 不合法時維持 provider/contract failure；`ContextRequirementDecision`

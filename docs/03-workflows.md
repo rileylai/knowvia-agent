@@ -99,10 +99,10 @@ Backend 在每一步檢查 timeout、argument、permission、context budget 與 
 
 這是已完成 implementation 的 current workflow。Unresolved actual-provider stability 與 browser
 acceptance deferred；目前下一個唯一主線 priority 是 `8.6.1 Context Requirement Provider Wire Contract`，
-只做 provider/domain contract design 與後續 bounded implementation，Readiness Usability Study
-排在此 slice implementation 後。
+automated implementation 已完成，尚待 bounded actual-provider verification。Readiness Usability Study
+排在此 slice 後。
 `7.0 Evaluation and Demo Hardening` 維持 `manual_verification`，Formal Browser Demo Story 保留但暫排在
-`8.6.1` contract implementation 後。Explicit save、conversation
+`8.6.1` 後。Explicit save、conversation
 recall、conversation transform 與 direct Memory compatibility 先走既有 dedicated routes；其餘
 substantive request 走 structured path：
 
@@ -192,11 +192,11 @@ substantive task 執行 `search_knowledge`，再將每個 facet `text` 原樣作
 tool calls；required tools 超過 budget 時 fail closed。純 Knowledge factual question 不強制
 Memory，direct memory-only recall 保留既有 `memory_query` routing，也不強制 Knowledge。
 
-8.6.1 的 planned provider boundary 會把 selector 的 wire DTO 與 backend domain decision 分開。
+8.6.1 的 current provider boundary 把 selector 的 wire DTO 與 backend domain decision 分開。
 Provider 先回傳 strict root object 的 `selection` nested union，再由 backend deterministic mapping
 成既有 `ContextRequirementDecision`；Knowledge、Memory、citation、execution 與 fail-closed
 authority 不移交給 wire DTO。四個 wire modes 對應 Knowledge-only、mixed、direct Memory-only
-與 neither；provider DTO 不做 semantic repair，implementation 尚未開始。
+與 neither；provider DTO 不做 semantic repair。
 
 Reference Binding provider 可使用 bounded resolver-visible history 理解 reference；selector 只
 接 exact current message 與 backend-validated bindings。Previous assistant answer 不具 Knowledge

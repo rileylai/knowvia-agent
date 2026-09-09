@@ -3780,3 +3780,26 @@ Final-QA evaluation now separates live automated classification from explicit of
 - 新增 D035（Accepted），但不修改 D027 historical product semantics。8.6.1 roadmap status 為
   `planned`；本輪只完成 architecture / contract design，implementation、TDD 與 UQ-003/UQ-007/
   UQ-010 bounded selector-only actual-provider verification 留待下一輪。
+
+## 2026-09-09 8.6.1 Context Requirement Provider Wire Contract Implementation
+
+- 新增 provider-only `ContextRequirementWireDecision`。Effective provider schema 是 strict root
+  object，唯一 required root field 為 `selection`；nested `anyOf` 只允許 `knowledge_only`、
+  `mixed`、`memory_only`、`neither` 四個 branch。Root、branch 與 facet object 均使用
+  `additionalProperties=false`；schema 不含 root-level `anyOf` 或 unsupported composition keywords。
+- Selector production path 改為 wire validation、deterministic mapping、既有
+  `ContextRequirementDecision.model_validate()`。Mapper 不做 semantic repair、retry、fallback、
+  facet drop/truncate 或 query rewrite。Wire/domain validation failure 使用既有
+  `provider_contract_error`；provider runtime failure 仍使用 `provider_error`。
+- Selector prompt 只同步新的 `selection.mode` 與 branch-specific fields。Reference Binding、
+  retrieval、Memory、Evidence Readiness、final synthesis、SSE、provider model、retry/timeout、public API
+  與 database schema 均未修改。8.5/8.6 diagnostic seam 保存 mapped domain flags、facet count、
+  memory-query presence 與 wire mode，不保存 raw wire output 或 provider values。
+- Automated verification：wire/schema/mapper、selector、provider 與 diagnostic focused tests
+  `91 passed`；conversation/orchestrator regression `82 passed`；Agent Golden Set `29/29`；compileall
+  pass。第一次 full backend run 為 `998 passed, 6 skipped, 1 failed`，唯一 failure 是既有 SQLite
+  concurrent idempotency timing test；isolated rerun pass，第二次 full backend 為
+  `999 passed, 6 skipped`。
+- `8.6.1` 維持 `in_progress`。Automated implementation complete；本輪未使用舊的 live-call
+  authorization。Completion 前仍需 owner 授權 UQ-003、UQ-007、UQ-010 各一次 selector-only
+  actual-provider verification，總計 3 calls。Readiness Usability Study 排在此 slice 後。

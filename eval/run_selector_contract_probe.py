@@ -19,7 +19,10 @@ from eval.user_facing_diagnostic import (
     write_json_report,
 )
 from src.agent import BoundedAgentRuntime
-from src.agent.models import ContextRequirementDecision
+from src.agent.models import (
+    ContextRequirementWireDecision,
+    map_context_requirement_wire_decision,
+)
 from src.orchestrators.qa_orchestrator import DEFAULT_QA_MODEL, DEFAULT_QA_PROVIDER_NAME
 from src.providers import LLMRequest, OpenAIClient, ProviderRouter
 
@@ -46,6 +49,11 @@ def _safe_event(event: Mapping[str, object]) -> dict[str, object]:
         "structured_output_contract": event.get("structured_output_contract"),
         "failure_fingerprint": event.get("failure_fingerprint"),
         "shape_metadata": event.get("shape_metadata"),
+        "wire_mode": event.get("wire_mode"),
+        "needs_knowledge": event.get("needs_knowledge"),
+        "needs_memory": event.get("needs_memory"),
+        "contextual_facet_count": event.get("contextual_facet_count"),
+        "memory_query_present": event.get("memory_query_present"),
     }
 
 
@@ -76,7 +84,7 @@ async def _probe_one(
         ),
         temperature=0.0,
         max_tokens=200,
-        response_format=ContextRequirementDecision.response_format(),
+        response_format=ContextRequirementWireDecision.response_format(),
         metadata={
             "workflow_id": f"8.6-selector-{query_id}-{probe_index}",
             "operation": "context_requirement_selection",
@@ -88,7 +96,10 @@ async def _probe_one(
     try:
         response = await router.route(DEFAULT_QA_PROVIDER_NAME, request)
         try:
-            ContextRequirementDecision.model_validate(response.structured_output)
+            wire_decision = ContextRequirementWireDecision.model_validate(
+                response.structured_output
+            )
+            map_context_requirement_wire_decision(wire_decision)
         except ValidationError:
             termination = "provider_contract_error"
     except Exception:

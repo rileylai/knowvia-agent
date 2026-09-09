@@ -11,8 +11,10 @@ from src.agent.models import (
     AgentState,
     AgentTerminationReason,
     ContextRequirementDecision,
+    ContextRequirementWireDecision,
     ReferenceBinding,
     ReferenceBindingDecision,
+    map_context_requirement_wire_decision,
 )
 from src.agent.evidence_readiness import (
     EvidenceReadinessContractError,
@@ -53,17 +55,19 @@ MAX_AGENT_TOOL_RESULT_CHARS = 4000
 CONTEXT_SELECTOR_SYSTEM_MESSAGE = (
     "You are the bounded Knowvia context requirement selector. Return only the requested "
     "structured object. Decide which authority the current task needs before answer generation. "
-    "Set needs_knowledge true when the answer requires indexed enterprise evidence. Set "
-    "needs_memory true only when explicitly saved personal, company, or project context is "
-    "needed to answer or materially improve a recommendation or application task. Knowledge-only "
-    "factual or extraction questions do not need memory. Memory-only direct recall does not need "
-    "Knowledge. For a mixed Knowledge task, return at most two contextual_facets. Each facet must "
+    "Return selection.mode=knowledge_only when the answer requires indexed enterprise evidence "
+    "without saved context. Return selection.mode=mixed when indexed enterprise evidence and "
+    "explicitly saved personal, company, or project context are both needed to answer or materially "
+    "improve a recommendation or application task. Return selection.mode=memory_only only for "
+    "direct recall of saved context, and selection.mode=neither when neither authority is needed. "
+    "Knowledge-only factual or extraction questions do not need memory. For a mixed selection, "
+    "return one or two contextual_facets. Each facet must "
     "have a short stable id and a concise, atomic noun-phrase text describing one contextual "
     "dependency, such as 'company size' or 'development preferences'. Do not write a prose "
     "retrieval query, mention a tool, corpus, source, search strategy, or retrieval plan. "
-    "For direct Memory recall only, write a concise task-oriented memory_query; do not copy the "
-    "full user question, request all memories, or use a wildcard. Set memory_query to null for "
-    "mixed contextual tasks and when needs_memory is false. "
+    "For a memory_only selection, write a concise task-oriented memory_query; do not copy the "
+    "full user question, request all memories, or use a wildcard. Do not add memory_query to "
+    "other modes or contextual_facets to knowledge_only, memory_only, or neither. "
     "The exact current user message is authoritative. Validated reference bindings may clarify "
     "textual antecedents, but previous assistant content is not Knowledge evidence and a previous "
     "assistant mention of saved facts is not current LongTermMemory retrieval. For a new substantive request, "
@@ -574,7 +578,7 @@ class BoundedAgentRuntime:
                     ),
                     temperature=0.0,
                     max_tokens=200,
-                    response_format=ContextRequirementDecision.response_format(),
+                    response_format=ContextRequirementWireDecision.response_format(),
                     metadata={
                         "workflow_id": request_workflow_id,
                         "operation": "context_requirement_selection",
@@ -585,14 +589,22 @@ class BoundedAgentRuntime:
             )
             if selector_response.tool_calls:
                 raise ValueError("context selector returned tool calls")
-            decision = ContextRequirementDecision.model_validate(
-                selector_response.structured_output
-            )
         except Exception:
             return self._failed_result(
                 state,
                 AgentTerminationReason.PROVIDER_ERROR,
                 None,
+            )
+        try:
+            wire_decision = ContextRequirementWireDecision.model_validate(
+                selector_response.structured_output
+            )
+            decision = map_context_requirement_wire_decision(wire_decision)
+        except ValueError:
+            return self._failed_result(
+                state,
+                AgentTerminationReason.PROVIDER_CONTRACT_ERROR,
+                selector_response,
             )
 
         state.context_requirement_decision = decision

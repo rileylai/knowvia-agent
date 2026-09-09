@@ -17,6 +17,7 @@ from src.agent import (
     BoundedAgentRuntime,
     ContextualFacet,
     ContextRequirementDecision,
+    ContextRequirementWireDecision,
     EvidenceReadinessDecision,
     build_agent_tool_registry,
 )
@@ -31,6 +32,34 @@ from src.conversation_context import ReferenceResolverMessage
 from src.db.base import Base
 from src.db.models import WorkflowRun
 from src.services.workflow_run_service import WorkflowRunService
+
+
+def _provider_wire_output(decision: Dict[str, Any]) -> Dict[str, Any]:
+    if "selection" in decision:
+        return dict(decision)
+    needs_knowledge = decision.get("needs_knowledge")
+    needs_memory = decision.get("needs_memory")
+    facets = decision.get("contextual_facets", [])
+    memory_query = decision.get("memory_query")
+    if needs_knowledge is True and needs_memory is False and not facets and memory_query is None:
+        return {"selection": {"mode": "knowledge_only"}}
+    if needs_knowledge is True and needs_memory is True and facets and memory_query is None:
+        return {
+            "selection": {
+                "mode": "mixed",
+                "contextual_facets": facets,
+            }
+        }
+    if needs_knowledge is False and needs_memory is True and not facets and memory_query:
+        return {
+            "selection": {
+                "mode": "memory_only",
+                "memory_query": memory_query,
+            }
+        }
+    if needs_knowledge is False and needs_memory is False and not facets and memory_query is None:
+        return {"selection": {"mode": "neither"}}
+    return dict(decision)
 
 
 class StructuredDecisionProvider(LLMProvider):
@@ -77,7 +106,7 @@ class StructuredDecisionProvider(LLMProvider):
                 )
             if not self.decisions:
                 raise RuntimeError("structured decision exhausted")
-            decision = dict(self.decisions.pop(0))
+            decision = _provider_wire_output(dict(self.decisions.pop(0)))
             return LLMResponse(
                 provider=self.name,
                 model=request.model,
@@ -125,13 +154,13 @@ class HistorySensitiveStructuredProvider(LLMProvider):
                 model=request.model,
                 output_text="",
                 structured_output={
-                    "needs_knowledge": True,
-                    "needs_memory": True,
-                    "contextual_facets": [
-                        {"id": "c1", "text": "company size"},
-                        {"id": "c2", "text": "development preferences"},
-                    ],
-                    "memory_query": None,
+                    "selection": {
+                        "mode": "mixed",
+                        "contextual_facets": [
+                            {"id": "c1", "text": "company size"},
+                            {"id": "c2", "text": "development preferences"},
+                        ],
+                    }
                 },
             )
         final_user_message = request.messages[1].content
@@ -188,7 +217,7 @@ class ReferenceBindingProvider(LLMProvider):
                 if schema_name == "reference_binding_decision"
                 else {"ready": True}
                 if schema_name == "evidence_readiness_decision"
-                else dict(self.decision)
+                else _provider_wire_output(dict(self.decision))
             )
             self.structured_outputs.append(output)
             return LLMResponse(
@@ -399,6 +428,76 @@ def test_context_requirement_decision_validates_bounded_contract() -> None:
         "memory_query": None,
     }
     assert "steps" not in ContextRequirementDecision.model_json_schema()["properties"]
+
+
+def test_runtime_uses_wire_schema_and_maps_knowledge_only_selection() -> None:
+    provider = StructuredDecisionProvider(
+        [{"selection": {"mode": "knowledge_only"}}],
+        ["The evidence supports this answer."],
+        [{"ready": True}],
+    )
+    runtime, retriever, _ = _runtime(provider)
+
+    result = _run(runtime, "What practice does the indexed PDF describe?")
+
+    assert result.status == "succeeded"
+    assert result.insufficient_info is False
+    assert len(retriever.calls) == 1
+    selector_schema = provider.requests[1].response_format["json_schema"]["schema"]
+    assert selector_schema["required"] == ["selection"]
+    assert "anyOf" in selector_schema["properties"]["selection"]
+    selector_prompt = provider.requests[1].messages[0].content
+    assert "selection.mode=knowledge_only" in selector_prompt
+    assert "selection.mode=mixed" in selector_prompt
+    assert "selection.mode=memory_only" in selector_prompt
+    assert "selection.mode=neither" in selector_prompt
+    assert "Set needs_knowledge" not in selector_prompt
+
+
+def test_runtime_rejects_invalid_wire_output_as_provider_contract_error() -> None:
+    provider = StructuredDecisionProvider(
+        [
+            {
+                "needs_knowledge": True,
+                "needs_memory": False,
+                "contextual_facets": [{"id": "c1", "text": "company size"}],
+                "memory_query": None,
+            }
+        ]
+    )
+    runtime, retriever, memory_service = _runtime(provider)
+
+    result = _run(runtime, "Which practices fit our company?")
+
+    assert result.status == "failed"
+    assert result.insufficient_info is False
+    assert result.termination_reason == AgentTerminationReason.PROVIDER_CONTRACT_ERROR
+    assert retriever.calls == []
+    assert memory_service.search_calls == []
+
+
+def test_runtime_maps_domain_semantic_failure_to_provider_contract_error() -> None:
+    provider = StructuredDecisionProvider(
+        [
+            {
+                "selection": {
+                    "mode": "mixed",
+                    "contextual_facets": [
+                        {"id": "c1", "text": "search saved memory"}
+                    ],
+                }
+            }
+        ]
+    )
+    runtime, retriever, memory_service = _runtime(provider)
+
+    result = _run(runtime, "Which practices fit our company?")
+
+    assert result.status == "failed"
+    assert result.insufficient_info is False
+    assert result.termination_reason == AgentTerminationReason.PROVIDER_CONTRACT_ERROR
+    assert retriever.calls == []
+    assert memory_service.search_calls == []
 
 
 def test_evidence_readiness_decision_is_strict_and_minimal() -> None:
@@ -690,14 +789,9 @@ def test_context_requirement_decision_accepts_bounded_contextual_facets() -> Non
     assert "contextual_facets" in ContextRequirementDecision.model_json_schema()[
         "properties"
     ]
-    wire_schema = ContextRequirementDecision.response_format()["json_schema"]["schema"]
-    assert set(wire_schema["required"]) == {
-        "needs_knowledge",
-        "needs_memory",
-        "contextual_facets",
-        "memory_query",
-    }
-    assert "default" not in wire_schema["properties"]["memory_query"]
+    wire_schema = ContextRequirementWireDecision.response_format()["json_schema"]["schema"]
+    assert wire_schema["required"] == ["selection"]
+    assert "anyOf" in wire_schema["properties"]["selection"]
 
 
 def test_contextual_facets_reject_unbounded_or_non_atomic_shapes() -> None:
@@ -1258,7 +1352,7 @@ def test_structured_decision_fails_closed_before_any_tool_on_malformed_output() 
     result = _run(runtime, "What is in the indexed PDF?")
 
     assert result.status == "failed"
-    assert result.termination_reason == AgentTerminationReason.PROVIDER_ERROR
+    assert result.termination_reason == AgentTerminationReason.PROVIDER_CONTRACT_ERROR
     assert retriever.calls == []
     assert memory_service.search_calls == []
     assert len(provider.requests) == 2

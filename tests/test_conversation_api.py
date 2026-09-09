@@ -148,13 +148,13 @@ class HistorySensitiveStructuredProvider(LLMProvider):
                 model=request.model,
                 output_text="",
                 structured_output={
-                    "needs_knowledge": True,
-                    "needs_memory": True,
-                    "contextual_facets": [
-                        {"id": "c1", "text": "company size"},
-                        {"id": "c2", "text": "development preferences"},
-                    ],
-                    "memory_query": None,
+                    "selection": {
+                        "mode": "mixed",
+                        "contextual_facets": [
+                            {"id": "c1", "text": "company size"},
+                            {"id": "c2", "text": "development preferences"},
+                        ],
+                    }
                 },
             )
         final_user_message = next(

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
@@ -8,17 +9,38 @@ from pydantic import ValidationError
 
 from eval.user_facing_diagnostic import (
     DiagnosticReportError,
+    RecordingProvider,
     build_report,
     build_safe_contract_fingerprint,
     classify_trace,
     load_diagnostic_set,
     write_json_report,
 )
-from src.agent.models import ContextRequirementDecision
+from src.agent.models import ContextRequirementDecision, ContextRequirementWireDecision
 from eval.run_provider_failure_triage import classify_repeats
+from src.providers import LLMMessage, LLMProvider, LLMRequest, LLMResponse
 
 
 FIXTURE_PATH = Path("eval/user_facing_diagnostic.yaml")
+
+
+class WireDiagnosticProvider(LLMProvider):
+    supports_structured_output = True
+
+    def __init__(self, output: dict[str, object]) -> None:
+        self.output = output
+
+    @property
+    def name(self) -> str:
+        return "wire-diagnostic"
+
+    async def generate(self, request: LLMRequest) -> LLMResponse:
+        return LLMResponse(
+            provider=self.name,
+            model=request.model,
+            output_text="",
+            structured_output=self.output,
+        )
 
 
 def _case(*, expected_outcome: str = "SHOULD_ANSWER") -> dict[str, object]:
@@ -167,6 +189,38 @@ def test_provider_failure_is_not_semantic_insufficient() -> None:
     )
 
     assert classify_trace(_case(), trace) == "provider_failure"
+
+
+def test_diagnostic_records_mapped_domain_metadata_without_wire_values() -> None:
+    provider = RecordingProvider(
+        WireDiagnosticProvider(
+            {
+                "selection": {
+                    "mode": "mixed",
+                    "contextual_facets": [
+                        {"id": "c1", "text": "private company context"}
+                    ],
+                }
+            }
+        )
+    )
+    request = LLMRequest(
+        model="fixture-1",
+        messages=[LLMMessage(role="user", content="private query")],
+        response_format=ContextRequirementWireDecision.response_format(),
+        metadata={"operation": "context_requirement_selection"},
+    )
+
+    asyncio.run(provider.generate(request))
+
+    event = provider.events[0]
+    assert event["structured_output_contract"] == "valid"
+    assert event["wire_mode"] == "mixed"
+    assert event["needs_knowledge"] is True
+    assert event["needs_memory"] is True
+    assert event["contextual_facet_count"] == 1
+    assert event["memory_query_present"] is False
+    assert "private company context" not in json.dumps(event)
 
 
 def test_expected_negative_control_maps_to_expected_insufficient() -> None:
