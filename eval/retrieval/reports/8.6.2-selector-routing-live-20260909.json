@@ -1,0 +1,41 @@
+{
+  "artifact_type": "selector_routing_actual_provider_verification",
+  "results": [
+    {
+      "contextual_facet_count": 0,
+      "expected_wire_mode": "mixed",
+      "memory_query_present": true,
+      "needs_knowledge": false,
+      "needs_memory": true,
+      "observed_wire_mode": "memory_only",
+      "operation": "context_requirement_selection",
+      "outcome": "failure",
+      "provider_error_kind": null,
+      "provider_status": "completed",
+      "query_id": "AP-1",
+      "reference_binding_count": 1,
+      "structured_output_contract": "valid",
+      "termination_reason": "selector_expectation_mismatch",
+      "wire_mode": "memory_only"
+    }
+  ],
+  "run_metadata": {
+    "actual_calls_executed": 1,
+    "database_mutation": false,
+    "final_synthesis_called": false,
+    "memory_called": false,
+    "model": "gpt-4o-mini",
+    "prompt_recorded": false,
+    "provider": "openai",
+    "raw_provider_response_recorded": false,
+    "readiness_called": false,
+    "reference_binding_resolution_called": false,
+    "retrieval_called": false,
+    "retry_count": 0,
+    "secret_recorded": false,
+    "selector_only": true,
+    "slice": "8.6.2",
+    "sse_called": false,
+    "stop_reason": "stopped_after_AP-1"
+  }
+}

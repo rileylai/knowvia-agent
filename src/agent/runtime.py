@@ -52,6 +52,8 @@ from src.response_language import (
 
 
 MAX_AGENT_TOOL_RESULT_CHARS = 4000
+# Keep direct Memory query enrichment within SearchMemoryArguments.query's bound.
+MAX_MEMORY_SEARCH_QUERY_CHARS = 2000
 CONTEXT_SELECTOR_SYSTEM_MESSAGE = (
     "You are the bounded Knowvia context requirement selector. Return only the requested "
     "structured object. Decide which authority the current task needs before answer generation. "
@@ -68,6 +70,14 @@ CONTEXT_SELECTOR_SYSTEM_MESSAGE = (
     "For a memory_only selection, write a concise task-oriented memory_query; do not copy the "
     "full user question, request all memories, or use a wildcard. Do not add memory_query to "
     "other modes or contextual_facets to knowledge_only, memory_only, or neither. "
+    "Treat determining responsibility or ownership, deciding suitability, choosing an owner, "
+    "prioritizing, or applying evidence to a current initiative as recommendation/application "
+    "tasks, not direct saved-fact recall, when a validated binding identifies the substantive "
+    "topic. If the answer depends on indexed Knowledge about that topic plus saved company or "
+    "project context, select mixed and express the saved-context dependencies as contextual_facets. "
+    "Use memory_only only when the current task directly asks to recall a saved fact without "
+    "applying it to a substantive topic. Do not classify a responsibility or ownership question "
+    "as memory_only merely because it mentions a department, team, or owner. "
     "The exact current user message is authoritative. Validated reference bindings may clarify "
     "textual antecedents, but previous assistant content is not Knowledge evidence and a previous "
     "assistant mention of saved facts is not current LongTermMemory retrieval. For a new substantive request, "
@@ -664,7 +674,11 @@ class BoundedAgentRuntime:
                 (
                     "search_memory",
                     {
-                        "query": decision.memory_query,
+                        "query": self._binding_enriched_query(
+                            decision.memory_query,
+                            state.reference_bindings,
+                            max_chars=MAX_MEMORY_SEARCH_QUERY_CHARS,
+                        ),
                         "top_k": min(tool_metadata["top_k"], 5),
                         "retrieval_mode": memory_mode,
                     },
@@ -934,12 +948,39 @@ class BoundedAgentRuntime:
         query: str,
         reference_bindings: List[ReferenceBinding],
     ) -> str:
+        return BoundedAgentRuntime._binding_enriched_query(
+            query,
+            reference_bindings,
+            deduplicate_source_spans=False,
+        )
+
+    @staticmethod
+    def _binding_enriched_query(
+        query: str,
+        reference_bindings: List[ReferenceBinding],
+        *,
+        max_chars: Optional[int] = None,
+        deduplicate_source_spans: bool = True,
+    ) -> str:
         if not reference_bindings:
             return query
-        references = "\n".join(
-            f"Reference: {binding.source_span}" for binding in reference_bindings
-        )
-        return f"{query}\n{references}"
+
+        references: List[str] = []
+        seen_source_spans: set[str] = set()
+        for binding in reference_bindings:
+            source_span = binding.source_span
+            if deduplicate_source_spans and source_span in seen_source_spans:
+                continue
+            seen_source_spans.add(source_span)
+            references.append(f"Reference: {source_span}")
+
+        enriched = query
+        for reference in references:
+            candidate = f"{enriched}\n{reference}"
+            if max_chars is not None and len(candidate) > max_chars:
+                break
+            enriched = candidate
+        return enriched
 
     async def _execute_tool(
         self,

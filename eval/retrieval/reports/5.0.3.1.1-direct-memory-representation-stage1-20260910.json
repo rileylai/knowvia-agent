@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "operation": "5.0.3.1.1_direct_memory_representation_stage1",
+  "generated_at_utc": "2026-09-09T16:28:28.840817+00:00",
+  "owner_scope": "local",
+  "model": "text-embedding-3-small",
+  "dimensions": 1536,
+  "embedding_calls_authorized": 5,
+  "embedding_calls_executed": 5,
+  "semantic_llm_calls_executed": 0,
+  "retrieval_mode": "pgvector_exact_cosine",
+  "diagnostic_top_k": 5,
+  "production_effective_top_k": 1,
+  "relevance_floor": 0.4,
+  "no_binding_fallback": "exact_original_memory_query",
+  "q5_fixture": {
+    "query": "production database schema 的重大修改需要誰 review？",
+    "source_span": "agentic system",
+    "executed": false
+  },
+  "queries": [
+    {
+      "query_id": "R1",
+      "representation": "R1",
+      "query_chars": 17,
+      "query_sha256": "8ca491b70d9b27c823c015689c20554c1ae783d3009910f384b1036d46a12f05",
+      "candidates": [
+        {"rank": 1, "safe_memory_id": 29, "label": "generic_department", "normalized_similarity": 0.5989913223656578, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 30, "label": "engineering_responsibility", "normalized_similarity": 0.5265578240458892, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 39, "label": null, "normalized_similarity": 0.4968814499794143, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 20, "label": "unknown_project_context", "normalized_similarity": 0.4849748084007225, "passes_direct_floor": true},
+        {"rank": 5, "safe_memory_id": 7, "label": null, "normalized_similarity": 0.4847567722074386, "passes_direct_floor": true}
+      ],
+      "production_selected_best1": {"rank": 1, "safe_memory_id": 29, "label": "generic_department", "normalized_similarity": 0.5989913223656578, "passes_direct_floor": true}
+    },
+    {
+      "query_id": "R2",
+      "representation": "R2",
+      "query_chars": 45,
+      "query_sha256": "7b1ac2382afce836c195e4babae1e818e1d42d26fd2f117ca45adb13dadcd2df",
+      "candidates": [
+        {"rank": 1, "safe_memory_id": 29, "label": "generic_department", "normalized_similarity": 0.5297194599063667, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 20, "label": "unknown_project_context", "normalized_similarity": 0.48721366916312103, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 24, "label": null, "normalized_similarity": 0.4764121469321241, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 31, "label": "ai_platform_responsibility", "normalized_similarity": 0.4680504889822963, "passes_direct_floor": true},
+        {"rank": 5, "safe_memory_id": 21, "label": null, "normalized_similarity": 0.46207935915626486, "passes_direct_floor": true}
+      ],
+      "production_selected_best1": {"rank": 1, "safe_memory_id": 29, "label": "generic_department", "normalized_similarity": 0.5297194599063667, "passes_direct_floor": true}
+    },
+    {
+      "query_id": "R3",
+      "representation": "R3",
+      "query_chars": 45,
+      "query_sha256": "3cb967dc1cbad15fb6e54f601117fa1db5bd0d05c96f1d62dd4f544856760beb",
+      "candidates": [
+        {"rank": 1, "safe_memory_id": 29, "label": "generic_department", "normalized_similarity": 0.4933136186651905, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 31, "label": "ai_platform_responsibility", "normalized_similarity": 0.4887396430444899, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 20, "label": "unknown_project_context", "normalized_similarity": 0.48535861206451436, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 24, "label": null, "normalized_similarity": 0.46958198062135303, "passes_direct_floor": true},
+        {"rank": 5, "safe_memory_id": 39, "label": null, "normalized_similarity": 0.4529066546641791, "passes_direct_floor": true}
+      ],
+      "production_selected_best1": {"rank": 1, "safe_memory_id": 29, "label": "generic_department", "normalized_similarity": 0.4933136186651905, "passes_direct_floor": true}
+    },
+    {
+      "query_id": "R4",
+      "representation": "R4",
+      "query_chars": 32,
+      "query_sha256": "a158f99c6826f8540c034459375205f37f323071032d6a1b52058cc455d4d195",
+      "candidates": [
+        {"rank": 1, "safe_memory_id": 29, "label": "generic_department", "normalized_similarity": 0.5603311029721535, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 20, "label": "unknown_project_context", "normalized_similarity": 0.5200978877788089, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 11, "label": null, "normalized_similarity": 0.4915830148730711, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 21, "label": null, "normalized_similarity": 0.4796468470144799, "passes_direct_floor": true},
+        {"rank": 5, "safe_memory_id": 31, "label": "ai_platform_responsibility", "normalized_similarity": 0.4711422122016291, "passes_direct_floor": true}
+      ],
+      "production_selected_best1": {"rank": 1, "safe_memory_id": 29, "label": "generic_department", "normalized_similarity": 0.5603311029721535, "passes_direct_floor": true}
+    },
+    {
+      "query_id": "Q4",
+      "representation": "R0-R4_shared_raw",
+      "query_chars": 10,
+      "query_sha256": "03eb3fae285e98e3c2ff6d2c78c100d741ad4d96686d628260152c0de89a524d",
+      "candidates": [
+        {"rank": 1, "safe_memory_id": 29, "label": "generic_department", "normalized_similarity": 0.7729727971031464, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 30, "label": "engineering_responsibility", "normalized_similarity": 0.5530056329401344, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 7, "label": null, "normalized_similarity": 0.5356740418037644, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 12, "label": null, "normalized_similarity": 0.5309381403958005, "passes_direct_floor": true},
+        {"rank": 5, "safe_memory_id": 11, "label": null, "normalized_similarity": 0.5180354817573372, "passes_direct_floor": true}
+      ],
+      "production_selected_best1": {"rank": 1, "safe_memory_id": 29, "label": "generic_department", "normalized_similarity": 0.7729727971031464, "passes_direct_floor": true}
+    }
+  ]
+}

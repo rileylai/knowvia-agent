@@ -3817,3 +3817,282 @@ Final-QA evaluation now separates live automated classification from explicit of
   Evidence Readiness、Final Synthesis、SSE 或 database mutation；沒有修改 runtime code。
 - `8.6.1` closure complete，roadmap status 更新為 `done`。Readiness Usability Study 排在此 slice
   後。
+
+## 2026-09-09 8.6.2 Contextual Recommendation Selector Routing
+
+### Scope
+
+- 只處理 browser persistence 已確認的 Case C：帶有 validated reference binding 的 responsibility / ownership recommendation 被 Context Requirement Selector 選成 direct Memory recall。
+- 不處理 Case A、Case B、Reference Binding、Evidence Readiness、Final Synthesis、retrieval、Memory relevance、embedding、threshold 或 top-k。
+
+### RED
+
+- 新增 regression 以 exact current message、validated binding 與 saved company/project context 模擬 Case C。
+- 修改前 selector guidance 未要求辨識 responsibility / ownership application task，fixture provider 走 `memory_only`，`search_knowledge` 次數為 `0`。
+
+### Implementation
+
+- 更新 `CONTEXT_SELECTOR_SYSTEM_MESSAGE`：將 responsibility、ownership、suitability、prioritization 與 evidence application 明確定義為 recommendation / application task。
+- 當 validated binding 指向 substantive topic，且答案需要該 topic 的 Knowledge 與 saved company/project context 時，selector 應選 `mixed`，並產生 1 至 2 個 bounded contextual facets。
+- `memory_only` 僅保留給不涉及 substantive topic application 的 direct saved-fact recall。
+- 沒有加入 department-specific keyword、regex、planner、query rewrite 或新的 provider wire state。
+
+### GREEN 與驗證
+
+- Case C regression：Knowledge 一次、contextual Memory 兩次，tool calls 為 3，final context 同時包含 Knowledge 與 Memory。
+- Direct department recall negative control 仍是一次 direct Memory search，不執行 Knowledge。
+- 沒有 validated referent 的孤立 department question 仍 fail closed，不猜測 topic。
+- Focused selector / context / binding suites：`67 passed`。
+- Extended authority、readiness、conversation、QA、SSE 與 tool suites：`163 passed`。
+- `uv sync --dev` 使用既有 `pyproject.toml` / `uv.lock` 完成，未修改 dependency files；`uv run --no-env-file --frozen python -m pytest -q` 通過 `1002 passed, 6 skipped`。
+
+### Actual-provider verification
+
+- 依本輪 bounded scope 只送出 AP-1 一次 selector-only call。輸入為 exact current message 加一個 backend-valid binding（`reference_binding_count=1`），沒有執行 Reference Binding resolver。
+- AP-1 provider wire output 與 domain mapping 均 valid，但回傳 `memory_only`、zero contextual facets；Case C 預期為 `mixed` 且需要 1 至 2 個 contextual facets，因此記為 `selector_expectation_mismatch`。
+- 依「任何 failure 立即停止」規則，AP-2 與 AP-3 沒有執行；沒有 retry 或額外 case。Artifact：[8.6.2-selector-routing-live-20260909.json](../eval/retrieval/reports/8.6.2-selector-routing-live-20260909.json)。Artifact 只保存 bounded operation、wire/domain flags、binding count、termination 與 call-boundary metadata。
+
+### Boundary 與狀態
+
+- Unchanged: Reference Binding、wire DTO、deterministic mapping、Knowledge retrieval、Memory retrieval mode / threshold / embedding / top-k、Evidence Readiness、Final Synthesis、SSE、MCP 與 database schema。
+- Actual-provider selector verification 未通過 AP-1，AP-2/AP-3 依 stop rule 未執行；browser manual verification 仍 pending。`8.6.2` 維持 `automated_verified`，不標記 `done`。
+
+## 2026-09-09 8.6.3 Binding-aware Direct Memory Recall
+
+### Scope
+
+- 只處理已確認的 direct `memory_only` context loss：selector 已合法回傳 `memory_only`，且 Reference Binding resolver 有 backend-valid binding。
+- 不處理 Case B、selector prompt / wire DTO / mapper、mixed semantics、retrieval policy、MemoryService、Evidence Readiness、Final Synthesis、actual-provider 或 browser。
+
+### RED、implementation、GREEN
+
+- RED：新增 direct Memory positive、stable dedup 與 unrelated-binding fail-closed regression。修改前 direct branch 只傳 provider 的 `memory_query`，positive case 缺少 `Reference: agentic system`，unrelated hint 也會落到 generic memory。
+- Implementation：抽出共用 `_binding_enriched_query`。Knowledge binding 維持既有 query shape；direct Memory branch 只加入 stable-order、dedup、bounded（2000 chars）的 `Reference: source_span`。
+- 維持 D030 authority boundary：source span 只作 retrieval hint，不是 fact、citation 或 sufficiency authority；沒有 raw history、query rewrite、retry 或 fallback。
+- GREEN：targeted 8.6.3 tests `5 passed`；locked focused group `278 passed`，包含 Reference Binding、Memory、context、conversation、readiness、SSE、MCP 與 Golden Set。
+
+### Boundary 與驗證
+
+- Knowledge referential binding、mixed contextual facets、MemoryService、relevance / threshold / top-k、Readiness 與 Final Synthesis regression 均通過且未修改。
+- `compileall` 與 `git diff --check` 通過。第一次 full backend 為 `1004 passed, 6 skipped, 1 failed`；唯一 failure 是既有 `test_concurrent_claims_have_one_owner` SQLite concurrency timing，isolated rerun `1 passed`。隔離 uv cache 後的 final full rerun 為 `1005 passed, 6 skipped`。
+- `8.6.3` 維持 `automated_verified`。Not yet manually verified. Browser acceptance pending，不標記 `done`。
+
+## 2026-09-10 5.0.3.1.1 Direct Memory Query Normalization Closure
+
+### Scope
+
+- 本次只做 documentation-only closure。沒有執行 provider call，沒有修改 production runtime、tests、prompt、schema、MemoryService、selector、Reference Binding、retrieval policy、threshold、top-k、embedding model 或 provider configuration。
+- 沒有新增 D036，也沒有 implementation。Stage A 與 Stage B 的 bounded evidence 沿用既有 artifacts：[Stage A report](../eval/retrieval/reports/5.0.3.1.1-normalizer-stage-a-20260910.json)、[Stage B report](../eval/retrieval/reports/5.0.3.1.1-normalizer-stage-b-20260910.json)。
+
+### Frozen engineering conclusion
+
+- `8.6.3` 已確認 direct `memory_only` query 的 `REFERENCE_BOUND_MEMORY_QUERY_CONTEXT_LOSS`，並以 stable-order、dedup、bounded source-span enrichment 完成 automated verification。Browser Case C 仍有 downstream Direct Memory ranking miss。
+- `5.0.3.1.1` 的 deterministic representation study 中，R0/R1/R2/R3/R4 都沒有安全的 production winner。Simple deterministic composition 不足以解決 vague direct Memory retrieval。
+- Dedicated semantic normalizer 的 Stage A 為 PASS。Q1 的 AI Platform responsibility 從 rank 3 到 rank 1，score `0.514848 → 0.538613`，target-vs-generic margin `-0.022190 → +0.078458`。這證明局部 retrieval value，但不是 production safety proof。
+- Stage B 為 FAIL。B4 raw baseline 的 target ID31 是 rank 1、score `0.501371`，通過 direct floor；normalized query 後 ID31 仍是 rank 1，但 score 降為 `0.380043`，低於 unchanged floor `0.40`，projected production best1 變成 no hit。這是 critical regression。
+- B2 保留 DB/database 的 semantic identity，但 literal acronym preservation 不穩定。B3 可以保留兩個 bindings，但 multi-target retrieval coverage 不穩定。
+
+### Architecture decision
+
+- broad `memory_only + validated binding → always normalize` trigger 不安全。Dedicated semantic normalizer 不採用，`5.0.3.1.1` 維持 `deferred`。
+- 本 study 沒有支持 threshold tuning、production top-k increase、second-pass retry、BM25、RRF、reranker 或 embedding migration。這些不列為 current recommendation。
+- 不新增正式 D036。Documentation 只記錄 candidate architecture evaluated and rejected/deferred due critical retrieval regression。
+
+### 8.6.3 status
+
+- `8.6.3` 保持 `automated_verified`，binding enrichment 不 revert。Browser acceptance 因 downstream Direct Memory retrieval ranking limitation blocked，不能標記 `done`。
+- Case B 是 closure 後下一個獨立 investigation：browser symptom 為 `reference_binding_count=0 → selector neither → no_context → insufficient_info`。本次不實作 Case B。
+- Case A（company size + agentic planning）維持 separate。
+
+### Closure boundary
+
+- Production behavior unchanged。此 closure 沒有 provider calls、database mutation、test execution 或 source-code change。
+- 未修改 `DECISIONS.md`，因本輪不新增 D036，也沒有需要新增正式 decision 的架構變更。
+
+## 2026-09-10 8.6.4 Reference Binding Antecedent Selection
+
+### Scope
+
+- 本輪只完成既有 8.6.4 implementation 的 automated verification closure。
+- 沒有執行 actual-provider call，沒有再修改 semantic guidance，也沒有修改 validator、history construction、selector、Memory、Knowledge、Evidence Readiness、Final Synthesis 或 `5.0.3.1.1`。
+
+### Automated verification
+
+- Golden Set：`29/29` pass。
+- 既有 focused Reference Binding/runtime/conversation/selector regression：`86 passed`。
+- 既有 prompt safety regression：`12 passed`。
+- Repository standard `uv run --no-env-file --frozen pytest -q` 首次因 `.venv/bin/pytest` shebang 指向舊路徑，在 collection 階段落到系統 Python，產生 `mcp` / `jsonschema` environment error；沒有進入 test execution。
+- 使用同一 locked `.venv` 的 module entrypoint 後，第一次 full run 為 `1007 passed, 6 skipped, 1 failed`。唯一 failure 是既有 `test_concurrent_claims_have_one_owner` SQLite concurrency timing；isolated rerun `1 passed`。
+- 最終 full backend rerun 為 `1008 passed, 6 skipped`。
+
+### Root cause and implementation boundary
+
+- Confirmed live root cause：`REFERENCE_BINDING_ANTECEDENT_SELECTION_MISS`。
+- Prior P1-production 與 P1-clean 都產生 valid binding，但錯綁 prior analogous unresolved user question；移除 failed assistant candidates 沒有改變結果。
+- P2 self-contained query 回傳 empty bindings；P3 ambiguous query 回傳 empty bindings。
+- Implementation 只增加 Reference Binding semantic guidance，要求 source 提供 substantive missing referent，並讓 substantive antecedent 優先於 analogous unresolved reference。沒有加入 keyword hard-code、role rejection、most-recent heuristic、`resolved_task`、confidence/scoring、second semantic pass 或 schema/validator change。
+- D030 unchanged。沒有新增 architecture decision。
+
+### Status and next probe
+
+- `8.6.4=automated_verified`。
+- Manual/provider verification pending；本輪不把 automated result 當作 live-provider verification。
+- 下一輪只提出 frozen live probe：P1-production、P1-clean、P2、P3。P1 需取得至少一個 validated binding，且 source 必須真正提供 agentic-system referent；P2 與 P3 須維持 empty bindings。不要求固定 `source_message_id`。
+- Not yet manually verified.
+
+## 2026-09-10 8.6.4 Surgical Rollback and Closure
+
+### Scope
+
+- 8.6.4 actual-provider acceptance 已失敗。本輪只做 surgical rollback 與 documentation closure。
+- 本輪沒有 provider call，沒有開始新的 Reference Binding implementation，也沒有重新設計 Reference Binding。
+- 只反向修改 8.6.4 新增的 runtime semantic guidance 與 prompt contract tests。沒有使用 whole-file restore、reset、checkout 或 stash。
+
+### Live acceptance evidence
+
+- Before 8.6.4：P1-production 與 P1-clean 都錯綁 message `554`；P2 self-contained 與 P3 ambiguous 都是 empty bindings。
+- After 8.6.4：P1-production 與 P1-clean 仍錯綁 message `554`；P2 over-binding 到 `554`；P3 over-binding 到 `603`。
+- 因此原始 antecedent-selection defect 沒有修正，並新增 self-contained 與 ambiguity 的 negative regression。
+- Final classification：`REFERENCE_BINDING_PROMPT_ONLY_FIX_REJECTED`。
+
+### Surgical rollback
+
+- `src/agent/runtime.py` 已移除 8.6.4 新增的 Reference Binding semantic guidance，恢復 pre-8.6.4 prompt behavior。
+- `tests/test_reference_binding.py` 已移除只為 8.6.4 prompt wording / semantic contract 新增的 3 個 tests；8.6.4 前既有的 Reference Binding tests 保留。
+- 8.6.2 selector、8.6.3 binding-aware Memory enrichment、5.0.3.1.1 artifacts 與其他既有 dirty worktree changes 均保留。
+
+### Post-rollback automated verification
+
+- Focused Reference Binding/runtime/conversation/selector regression：`24 passed`。
+- Prompt safety：`12 passed`。
+- Golden Set：`29/29` pass。
+- Full locked module backend regression：`1005 passed, 6 skipped`。
+- Regression 後確認 pre-8.6.4 production behavior 已恢復；本輪沒有執行 live provider calls。
+
+### Closure and next investigation
+
+- `8.6.4=live_failed / rejected / not adopted`。Prompt-only semantic guidance 不採用；不要繼續 prompt tuning。
+- Root issue remains open：provider 可能選擇 structurally similar、但仍 unresolved 的 prior question，而不是提供 substantive antecedent 的 source。
+- 下一輪只記錄 `BOUNDED_REFERENCE_BINDING_TOPOLOGY_STUDY`，不在本輪 implementation：
+  - A. bounded multi-hop / binding-chain：將 `554` 視為 intermediate referential source，再解析其「這件事」至 substantive `552/553` antecedent。
+  - B. independent binding-quality verification：provider 產生 candidate binding 後，由 bounded verifier 檢查 source span 是否真的提供 missing referent；不足時 reject / fail closed。
+  - C. 其他符合 current architecture 的 bounded topology。
+- D030 unchanged：raw history 只進 Reference Binding boundary；downstream 不取得 raw transcript；不新增 `resolved_task`；exact current request 保持 authoritative task；binding 只做 referent interpretation / retrieval enrichment。
+- 8.6.3 unchanged；`5.0.3.1.1` remains deferred。No commit confirmation。
+
+## 2026-09-10 Case B Reference Binding Deep Ellipsis Final Closure
+
+### Scope
+
+- 本輪只做 Case B documentation-only final closure。
+- 沒有修改 production runtime、tests、prompt、schema、provider configuration、Reference Binding logic、selector、Memory、Knowledge、Evidence Readiness 或 Final Synthesis。
+- 沒有執行 provider call、其他 model benchmark、implementation、commit、push 或 stash。
+
+### Final evidence
+
+- Case B browser symptom 是同一 session 已有 substantive agentic-system discussion，但 current query「哪個部門去負責處理？」曾得到 `reference_binding_count=0`、selector `neither`、`no_context` 與 `insufficient_info`。
+- Bounded diagnosis 確認 substantive antecedent 存在於 resolver history。Candidate-history absence、backend validator、failed assistant candidates 都不是 primary cause；問題是 provider 可能選到 prior analogous、仍未解析的 question，而不是 substantive antecedent。
+- `8.6.4` prompt-only semantic guidance 未改善 P1 antecedent selection，並造成 P2 self-contained 與 P3 ambiguous over-binding。該 slice 已 rollback，狀態為 `live_failed / rejected / not adopted`。
+- Specialized bounded second-hop 的 viability probe 中，P1 的 binding association 通過，但 source span 仍不足以提供 substantive agentic-system referent；P2 already-terminal 與 P3 ambiguous 都發生 over-resolution。此方向不採用。
+- Reference Binding model capability benchmark 固定 current pre-8.6.4 one-hop prompt、schema、history、validator 與 temperature/config，只將 model 改為 `gpt-4.1-2025-04-14`。B1 為 zero binding，B2 綁到 prior unresolved message `554`，B3 self-contained 與 B4 ambiguous 通過，總分 `2/4`。因此 model upgrade 不支持目前 limitation 的安全修正。
+
+### Final state
+
+- Case B=`deferred / known limitation`。
+- Limitation：需要跨越 intermediate referential turn 的 deep conversational ellipsis，current bounded one-hop Reference Binding path 無法可靠解析。
+- Existing explicit-reference coverage、self-contained negative 與 ambiguity fail-closed behavior 仍保留。這不是 Reference Binding 整體不可用的結論。
+- 不採用 prompt tuning、specialized second-hop、independent verifier、third hop、keyword/regex heuristic 或 further model escalation。Current fail-closed behavior accepted。
+
+### Production boundary
+
+- Production topology 維持 current bounded one-hop Reference Binding。
+- D030 unchanged：raw history 只進 Reference Binding boundary；downstream 只取得 exact current request 與 validated bindings；不新增 `resolved_task`、conversation summary、binding graph 或 terminal verifier。
+- `8.6.4` remains rejected；`SPECIALIZED_SECOND_HOP` remains rejected；`5.0.3.1.1` remains deferred；`8.6.3` remains automated verified with its known downstream retrieval limitation。
+
+### Reopen criteria and next slice
+
+- 只有在多個真實 user-facing cases 顯示 deep ellipsis 是高頻或高價值 failure mode，或出現不需要 prompt stacking/recursive resolution 的新 bounded topology evidence，或 provider/model capability 出現 materially different evidence 時，才重新研究 Case B。
+- 下一個 active investigation 是 `CASE_A`，company size + agentic-system planning。本 closure 不開始 Case A implementation。
+
+### Closure boundary
+
+- 本輪只更新 roadmap 與 daily log。沒有 production files、test files 或 `DECISIONS.md` 變更。
+- Provider calls executed=`0`。No commit confirmation。
+
+## 2026-09-11 Case A Mixed Evidence Readiness Final Documentation Closure
+
+### Scope
+
+- 本輪只做 Case A / Mixed Evidence Readiness investigation 的 final documentation-only closure。
+- 沒有修改 production runtime、tests、prompt、schema、provider config、Selector、Knowledge retrieval、Memory、Evidence Readiness 或 Final Synthesis。
+- 沒有執行 provider call、implementation、其他 model benchmark、commit、push 或 stash。
+
+### Production-equivalent trace
+
+受控 user-facing task 是「以我們公司的人數規模資訊等等，在做 agentic system 怎麼規劃」。既有 trace 為：
+
+- Reference Binding：`PASS_EMPTY`。
+- Selector：`needs_knowledge=true`、`needs_memory=true`，`PASS`。
+- Knowledge retrieval：`10` candidates、`5` accepted，已有支援 agentic-system planning 的 evidence，`PASS`。
+- Memory retrieval：company-size Memory ID `7`，rank `1`，score `0.666913`，`accepted=true`，`PASS`。
+- Evidence Readiness：`ready=false`，`FAIL`。
+- Final Synthesis：`NOT_REACHED`。
+
+Primary boundary 是 `EVIDENCE_READINESS_FALSE_NEGATIVE`。
+
+### Readiness semantic ablation
+
+- R0：whole mixed task，`false`。
+- R1：whole mixed task 加強 Knowledge-scope wording，`false`。
+- R2：相同 accepted Knowledge evidence 的 Knowledge-only diagnostic task，`true`。
+- R3：incomplete Knowledge safety control，`false`。
+
+結果是 `WHOLE_TASK_SEMANTIC_COLLISION_PERSISTS`。Simple production prompt clarification 沒有得到支持。
+
+### Structured Knowledge scope study
+
+- Current architecture 沒有獨立的 Knowledge scope representation；Knowledge retrieval query 仍是 whole task。
+- `contextual_facets` 僅表示 Memory-side dependencies，deterministic backend derivation 也不是一般化 scope contract。
+- Dedicated provider 增加的複雜度不符合本 slice 邊界；Selector-owned scope 需要更多 evidence。
+- Gate 1 的 K1（mixed task 加 explicit bounded `KNOWLEDGE_SCOPE`）與 K2（mixed incomplete）都為 `ready=false`。
+- `STRUCTURED_KNOWLEDGE_SCOPE_SUPPORTED=false`。Selector scope Gate 2 `NOT_STARTED / CLOSED`，不新增 `knowledge_scope` schema field。
+
+### Readiness model capability benchmark
+
+Benchmark 固定同一 readiness prompt、input topology、evidence 與 `{ready: bool}` schema，只比較 baseline `gpt-4o-mini` 與 candidate `gpt-4.1-2025-04-14`：
+
+- C1 mixed positive：`false`，`FAIL`。
+- C2 mixed incomplete：`true`，`FAIL`，出現 unsafe false positive。
+- C3 Knowledge-only positive：`true`，`PASS`。
+- C4 Knowledge-only incomplete：`true`，`FAIL`，出現 unsafe false positive。
+
+Candidate score 是 `1/4`。`READINESS_MODEL_UPGRADE_SUPPORTED=false`，`UNSAFE_READINESS_RELAXATION=true`；不更換 production readiness model，不做 repeatability、prompt tuning 或 further model escalation。
+
+### Final state
+
+- Case A / mixed Evidence Readiness=`deferred / known limitation`。
+- Limitation：`Evidence Readiness can produce persistent false negatives for mixed Knowledge + LongTermMemory tasks when the exact whole user task remains visible, even when the Knowledge-side evidence is sufficient and Memory retrieval succeeds.`
+- Prompt scope clarification 與 structured Knowledge scope 沒有形成安全 production candidate；model benchmark 也沒有支持 upgrade。Current fail-closed behavior 保留。
+- Evidence Readiness 不記錄為 globally broken。Knowledge-only positive 與 incomplete/negative controls 仍有有效 coverage。
+
+這項 limitation 會造成部分可回答的 mixed task 回傳 `insufficient_info`，但已測 alternatives 沒有安全改善：scope clarification 與 structured scope 沒有修正 positive case，candidate model 又在 incomplete Knowledge 上產生 false positive。因此不為了可用性放寬 safety boundary。
+
+### Reopen criteria and unchanged architecture
+
+只有在未來出現多個 high-value mixed user-facing failures、materially different provider capability、能在不引入 planner/decomposition 下分離 Knowledge sufficiency 的 bounded architecture，或新的 evaluation evidence 顯示安全解法時，才重新開啟本 limitation。
+
+不因 prompt tune、增加 `knowledge_scope`、擴大 Selector、增加 semantic provider、加入 verifier、retry readiness、降低 thresholds 或改變 top-k 而重開。
+
+D025、D027、D030、D033、D035 與 Knowledge / Memory authority separation unchanged。Memory content 仍排除在 Evidence Readiness 之外；沒有新增 architecture decision。
+
+Case B、8.6.4、specialized second-hop 與 `5.0.3.1.1` 維持先前的 deferred / rejected 狀態；8.6.3 unchanged；`8.5=done`。
+
+### Next active mainline
+
+下一個 active mainline 是 `7.0` Formal Browser Demo Story / manual verification。本 closure 不開始 `7.0` execution。
+
+### Closure boundary
+
+- 本輪只更新 `dev_state/PROJECT_ROADMAP.md` 與 `dev_state/DAILY_LOG.md`。
+- `DECISIONS.md`、production files 與 test files 沒有變更。
+- Provider calls executed=`0`。No commit confirmation。

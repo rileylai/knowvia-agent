@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "operation": "8.6.3_direct_memory_retrieval_probe",
+  "owner_scope": "local",
+  "model": "text-embedding-3-small",
+  "dimensions": 1536,
+  "embedding_calls_authorized": 3,
+  "embedding_calls_executed": 3,
+  "semantic_llm_calls_executed": 0,
+  "diagnostic_top_k": 5,
+  "production_effective_top_k": 1,
+  "relevance_floor": 0.4,
+  "queries": [
+    {
+      "query_id": "Q1",
+      "query_chars": 43,
+      "query_sha256": "8581dbdbd81a36dcf93703682096049de7b5b7e03bba153bb37f64627bbad7ba",
+      "reference_binding_count_fixture": 1,
+      "classification": "MEMORY_RANKING_MISS",
+      "candidates": [
+        {"rank": 1, "safe_memory_id": 20, "memory_type": "project_context", "normalized_similarity": 0.5400143022367119, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 29, "label": "generic_department", "memory_type": "project_context", "normalized_similarity": 0.5370378650223663, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 31, "label": "ai_platform_responsibility", "memory_type": "project_context", "normalized_similarity": 0.5148480257952114, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 11, "memory_type": "project_context", "normalized_similarity": 0.5043821964853061, "passes_direct_floor": true},
+        {"rank": 5, "safe_memory_id": 21, "memory_type": "project_context", "normalized_similarity": 0.49851527294230125, "passes_direct_floor": true}
+      ],
+      "production_selected_best1": {"rank": 1, "safe_memory_id": 20, "memory_type": "project_context", "normalized_similarity": 0.5400143022367119, "passes_direct_floor": true}
+    },
+    {
+      "query_id": "Q2",
+      "query_chars": 42,
+      "query_sha256": "50377c2d039ad3b5973f17f6437e877ab4e6740b437b0bfb9ad81746fd711f88",
+      "reference_binding_count_fixture": 0,
+      "classification": "RETRIEVAL_PASS",
+      "candidates": [
+        {"rank": 1, "safe_memory_id": 31, "label": "ai_platform_responsibility", "memory_type": "project_context", "normalized_similarity": 0.5924616981202475, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 33, "label": "joint_ai_feature_responsibility", "memory_type": "project_context", "normalized_similarity": 0.5829592661922371, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 20, "memory_type": "project_context", "normalized_similarity": 0.5209783915234126, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 29, "label": "generic_department", "memory_type": "project_context", "normalized_similarity": 0.5169890513145278, "passes_direct_floor": true},
+        {"rank": 5, "safe_memory_id": 30, "label": "engineering_responsibility", "memory_type": "project_context", "normalized_similarity": 0.503166890533597, "passes_direct_floor": true}
+      ],
+      "production_selected_best1": {"rank": 1, "safe_memory_id": 31, "label": "ai_platform_responsibility", "memory_type": "project_context", "normalized_similarity": 0.5924616981202475, "passes_direct_floor": true}
+    },
+    {
+      "query_id": "Q3",
+      "query_chars": 52,
+      "query_sha256": "62b900c23a88a5494edea5b208419e160e476005fe87b34a08e2c09833be85d9",
+      "reference_binding_count_fixture": 0,
+      "classification": "RETRIEVAL_PASS",
+      "candidates": [
+        {"rank": 1, "safe_memory_id": 31, "label": "ai_platform_responsibility", "memory_type": "project_context", "normalized_similarity": 0.8093590607300376, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 36, "memory_type": "project_context", "normalized_similarity": 0.6102113466604242, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 29, "label": "generic_department", "memory_type": "project_context", "normalized_similarity": 0.522957437021618, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 33, "label": "joint_ai_feature_responsibility", "memory_type": "project_context", "normalized_similarity": 0.5027164072116699, "passes_direct_floor": true},
+        {"rank": 5, "safe_memory_id": 25, "memory_type": "project_context", "normalized_similarity": 0.4808153837589304, "passes_direct_floor": true}
+      ],
+      "production_selected_best1": {"rank": 1, "safe_memory_id": 31, "label": "ai_platform_responsibility", "memory_type": "project_context", "normalized_similarity": 0.8093590607300376, "passes_direct_floor": true}
+    }
+  ],
+  "overall": {
+    "ai_platform_memory": {"safe_memory_id": 31, "q1_rank": 3, "q2_rank": 1, "q3_rank": 1, "q1_passes_floor": true, "q2_passes_floor": true, "q3_passes_floor": true},
+    "binding_enrichment_primary": "NO",
+    "five_point_three_one_reopen_supported": "YES",
+    "final_synthesis_followup_supported": "INSUFFICIENT_EVIDENCE",
+    "production_behavior_changed": "NO",
+    "note": "Q2/Q3 controlled no-binding probes retrieved AI Platform as best-1; browser Q2 persisted reference_binding_count=1, so final-context attribution for the browser run remains unresolved."
+  }
+}

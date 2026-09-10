@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "operation": "5.0.3.1.1_bounded_direct_memory_query_normalization_stage_a",
+  "model": "text-embedding-3-small",
+  "embedding_dimensions": 1536,
+  "normalizer_model": "gpt-4o-mini",
+  "owner_scope": "local",
+  "normalizer_calls_executed": 6,
+  "embedding_batch_requests_executed": 2,
+  "provider_requests_executed": 8,
+  "retry_count": 0,
+  "diagnostic_top_k": 5,
+  "production_effective_top_k": 1,
+  "relevance_floor": 0.4,
+  "no_binding_baseline_reused": true,
+  "production_behavior_changed": false,
+  "normalization_cases": [
+    {
+      "case_id": "A1",
+      "retrieval_query": "負責處理 agentic system 的部門",
+      "retrieval_query_chars": 23,
+      "schema_valid": true,
+      "task_intent_preserved": true,
+      "referent_preserved": true,
+      "no_added_fact": true,
+      "no_answer_leakage": true,
+      "instruction_safety": true,
+      "normalization_contract_pass": true
+    },
+    {
+      "case_id": "A2",
+      "retrieval_query": "公司規模",
+      "retrieval_query_chars": 4,
+      "schema_valid": true,
+      "task_intent_preserved": true,
+      "referent_preserved": true,
+      "no_added_fact": true,
+      "no_answer_leakage": true,
+      "instruction_safety": true,
+      "normalization_contract_pass": true
+    },
+    {
+      "case_id": "A3",
+      "retrieval_query": "架構選擇",
+      "retrieval_query_chars": 4,
+      "schema_valid": true,
+      "task_intent_preserved": true,
+      "referent_preserved": true,
+      "no_added_fact": true,
+      "no_answer_leakage": true,
+      "instruction_safety": true,
+      "normalization_contract_pass": true
+    },
+    {
+      "case_id": "A4",
+      "retrieval_query": "team ownership of 企業內部知識管理與 AI Agent 平台",
+      "retrieval_query_chars": 39,
+      "schema_valid": true,
+      "task_intent_preserved": true,
+      "referent_preserved": true,
+      "no_added_fact": true,
+      "no_answer_leakage": true,
+      "instruction_safety": true,
+      "normalization_contract_pass": true
+    },
+    {
+      "case_id": "A5",
+      "retrieval_query": "production database schema review process",
+      "retrieval_query_chars": 41,
+      "schema_valid": true,
+      "task_intent_preserved": true,
+      "referent_preserved": true,
+      "no_added_fact": true,
+      "no_answer_leakage": true,
+      "instruction_safety": true,
+      "normalization_contract_pass": true
+    },
+    {
+      "case_id": "A6",
+      "retrieval_query": "department handling inquiry",
+      "retrieval_query_chars": 27,
+      "schema_valid": true,
+      "task_intent_preserved": true,
+      "referent_preserved": false,
+      "no_added_fact": true,
+      "no_answer_leakage": true,
+      "instruction_safety": true,
+      "normalization_contract_pass": true
+    }
+  ],
+  "retrieval_cases": [
+    {
+      "case_id": "A1",
+      "baseline_source": "existing_8.6.3_R0",
+      "target_label": "ai_platform_responsibility",
+      "baseline": [
+        {"rank": 1, "safe_memory_id": 20, "label": "unknown_project_context", "score": 0.5400143022367119, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 29, "label": "generic_department", "score": 0.5370378650223663, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 31, "label": "ai_platform_responsibility", "score": 0.5148480257952114, "passes_direct_floor": true}
+      ],
+      "normalized": [
+        {"rank": 1, "safe_memory_id": 31, "label": "ai_platform_responsibility", "score": 0.5386127726032607, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 29, "label": "generic_department", "score": 0.46015472693479376, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 37, "label": null, "score": 0.430704092258535, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 30, "label": "engineering_responsibility", "score": 0.4267109243995827, "passes_direct_floor": true},
+        {"rank": 5, "safe_memory_id": 39, "label": null, "score": 0.42510362297770865, "passes_direct_floor": true}
+      ],
+      "production_best1": {"safe_memory_id": 31, "label": "ai_platform_responsibility", "score": 0.5386127726032607, "passes_direct_floor": true},
+      "verdict": "PASS_MATERIAL_IMPROVEMENT"
+    },
+    {
+      "case_id": "A2",
+      "baseline_source": "new_R0_baseline",
+      "target_label": "company_size",
+      "baseline": [
+        {"rank": 1, "safe_memory_id": 7, "label": "company_size", "score": 0.5825968016035332, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 29, "label": null, "score": 0.44908496216229044, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 12, "label": null, "score": 0.3893803785316615, "passes_direct_floor": false}
+      ],
+      "normalized": [
+        {"rank": 1, "safe_memory_id": 7, "label": "company_size", "score": 0.6581148772988848, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 29, "label": null, "score": 0.45715252063643175, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 12, "label": null, "score": 0.45163895863783865, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 24, "label": null, "score": 0.3870334124297925, "passes_direct_floor": false},
+        {"rank": 5, "safe_memory_id": 11, "label": null, "score": 0.37589641416210695, "passes_direct_floor": false}
+      ],
+      "production_best1": {"safe_memory_id": 7, "label": "company_size", "score": 0.6581148772988848, "passes_direct_floor": true},
+      "verdict": "PASS_NO_REGRESSION"
+    },
+    {
+      "case_id": "A3",
+      "baseline_source": "new_R0_baseline",
+      "target_label": "architecture_decision",
+      "baseline": [
+        {"rank": 1, "safe_memory_id": 23, "label": "architecture_decision", "score": 0.5513272222696576, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 39, "label": null, "score": 0.4472171957983615, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 13, "label": null, "score": 0.4118310782977732, "passes_direct_floor": true}
+      ],
+      "normalized": [
+        {"rank": 1, "safe_memory_id": 23, "label": "architecture_decision", "score": 0.5538711021765935, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 5, "label": null, "score": 0.41034644543351173, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 22, "label": null, "score": 0.40382654314994815, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 38, "label": null, "score": 0.37493868470570013, "passes_direct_floor": false},
+        {"rank": 5, "safe_memory_id": 18, "label": null, "score": 0.3616921857745192, "passes_direct_floor": false}
+      ],
+      "production_best1": {"safe_memory_id": 23, "label": "architecture_decision", "score": 0.5538711021765935, "passes_direct_floor": true},
+      "verdict": "PASS_NO_REGRESSION"
+    },
+    {
+      "case_id": "A4",
+      "baseline_source": "new_R0_baseline",
+      "target_label": "ai_platform_responsibility",
+      "baseline": [
+        {"rank": 1, "safe_memory_id": 11, "label": null, "score": 0.7129013481444959, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 31, "label": "ai_platform_responsibility", "score": 0.5984470943073505, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 20, "label": null, "score": 0.5726755200469151, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 33, "label": null, "score": 0.53733814149952, "passes_direct_floor": true}
+      ],
+      "normalized": [
+        {"rank": 1, "safe_memory_id": 11, "label": null, "score": 0.8145348137605234, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 20, "label": null, "score": 0.6853260677948799, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 31, "label": "ai_platform_responsibility", "score": 0.6492444811337724, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 33, "label": null, "score": 0.6040948405455093, "passes_direct_floor": true}
+      ],
+      "production_best1": {"safe_memory_id": 11, "label": null, "score": 0.8145348137605234, "passes_direct_floor": true},
+      "verdict": "NO_MATERIAL_IMPROVEMENT"
+    },
+    {
+      "case_id": "A5",
+      "baseline_source": "new_R0_baseline",
+      "target_label": "database_review_responsibility",
+      "baseline": [
+        {"rank": 1, "safe_memory_id": 35, "label": "database_review_responsibility", "score": 0.6425496866644792, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 34, "label": null, "score": 0.37739275350273216, "passes_direct_floor": false},
+        {"rank": 3, "safe_memory_id": 31, "label": "ai_platform_responsibility", "score": 0.3691788021963205, "passes_direct_floor": false}
+      ],
+      "normalized": [
+        {"rank": 1, "safe_memory_id": 35, "label": "database_review_responsibility", "score": 0.6049874662012797, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 30, "label": null, "score": 0.320432107976804, "passes_direct_floor": false},
+        {"rank": 3, "safe_memory_id": 34, "label": null, "score": 0.31886728526916785, "passes_direct_floor": false}
+      ],
+      "production_best1": {"safe_memory_id": 35, "label": "database_review_responsibility", "score": 0.6049874662012797, "passes_direct_floor": true},
+      "unrelated_binding_pollution": false,
+      "verdict": "PASS_NO_POLLUTION"
+    },
+    {
+      "case_id": "A6",
+      "baseline_source": "new_R0_baseline",
+      "target_label": null,
+      "baseline": [
+        {"rank": 1, "safe_memory_id": 31, "label": "ai_platform_responsibility", "score": 0.5628476645547881, "passes_direct_floor": true},
+        {"rank": 2, "safe_memory_id": 33, "label": null, "score": 0.46143152943621435, "passes_direct_floor": true},
+        {"rank": 3, "safe_memory_id": 36, "label": null, "score": 0.43747709662151213, "passes_direct_floor": true},
+        {"rank": 4, "safe_memory_id": 29, "label": "generic_department", "score": 0.41115266171387865, "passes_direct_floor": true}
+      ],
+      "normalized": [
+        {"rank": 1, "safe_memory_id": 24, "label": null, "score": 0.3901800339422251, "passes_direct_floor": false},
+        {"rank": 2, "safe_memory_id": 29, "label": "generic_department", "score": 0.33775077629325234, "passes_direct_floor": false},
+        {"rank": 3, "safe_memory_id": 30, "label": null, "score": 0.33130273380749853, "passes_direct_floor": false}
+      ],
+      "production_best1": null,
+      "instruction_safety": "PASS",
+      "verdict": "PASS_SAFE_NEGATIVE"
+    }
+  ],
+  "stage_a_result": "PASS"
+}

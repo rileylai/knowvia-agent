@@ -233,6 +233,76 @@ class ReferenceBindingProvider(LLMProvider):
         )
 
 
+class ResponsibilityAwareSelectorProvider(LLMProvider):
+    supports_tool_calling = True
+    supports_structured_output = True
+
+    def __init__(self) -> None:
+        self.requests: List[LLMRequest] = []
+
+    @property
+    def name(self) -> str:
+        return "responsibility-aware-selector"
+
+    async def generate(self, request: LLMRequest) -> LLMResponse:
+        self.requests.append(request)
+        if request.response_format is not None:
+            schema_name = request.response_format["json_schema"]["name"]
+            if schema_name == "reference_binding_decision":
+                return LLMResponse(
+                    provider=self.name,
+                    model=request.model,
+                    output_text="",
+                    structured_output={
+                        "reference_bindings": [
+                            {
+                                "current_span": "哪個部門",
+                                "source_message_id": 41,
+                                "source_span": "agentic system",
+                            }
+                        ]
+                    },
+                )
+            if schema_name == "evidence_readiness_decision":
+                return LLMResponse(
+                    provider=self.name,
+                    model=request.model,
+                    output_text="",
+                    structured_output={"ready": True},
+                )
+            selector_system = request.messages[0].content
+            if "determining responsibility or ownership" in selector_system:
+                selection = {
+                    "mode": "mixed",
+                    "contextual_facets": [
+                        {
+                            "id": "organizational-teams",
+                            "text": "organizational teams relevant to ownership",
+                        },
+                        {
+                            "id": "team-responsibilities",
+                            "text": "team responsibilities relevant to current initiative",
+                        },
+                    ],
+                }
+            else:
+                selection = {
+                    "mode": "memory_only",
+                    "memory_query": "company departments",
+                }
+            return LLMResponse(
+                provider=self.name,
+                model=request.model,
+                output_text="",
+                structured_output={"selection": selection},
+            )
+        return LLMResponse(
+            provider=self.name,
+            model=request.model,
+            output_text="A bounded recommendation.",
+        )
+
+
 class FixtureRetriever:
     def __init__(
         self,
@@ -295,6 +365,27 @@ class FixtureMemoryService:
         return memories[: int(kwargs["top_k"])]
 
 
+class ReferentialMemoryService(FixtureMemoryService):
+    def __init__(
+        self,
+        *,
+        generic_memory: LongTermMemorySnapshot,
+        responsibility_memory: LongTermMemorySnapshot,
+    ) -> None:
+        super().__init__(memories=[])
+        self.generic_memory = generic_memory
+        self.responsibility_memory = responsibility_memory
+
+    async def search_memories(self, **kwargs: Any) -> List[LongTermMemorySnapshot]:
+        self.search_calls.append(kwargs)
+        query = str(kwargs["query"])
+        if "agentic system" in query:
+            return [self.responsibility_memory]
+        if "unrelated assistant text" in query:
+            return []
+        return [self.generic_memory]
+
+
 class RecordingStatusSink:
     def __init__(self) -> None:
         self.phases: List[str] = []
@@ -338,6 +429,7 @@ def _runtime(
     *,
     memories: Optional[List[LongTermMemorySnapshot]] = None,
     memory_search_results: Optional[List[List[LongTermMemorySnapshot]]] = None,
+    memory_service_override: Optional[FixtureMemoryService] = None,
     chunks: Optional[List[RetrievedChunk]] = None,
     candidate_count: Optional[int] = None,
     accepted_evidence_count: Optional[int] = None,
@@ -355,7 +447,10 @@ def _runtime(
         best_score=best_score,
         relevance_floor=relevance_floor,
     )
-    memory_service = FixtureMemoryService(memories, memory_search_results)
+    memory_service = memory_service_override or FixtureMemoryService(
+        memories,
+        memory_search_results,
+    )
     runtime = BoundedAgentRuntime(
         provider_router=router,
         tool_registry=build_agent_tool_registry(
@@ -1012,6 +1107,254 @@ def test_context_selector_marks_previous_answer_as_non_authority() -> None:
     assert "previous assistant mention of saved facts is not current LongTermMemory retrieval" in selector_system
     assert "Do not set a requirement false merely because the relevant fact appeared in a previous assistant response" in selector_system
     assert "[assistant]" not in selector_request.messages[1].content
+
+
+def test_contextual_responsibility_recommendation_selects_mixed_authority() -> None:
+    provider = ResponsibilityAwareSelectorProvider()
+    runtime, retriever, memory_service = _runtime(provider)
+
+    result = _run(
+        runtime,
+        "我們公司哪個部門去負責處理？",
+        provider_name=provider.name,
+        reference_resolver_history=[
+            ReferenceResolverMessage(
+                message_id=41,
+                sequence_number=2,
+                role="user",
+                content="以我們公司的規模等等，在做 agentic system 怎麼規劃",
+            )
+        ],
+        current_sequence_number=3,
+    )
+
+    assert result.status == "succeeded"
+    assert len(retriever.calls) == 1
+    assert len(memory_service.search_calls) == 2
+    assert all(
+        call["retrieval_mode"] == "contextual"
+        for call in memory_service.search_calls
+    )
+    assert [call["query"] for call in memory_service.search_calls] == [
+        "organizational teams relevant to ownership",
+        "team responsibilities relevant to current initiative",
+    ]
+    selector_request = provider.requests[1]
+    selector_system = selector_request.messages[0].content
+    selector_user = selector_request.messages[1].content
+    assert "determining responsibility or ownership" in selector_system
+    assert "我們公司哪個部門去負責處理？" in selector_user
+    assert "agentic system" in selector_user
+    assert "company departments" not in selector_user
+    final_context = "\n".join(message.content for message in provider.requests[-1].messages)
+    assert "KNOWLEDGE_CONTEXT" in final_context
+    assert "MEMORY_CONTEXT" in final_context
+
+
+def test_binding_aware_direct_memory_recall_uses_referent_context() -> None:
+    generic_memory = _memory(
+        "我們公司的主要部門包括 Engineering、AI Platform、Product。"
+    )
+    responsibility_memory = _memory(
+        "AI Platform 負責 LLM、RAG、Agent、evaluation 與 AI infrastructure。"
+    )
+    provider = ReferenceBindingProvider(
+        reference_bindings=[
+            {
+                "current_span": "哪個部門",
+                "source_message_id": 41,
+                "source_span": "agentic system",
+            }
+        ],
+        decision={
+            "selection": {
+                "mode": "memory_only",
+                "memory_query": "我們公司哪個部門負責處理",
+            }
+        },
+        final_output=responsibility_memory.content,
+    )
+    memory_service = ReferentialMemoryService(
+        generic_memory=generic_memory,
+        responsibility_memory=responsibility_memory,
+    )
+    runtime, retriever, _ = _runtime(
+        provider,  # type: ignore[arg-type]
+        memory_service_override=memory_service,
+    )
+
+    result = _run(
+        runtime,
+        "我們公司哪個部門去負責處理？",
+        provider_name=provider.name,
+        reference_resolver_history=[
+            ReferenceResolverMessage(
+                message_id=41,
+                sequence_number=2,
+                role="assistant",
+                content="agentic system planning",
+            )
+        ],
+        current_sequence_number=3,
+    )
+
+    assert result.status == "succeeded"
+    assert result.insufficient_info is False
+    assert result.used_saved_memory is True
+    assert result.citations == []
+    assert result.tool_calls_used == 1
+    assert retriever.calls == []
+    assert len(memory_service.search_calls) == 1
+    assert memory_service.search_calls[0]["retrieval_mode"] == "direct"
+    assert memory_service.search_calls[0]["query"] == (
+        "我們公司哪個部門負責處理\nReference: agentic system"
+    )
+    final_context = "\n".join(message.content for message in provider.requests[-1].messages)
+    assert responsibility_memory.content in final_context
+    assert generic_memory.content not in final_context
+
+
+def test_binding_aware_direct_memory_query_deduplicates_spans_in_order() -> None:
+    provider = ReferenceBindingProvider(
+        reference_bindings=[
+            {
+                "current_span": "哪個部門",
+                "source_message_id": 41,
+                "source_span": "agentic system",
+            },
+            {
+                "current_span": "處理",
+                "source_message_id": 42,
+                "source_span": "agentic system",
+            },
+        ],
+        decision={
+            "selection": {
+                "mode": "memory_only",
+                "memory_query": "我們公司哪個部門負責處理",
+            }
+        },
+        final_output="The saved responsibility fact.",
+    )
+    memory_service = ReferentialMemoryService(
+        generic_memory=_memory("generic department list"),
+        responsibility_memory=_memory("saved responsibility fact"),
+    )
+    runtime, _, _ = _runtime(
+        provider,  # type: ignore[arg-type]
+        memory_service_override=memory_service,
+    )
+
+    result = _run(
+        runtime,
+        "我們公司哪個部門去處理？",
+        provider_name=provider.name,
+        reference_resolver_history=[
+            ReferenceResolverMessage(41, 2, "assistant", "agentic system planning"),
+            ReferenceResolverMessage(42, 3, "assistant", "agentic system details"),
+        ],
+        current_sequence_number=4,
+    )
+
+    assert result.status == "succeeded"
+    assert len(memory_service.search_calls) == 1
+    assert memory_service.search_calls[0]["query"] == (
+        "我們公司哪個部門負責處理\nReference: agentic system"
+    )
+
+
+def test_unrelated_binding_does_not_become_direct_memory_fact() -> None:
+    provider = ReferenceBindingProvider(
+        reference_bindings=[
+            {
+                "current_span": "哪個部門",
+                "source_message_id": 41,
+                "source_span": "unrelated assistant text",
+            }
+        ],
+        decision={
+            "selection": {
+                "mode": "memory_only",
+                "memory_query": "我們公司哪個部門負責處理",
+            }
+        },
+        final_output="The unrelated assistant text is a company fact.",
+    )
+    memory_service = ReferentialMemoryService(
+        generic_memory=_memory("generic department list"),
+        responsibility_memory=_memory("saved responsibility fact"),
+    )
+    runtime, retriever, _ = _runtime(
+        provider,  # type: ignore[arg-type]
+        memory_service_override=memory_service,
+    )
+
+    result = _run(
+        runtime,
+        "我們公司哪個部門去負責處理？",
+        provider_name=provider.name,
+        reference_resolver_history=[
+            ReferenceResolverMessage(
+                message_id=41,
+                sequence_number=2,
+                role="assistant",
+                content="unrelated assistant text",
+            )
+        ],
+        current_sequence_number=3,
+    )
+
+    assert result.status == "succeeded"
+    assert result.insufficient_info is True
+    assert result.used_saved_memory is False
+    assert result.citations == []
+    assert retriever.calls == []
+    assert len(memory_service.search_calls) == 1
+    assert memory_service.search_calls[0]["retrieval_mode"] == "direct"
+    assert "unrelated assistant text" not in result.answer
+
+
+def test_direct_department_recall_remains_memory_only() -> None:
+    provider = StructuredDecisionProvider(
+        [
+            {
+                "needs_knowledge": False,
+                "needs_memory": True,
+                "memory_query": "company departments",
+            }
+        ],
+        ["Our company has several departments."],
+    )
+    runtime, retriever, memory_service = _runtime(provider)
+
+    result = _run(runtime, "我們公司有哪些部門？")
+
+    assert result.status == "succeeded"
+    assert retriever.calls == []
+    assert len(memory_service.search_calls) == 1
+    assert memory_service.search_calls[0]["retrieval_mode"] == "direct"
+    assert memory_service.search_calls[0]["query"] == "company departments"
+
+
+def test_unbound_department_question_keeps_fail_closed_behavior() -> None:
+    provider = StructuredDecisionProvider(
+        [
+            {
+                "needs_knowledge": False,
+                "needs_memory": False,
+                "memory_query": None,
+            }
+        ],
+        ["A guessed department."],
+    )
+    runtime, retriever, memory_service = _runtime(provider)
+
+    result = _run(runtime, "哪個部門負責？")
+
+    assert result.status == "succeeded"
+    assert result.insufficient_info is True
+    assert retriever.calls == []
+    assert memory_service.search_calls == []
 
 
 def test_repeated_substantive_query_reacquires_both_authorities() -> None:
