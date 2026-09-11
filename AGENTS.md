@@ -18,6 +18,8 @@
   dependency lockfile 為準。
 - 不把 planned、future 或 legacy capability 寫成已完成；詳細產品與 guardrail 規則
   留在 relevant spec，不要複製到本文件。
+- `README.md` 與 `docs/*.md` 面向第三方工程師，使用 capability-oriented current-state
+  wording；internal roadmap IDs 與 development slice tracking 只保留在 `dev_state/`。
 - Development state 使用 `dev_state/PROJECT_ROADMAP.md` 與
   `dev_state/DAILY_LOG.md`；accepted decisions 使用
   `docs/decisions/DECISIONS.md`。不要把 daily log 當成 current spec。

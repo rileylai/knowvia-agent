@@ -2,8 +2,7 @@
 
 本文件是 product scope、MVP boundary、user-facing behavior 與 non-goal 的 canonical source。
 Current implementation status 以 application code、tests、migrations、config 與 dependency
-lockfile 為準；priority 與 verification evidence 請看
-[`dev_state/PROJECT_ROADMAP.md`](../dev_state/PROJECT_ROADMAP.md)。
+lockfile 為準；verification details 應回查 current code、tests 與 deployment documentation。
 
 ## 產品問題
 
@@ -259,9 +258,7 @@ done
 | SSE 與 Web UI | `IMPLEMENTED` |
 | Telegram、Supplement、Notion write-back、RQ | `LEGACY` |
 
-`done`、`automated_verified`、`manual_verification`、`deferred` 與 `rejected` 的 roadmap
-status 及其 evidence 不在本表重複；以 [`PROJECT_ROADMAP.md`](../dev_state/PROJECT_ROADMAP.md)
-為準。
+本表只摘要 capability state，不承擔 internal development tracking 或 verification history。
 
 ## 明確非目標
 

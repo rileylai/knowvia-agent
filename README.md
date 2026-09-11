@@ -157,7 +157,7 @@ src/
 
 frontend/             React workspace
 docs/                 product, architecture, contracts, workflows, guardrails
-dev_state/            roadmap, decisions, daily engineering state
+dev_state/            internal development state
 eval/                 deterministic Golden Set and runner
 scripts/              demo, preflight, and diagnostic tooling
 mock_data/            local demo fixtures
@@ -207,7 +207,7 @@ npm --prefix frontend test
 npm --prefix frontend run build
 ```
 
-Golden Set 使用 deterministic scripted provider 與 local fixtures，不需要 live provider、live Notion 或 private source。它是目前的 controlled regression surface，不代表 generic production evaluation framework。尚待 browser acceptance 的 slice 會在 `dev_state/DAILY_LOG.md` 記錄嘗試結果與 findings。
+Golden Set 使用 deterministic scripted provider 與 local fixtures，不需要 live provider、live Notion 或 private source。它是目前的 controlled regression surface，不代表 generic production evaluation framework。Browser manual verification 的步驟與結果已有紀錄。
 
 ## Demo
 
@@ -224,13 +224,23 @@ Knowledge source
 
 完整的 5 至 10 分鐘步驟、fallback query、preflight 與 browser checklist 請看 [Deployment and Demo](docs/06-deployment-and-demo.md)。
 
-## Current Status and Roadmap
+## Current Status and Known Limitations
 
-目前已實作 PDF、Image/OCR、URL 與 Notion indexing、conversation sessions、explicit-save Memory、bounded Agent tools、native MCP stdio、SSE 與 React workspace。YouTube transcript 與 chat text ingestion 目前只保存 `SourceDocument`，尚未進入 searchable Knowledge QA。
+### Implemented
 
-8.x diagnostics 已完成目前 scope 的 evidence collection：`8.5` 為 `done`，`8.6` 與 `8.6.1` 為 `done`，`8.6.2` 與 `8.6.3` 為 `automated_verified`，`8.6.4` 為 `rejected`。`8.4.1` 的 mixed Knowledge + Memory readiness false negative 維持 `deferred`。
+- PDF、Image/OCR、URL 與 Notion Knowledge indexing
+- durable conversation sessions、same-session context 與 New Chat isolation
+- explicit-save `LongTermMemory`、cross-session recall 與 Memory Inspector
+- bounded Agent tools、native MCP stdio、SSE 與 React workspace
+- backend-owned citations、structured Context Requirement Selection、Reference Binding 與 Evidence Readiness
+- deterministic Agent evaluation、read-only demo preflight 與 documented local verification path
 
-下一個 active mainline 是 `7.0 Evaluation and Demo Hardening`，目前為 `manual_verification`。`5.0.3.1` 的 query-side semantic normalization、`5.0.3.3` 的 unresolved actual-provider stability，以及正式 browser acceptance 仍依 roadmap 狀態管理。詳細 verification evidence 只放在 [Project Roadmap](dev_state/PROJECT_ROADMAP.md) 與 [Daily Log](dev_state/DAILY_LOG.md)。
+### Known Limitations and Deferred Work
+
+- YouTube transcript 與 chat-text generic Knowledge indexing 尚未完成；目前只建立 `SourceDocument`。
+- Query-side semantic Memory normalization 與 no-hit / low-confidence second-pass retry 目前 deferred。
+- Mixed Knowledge + Memory requests 在部分情境仍有 Evidence Readiness false-negative limitation；後續 semantic-stability work deferred。
+- Remote MCP、RBAC 與 provider-native streaming 不在目前 scope。
 
 ## 非目標與設計約束
 

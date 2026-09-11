@@ -121,9 +121,9 @@ trusted save path。這條 path 不進 `BoundedAgentRuntime`，也不呼叫 fina
 persistence。`save_memory` tool 保留給 MCP 與其他 tool execution boundary，且仍要求
 trusted explicit-save authorization。
 
-Mixed explicit-save 加 substantive task 目前沒有 typed split contract，本 slice 不支援。
+Mixed explicit-save 加 substantive task 目前沒有 typed split contract，因此不支援。
 
-## Context Authority Consolidation（5.0.3.3 current implementation）
+## Context Authority Consolidation
 
 以下是已 freeze 並完成 implementation 的 replacement architecture。核心原則是：LLM 只做 bounded
 semantic interpretation；validation、authority、capability、topology、retrieval execution、
@@ -160,7 +160,7 @@ Context Acquisition
 Knowledge + contextual Memory
      ▼
 Current pre-final sufficiency behavior
-UNCHANGED in 5.0.3.3
+UNCHANGED in current implementation
      ▼
 Final substantive synthesis
 exact current message
@@ -190,31 +190,30 @@ Self-contained request 使用 backend 持有的 exact current user message，`re
 reference-resolution boundary 可見；它不會成為 Knowledge evidence、Memory authority、citation
 或 sufficiency signal。這項限制不套用到明確要求 conversation recall 或 transform 的 dedicated path。
 
-5.0.3.3 已以 backend-validatable bindings 取代 structured selector 的
+Current implementation 已以 backend-validatable bindings 取代 structured selector 的
 `conversation_dependency` representation。Current selector 仍保留 `needs_knowledge`、
-`needs_memory`、`contextual_facets` 與 `memory_query`；本輪不做 Selector Authority Slimming。
+`needs_memory`、`contextual_facets` 與 `memory_query`；Selector Authority Slimming 不在 current contract。
 `ContextualFacet` 上限 2、Knowledge/Memory 分離、per-facet Memory resolution signal 與 max 3
 tool calls 保持不變；partial 或 zero contextual Memory hit 時，若 Knowledge readiness 通過，
 仍可退化為 Knowledge-only 或 partial-personalized synthesis。Malformed decision、provider failure
 或超過 tool budget 仍依既有規則 fail closed。
 
-8.6.1 的 current implementation 將 provider wire contract 與 backend domain contract 分離。Provider
+Current provider implementation 將 provider wire contract 與 backend domain contract 分離。Provider
 使用 strict root object 與 nested `selection` union，backend 再以 deterministic structural mapping
 產生既有 `ContextRequirementDecision`。這個 internal DTO 不取得 semantic、authority 或 execution
 權限；backend validator、Knowledge/Memory authority、retrieval topology 與 termination control
 保持不變。
 
-5.0.3.3 的 architecture implementation 與 automated verification 已完成；unresolved
-actual-provider stability probe 與 browser acceptance deferred。`8.6.1 Context Requirement Provider
-Wire Contract` 的 automated implementation 與 bounded actual-provider verification 已完成：UQ-003、
+架構 implementation 與 automated verification 已完成；unresolved
+actual-provider stability probe remains deferred。`Context Requirement Provider Wire
+Contract` 的 automated implementation 與 bounded actual-provider verification 已完成：UQ-003、
 UQ-007、UQ-010 各一次均通過 OpenAI Structured Output schema acceptance、wire validation、
-deterministic mapping 與 domain validation。Readiness Usability Study 排在此 slice 後。
-`7.0 Evaluation and Demo Hardening` 是目前下一個 active mainline，維持 `manual_verification`；
-Formal Browser Demo Story 的詳細 gate 以 roadmap 為準。
+deterministic mapping 與 domain validation。Readiness usability study remains deferred。Core
+browser verification evidence is part of the current release record。
 
-## Evidence Readiness（8.4 current implementation）
+## Evidence Readiness
 
-8.4 的 contract 已完成 implementation，structured substantive Agent path 與 `/api/qa`
+此 contract 已完成 implementation，並由 structured substantive Agent path 與 `/api/qa`
 共用同一個 readiness boundary。Current production retrieval freeze 維持不變：
 `PyPDFParserClient / pypdf`、`chunk_max_chars=1200`、`overlap=0`、
 `text-embedding-3-small / 1536`、pgvector cosine、`knowledge_relevance_floor=0.30` 與

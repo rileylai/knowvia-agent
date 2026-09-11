@@ -123,7 +123,7 @@ updated_at
 `source_document_id`，並共用向量、embedding identity、provenance、owner scope 與
 eligibility 欄位。Repository 允許 `notion`、`pdf`、`image` 與 `url`；PDF、image 與 URL
 只有在其 `SourceDocument.status=indexed` 且 chunk eligibility 為 `eligible` 時可被
-retrieval 使用。`KnowledgeSource` table 仍是 conceptual entity，本輪沒有為它建立
+retrieval 使用。`KnowledgeSource` table 仍是 conceptual entity，current implementation 沒有為它建立
 大型新 schema。
 
 ## `ConversationSession`
@@ -208,7 +208,7 @@ Public conversation 在 backend 產生有效 `ExplicitSaveIntent` 後，直接�
 `MemoryService` save path，不由 provider tool selection 決定是否 persistence。`save_memory`
 tool 仍是 MCP 與其他 tool execution boundary 的受控 adapter，沒有 trusted explicit-save
 authorization 時不得寫入。Mixed explicit-save 加 substantive task 目前沒有 typed split
-contract，本 slice 不支援。
+contract，因此不支援。
 
 在單一 bounded Agent run 中，具備 structured output capability 的 provider 先產生內部的
 `ContextRequirementDecision`：
@@ -240,10 +240,10 @@ Knowledge evidence。
 Malformed decision、extra field、空 facet 或超過 facet 上限直接 fail closed，不用 keyword 或
 regex 重新猜測。
 
-### Context Requirement Provider Wire Contract（8.6.1 current implementation）
+### Context Requirement Provider Wire Contract
 
-8.6 的 actual-provider evidence 顯示，既有四個 root fields 的 provider schema 可以接受
-backend cross-field validator 必拒絕的組合。8.6.1 將 provider wire contract 與 domain contract
+Actual-provider evidence 顯示，既有四個 root fields 的 provider schema 可以接受
+backend cross-field validator 必拒絕的組合。Current implementation 將 provider wire contract 與 domain contract
 分開：provider 只產生 strict root object 的 `selection` nested union，backend 再以 deterministic
 structural mapping 產生既有 `ContextRequirementDecision`。
 
@@ -260,8 +260,8 @@ validator 仍是最後 authority。此設計只消除已確認的 top-level cros
 因此不宣稱所有 provider-schema-valid output 都必然通過 backend。
 
 Reference Binding provider 可以讀取本次 bounded resolver-visible、identity-bearing same-session
-history；previous assistant answer 不是本輪 Knowledge evidence，previous assistant 提到的 saved
-fact 也不是本輪 LongTermMemory retrieval。Selector 對新的 substantive request 只接 exact current
+history；previous assistant answer 不是 current Knowledge evidence，previous assistant 提到的 saved
+fact 也不是 current LongTermMemory retrieval。Selector 對新的 substantive request 只接 exact current
 message 與 validated bindings；authority requirement
 必須依 current answer 的依賴決定；不能因相關內容曾出現在 previous assistant response，就把
 `needs_knowledge` 或 `needs_memory` 設為 `false`。因此同一 substantive query 在同一 session
@@ -285,9 +285,9 @@ Direct recall 只取 final best-1，broad 與 contextual recall 維持 bounded m
 disclosure 仍分開。Provider 不具 structured output capability 時，保留既有 bounded tool loop
 作為相容 fallback。
 
-## `EvidenceReadinessDecision`（8.4 current contract）
+## `EvidenceReadinessDecision`
 
-這是 8.4 凍結並已加入 current runtime 的最小 contract。它只回答 final synthesis 是否可以
+這是凍結並已加入 current runtime 的最小 contract。它只回答 final synthesis 是否可以
 安全開始，不保存 answer requirements，也不描述 retrieval plan：
 
 ```python
@@ -327,11 +327,11 @@ contract failure semantics。
 `contextual_facets` 仍只代表 contextual Memory retrieval dependencies，不是 Knowledge answer
 coverage requirements。
 
-## 5.0.3.3 current：Reference Binding contract
+## Current Reference Binding contract
 
-以下 contract 是 D030 frozen architecture 的 current runtime contract。Current selector 使用
-`needs_knowledge`、`needs_memory`、`contextual_facets` 與 `memory_query`；本輪不做 Selector
-Authority Slimming。
+以下 contract 是 frozen architecture 的 current runtime contract。Current selector 使用
+`needs_knowledge`、`needs_memory`、`contextual_facets` 與 `memory_query`；Selector Authority
+Slimming 不在 current contract。
 
 Structured substantive provider 只回傳：
 
@@ -381,7 +381,7 @@ conversation history 只在 Reference Binding 可見；後續 selector、retriev
 只接 exact current message、validated bindings 與 fresh authority context。Explicit conversation
 recall、conversation transform 與 direct Memory compatibility 維持 dedicated paths。
 
-`5.0.3.1` 已 deferred，且不是整體失敗。Current implementation 已保留
+Query-side semantic normalization 與 no-hit / low-confidence second-pass retry 目前 deferred，且不是整體失敗。Current implementation 已保留
 user-authoritative original `content`、bounded derived `retrieval_text`、retrieval embedding、
 explicit-save authorization、strict bounded save-side canonicalization fallback、original-content
 Inspector/API display、direct best-1、broad bounded multi-result、owner scope 與 relevance gates。

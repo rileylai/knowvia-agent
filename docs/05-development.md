@@ -2,12 +2,12 @@
 
 本文件是 repository development workflow、SDD/TDD、manual acceptance、verification
 expectations 與 safety rules 的 canonical source。產品 scope、架構與 guardrail details 應回到
-各自的 canonical docs；current priority 與 chronological evidence 分別看 roadmap 與 daily log。
+各自的 canonical docs；chronological evidence 以 daily log 為準。
 
 本 repository 採 Spec-Driven Development（SDD）與 Test-Driven Development
 （TDD）。目標是讓每個功能先有可觀察的行為，再進入實作。
 
-## 一次只處理一個 vertical slice
+## Incremental feature work
 
 ```text
 Requirement
@@ -24,8 +24,8 @@ Requirement
 測試循環是 Red、Green、Refactor。不要為尚未實作的 architecture 一次撰寫大量
 speculative tests，也不要把 internal helper 當成主要 acceptance surface。
 
-Foundation cleanup 完成後，每個主要 feature 都必須以 end-to-end vertical slice
-交付。Slice 要同時包含 SDD、TDD 與 Frontend Manual Acceptance，不得先累積一批
+Foundation cleanup 完成後，每個主要 feature 都必須以 end-to-end increment
+交付。每個 increment 要同時包含 SDD、TDD 與 Frontend Manual Acceptance，不得先累積一批
 只有 backend 的 feature，最後才一次接上 UI。
 
 ## SDD 規則
@@ -43,11 +43,11 @@ Foundation cleanup 完成後，每個主要 feature 都必須以 end-to-end vert
 
 ## TDD 規則
 
-每個 slice 至少包含：
+每個 feature increment 至少包含：
 
 - 一個從 public interface 驗證成功行為的 failing test。
 - 相關 fail-closed、permission、limit 或 error behavior。
-- 只覆蓋該 slice 的 regression。
+- 只覆蓋該 increment 的 regression。
 
 Core tests 應使用 fixtures、injected clients 或 isolated database。Live dependency
 checks 必須明確 opt-in、bounded、redacted，並使用專用資源。
@@ -55,10 +55,10 @@ checks 必須明確 opt-in、bounded、redacted，並使用專用資源。
 ## Frontend Manual Acceptance
 
 Frontend manual verification 與 automated test 的目的不同，前者不能取代後者，
-後者也不能取代前者。每個 slice 都要提供最小 frontend interaction，讓使用者能
+後者也不能取代前者。每個 feature increment 都要提供最小 frontend interaction，讓使用者能
 操作實際入口並確認 visible result、loading、success 或 error behavior。
 
-如果尚未完成 frontend manual verification，不能把 slice 標記為完成，並在
+如果尚未完成 frontend manual verification，不能把功能標記為完成，並在
 `dev_state/DAILY_LOG.md` 記錄：
 
 ```text
@@ -115,7 +115,7 @@ uv run --no-env-file --frozen pytest -q
 
 ## 完成條件
 
-一個 implementation slice 完成時：
+一個 implementation change 完成時：
 
 1. acceptance behavior 有測試。
 2. relevant regression 通過，或明確記錄未驗證原因。

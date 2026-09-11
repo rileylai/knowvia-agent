@@ -3,8 +3,8 @@
 本文件是 current end-to-end workflow、ingestion、conversation、Memory、SSE 與 legacy
 boundary 的 canonical source。Product scope 請看
 [`docs/00-product-spec.md`](00-product-spec.md)；entity contract 請看
-[`docs/02-data-and-contracts.md`](02-data-and-contracts.md)；roadmap status 與 evidence 請看
-[`dev_state/PROJECT_ROADMAP.md`](../dev_state/PROJECT_ROADMAP.md)。
+[`docs/02-data-and-contracts.md`](02-data-and-contracts.md)；current evidence 請回查 code、
+tests 與 deployment documentation。
 
 本文件區分 current implementation 與 target workflow。Current flow 以 code
 與 tests 為準；target flow 是後續 SDD/TDD 的行為依據。
@@ -101,15 +101,14 @@ User message
 Agent 可以在一次 run 中 chaining allowed tools，但初始最多 3 次 tool calls。
 Backend 在每一步檢查 timeout、argument、permission、context budget 與 termination。
 
-### Current: 5.0.3.3 Context Authority Consolidation
+### Current Context Authority Consolidation
 
-這是已完成 implementation 的 current workflow。Unresolved actual-provider stability 與 browser
-acceptance deferred；`8.6.1 Context Requirement Provider Wire Contract` 的 automated implementation
+這是已完成 implementation 的 current workflow。Unresolved actual-provider stability remains
+deferred；`Context Requirement Provider Wire Contract` 的 automated implementation
 與 bounded actual-provider verification 已完成。UQ-003、UQ-007、UQ-010 各一次均通過 OpenAI
 Structured Output schema acceptance、wire validation、deterministic mapping 與 domain validation。
-Readiness Usability Study 排在此 slice 後。
-`7.0 Evaluation and Demo Hardening` 是目前下一個 active mainline，維持 `manual_verification`；
-Formal Browser Demo Story 的詳細 gate 以 roadmap 為準。Explicit save、conversation
+Further readiness usability study remains deferred。Core browser verification evidence is part of the
+current release record。Explicit save、conversation
 recall、conversation transform 與 direct Memory compatibility 先走既有 dedicated routes；其餘
 substantive request 走 structured path：
 
@@ -142,7 +141,7 @@ Context Requirement Selection、後續 retrieval 與 final synthesis 都不接 i
 conversation transcript。這項 restriction 不套用到明確要求 conversation evidence 的 recall
 或 transform dedicated path。
 
-### 8.4 current：Evidence Readiness（automated verified, manual pending）
+### Evidence Readiness
 
 Current flow 是：
 
@@ -199,7 +198,7 @@ substantive task 執行 `search_knowledge`，再將每個 facet `text` 原樣作
 tool calls；required tools 超過 budget 時 fail closed。純 Knowledge factual question 不強制
 Memory，direct memory-only recall 保留既有 `memory_query` routing，也不強制 Knowledge。
 
-8.6.1 的 current provider boundary 把 selector 的 wire DTO 與 backend domain decision 分開。
+The current provider boundary 把 selector 的 wire DTO 與 backend domain decision 分開。
 Provider 先回傳 strict root object 的 `selection` nested union，再由 backend deterministic mapping
 成既有 `ContextRequirementDecision`；Knowledge、Memory、citation、execution 與 fail-closed
 authority 不移交給 wire DTO。四個 wire modes 對應 Knowledge-only、mixed、direct Memory-only
@@ -255,7 +254,7 @@ boundary；沒有 trusted explicit-save authorization 時仍 fail closed。Agent
 已保存的 personal、company 或 project context，不要求 query 包含 `memory`、`remember` 或
 `saved`。
 
-Mixed explicit-save 加 substantive task 目前沒有 typed split contract，本 slice 不支援；
+Mixed explicit-save 加 substantive task 目前沒有 typed split contract，因此不支援；
 目前 parser 會將 `記住` 後的 remainder 視為同一段 memory content。
 
 ## Session isolation 與 New Chat

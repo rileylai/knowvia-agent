@@ -3,8 +3,8 @@
 本文件是 grounding、citation、insufficient-info、tool safety、Memory authority、retrieval
 eligibility、prompt-injection boundary 與 evaluation contract 的 canonical source。Runtime
 topology 請看 [`docs/01-architecture.md`](01-architecture.md)，data contract 請看
-[`docs/02-data-and-contracts.md`](02-data-and-contracts.md)，current status/evidence 請看
-[`dev_state/PROJECT_ROADMAP.md`](../dev_state/PROJECT_ROADMAP.md)。
+[`docs/02-data-and-contracts.md`](02-data-and-contracts.md)。Current status and evidence 以
+code、tests 與 deployment documentation 為準。
 
 ## Grounding
 
@@ -100,7 +100,7 @@ backend 驗證 owner、類型、內容長度與 persistence policy。
 Public conversation 一旦產生有效 `ExplicitSaveIntent`，由 backend deterministic 執行
 trusted save path，不等待 provider 選擇 `save_memory`。`save_memory` tool 保留給 MCP 與
 其他 tool execution boundary；沒有 trusted explicit-save authorization 時仍 fail closed。
-Mixed explicit-save 加 substantive task 目前沒有 typed split contract，本 slice 不支援。
+Mixed explicit-save 加 substantive task 目前沒有 typed split contract，因此不支援。
 
 Exact duplicate 可以被拒絕或回傳既有 memory。MVP 不做 semantic dedup、
 automatic consolidation、memory graph、importance ranking 或 temporal ranking。
@@ -112,7 +112,7 @@ unknown acronym；產生失敗時，embedding 回退使用原始 `content`。Mem
 original `content`。
 Memory search 可接受自然 user query，不要求 query 包含 `memory`、`remember` 或 `saved`。
 
-`5.0.3.1` 已 deferred。Current `MemoryService.search_memories()` 沒有 query-side semantic
+Query-side semantic Memory normalization 已 deferred。Current `MemoryService.search_memories()` 沒有 query-side semantic
 normalization，也沒有 no-hit / low-confidence second-pass retry。Existing retrieval 仍先取
 top-k，再套用既有 relevance gate；direct recall 只回傳 final best-1，broad recall 維持 bounded
 multi-result。既有 global relevance floors 不因單一案例降低，也不建立大型 hard-coded synonym
@@ -153,7 +153,7 @@ Selector 可以參考 same-session history 來理解 current task，但 previous
 LongTermMemory retrieval。新的 substantive query 不得因 history 已包含相同內容而省略必要
 authority；若 decision 要求 Knowledge，Backend 必須先取得當次 Knowledge evidence，只有實際
 無 evidence 時才可進入 `insufficient_info`。既有 conversational transform 仍可只使用
-previous answer，不在本輪擴張 transform classifier。
+previous answer；transform classifier 不在 current scope。
 
 Structured substantive final synthesis 固定只接 exact current user message、validated reference
 bindings、accepted Knowledge 與當次 retrieved Memory；不接 previous user/assistant transcript，
@@ -162,9 +162,9 @@ deterministic retrieval query enrichment，不會成為 Knowledge、Memory、cit
 authority。相同 substantive query 重送時也使用 fresh authority。這項 backend isolation 不套用到
 conversation recall 或 transform dedicated path。
 
-### 5.0.3.3 current authority boundary
+### Current context authority boundary
 
-以下 boundary 是 D030 frozen architecture 的 current implementation。Incidental raw conversation
+以下 boundary 是 current frozen architecture。Incidental raw conversation
 history 只能出現在 bounded `Reference Binding` boundary；後續 Context Requirement Selection、
 Knowledge/Memory retrieval 與 final substantive synthesis 都不得直接接收 raw conversation
 transcript。
@@ -189,7 +189,7 @@ Knowledge count 或 answer-sufficiency signal，也不能 rescue missing Knowled
 不引入 `conversation_dependency`、`reference_status`、`resolved_task` 或 free-form query rewrite；
 self-contained request 保留 exact current user message，使用空的 `reference_bindings`。
 
-### Evidence Readiness：8.4 current implementation
+### Evidence Readiness
 
 Current `knowledge_relevance_floor=0.30` 只表示 chunk relevance acceptance，不表示 whole-answer
 sufficiency。Current runtime 在 Knowledge required 且 accepted Knowledge 為 0 時，會由 backend
@@ -197,7 +197,7 @@ deterministic 回傳 `insufficient_info`；accepted Knowledge 大於 0 時，先
 判斷，再決定是否進入 final synthesis。Current semantic sufficiency authority 是 backend gate
 加上 bounded readiness provider。
 
-Current 8.4 topology 是：
+Current topology 是：
 
 ```text
 Accepted Knowledge Evidence
@@ -255,13 +255,13 @@ Final synthesis 只負責 grounded answer wording；ready 後若 final provider 
 `INSUFFICIENT_INFO`，會視為 provider contract violation，而不是重新改判
 `insufficient_info`。ready path 使用 `qa_answer_v4`，`qa_answer_v3` 不變。
 
-8.4 implementation 的 regression contract 至少包括：zero accepted evidence、sufficient single
+Evidence Readiness regression contract 至少包括：zero accepted evidence、sufficient single
 evidence、complete multi-evidence、partial multi-evidence、related-but-incomplete evidence、
 rv-009、rv-027、rv-029、Memory 不得 rescue Knowledge、mixed Knowledge + Memory、malformed output、
 provider timeout/error、ready citations、not-ready zero citations，以及 final synthesis 不再擁有
 semantic sufficiency authority。
 
-### 8.4 actual-provider limitation
+### Actual-provider limitation
 
 Actual-provider verification 已通過 Knowledge-only positive probes 與 incomplete/negative safety
 controls。Controlled mixed Knowledge + Memory recommendation case 則仍出現
@@ -270,7 +270,7 @@ retrieval、contextual Memory retrieval 與 owner scope 都符合 contract，但
 `ready=false`，因此沒有進入 final synthesis。這是 mixed task 與其 Knowledge-backed portion 的
 provider semantic separation 尚未穩定的 evidence，不表示 optional Memory 又成為 hard gate。
 
-這項 limitation 不改變 current 8.4 implementation，也不在本 slice 內引入 task decomposition、
+這項 limitation 不改變 current Evidence Readiness implementation，也不在 current scope 內引入 task decomposition、
 planner 或另一個 verifier。後續 mixed semantic-stability work deferred，且不阻塞其他 MVP
 priority。
 
@@ -366,7 +366,7 @@ Runtime log 使用英文；產品文件使用繁體中文。
 provider、PostgreSQL 或 Telegram checks 必須明確 opt-in，且不得接觸 production
 資源。
 
-## 7.0 Deterministic Golden Set
+## Deterministic Golden Set
 
 `eval/golden_set.yaml` 以 29 個小型 scenario 覆蓋 Knowledge retrieval、grounding、
 citation、conversation、session isolation、explicit memory、authority separation、
@@ -385,7 +385,7 @@ Core scenario 全部通過才算 regression pass。Report 只包含 scenario id�
 bounded check name、結果與失敗原因，不輸出 prompt、raw provider response、source
 chunk 或 embedding。
 
-## 8.x Retrieval Quality Benchmark
+## Retrieval Quality Benchmark
 
 `Agent Contract Golden Set` 與 `Retrieval Quality Benchmark` 是兩個不同的 evidence
 surface：
@@ -395,10 +395,10 @@ surface：
 | Agent Contract Golden Set | `eval/golden_set.yaml` 的 deterministic fixtures，驗證 routing、authority、citation、safety、MCP 與 SSE contract。 | 不證明 real PDF parser/chunker/embedding/pgvector 的 ranking quality。 |
 | Retrieval Quality Benchmark | Frozen real PDFs，經 current parser、page-aware chunker、current embedding 與 isolated pgvector indexing；runner 只執行 retrieval，gold 使用 source/page/evidence anchors。 | 不代表 final LLM answer quality，也不授權在 baseline 前調整 retrieval behavior。 |
 
-Current frozen 8.2 benchmark 使用 `eval/retrieval/benchmark.yaml` 的 30 個 cases，固定三份 PDF，
+Current frozen retrieval benchmark 使用 `eval/retrieval/benchmark.yaml` 的 30 個 cases，固定三份 PDF，
 明確報告 macro-by-case Recall@1/3/5、MRR、
 full-case success、source/page coverage 與 negative rejection。Per-case report 保留 evidence
 group hits，供 anchor review 使用；不另設與 Recall 重複的 anchor coverage primary metric。
 Diagnostics 只保留 bounded rank、locator、score、retrieval mode 與 failure label，不保存全文、
-embedding、向量、raw provider response 或 secrets。Pilot 完成並經人工 review 前，不能把
-`29/29` Agent Golden Set PASS 解讀成 retrieval quality PASS。
+embedding、向量、raw provider response 或 secrets。`29/29` Agent Golden Set PASS 不等於
+retrieval quality PASS；兩者的 evidence surface 維持分離。

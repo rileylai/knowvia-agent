@@ -115,7 +115,11 @@ Preflight 會檢查 frontend `dist/` build artifact；如果 frontend 或 API �
 | 8 | Refresh browser，查看目前 session 與 Memory Inspector。 | conversation、citation disclosure 與 memory indicator 保留。 | Durable state。 | 重新開啟同一個 `session_id`。 |
 | 9 | （Technical appendix）執行 `initialize` 與 `tools/list`。 | 只列出三個 Agent tools。 | Native MCP boundary。 | 使用 deterministic eval report。 |
 
-正式 browser acceptance 仍未完成，下一個 active mainline 是 `7.0 Evaluation and Demo Hardening`，目前為 `manual_verification`。`8.5`、`8.6` 與 `8.6.1` 已完成，`8.6.2` 與 `8.6.3` 的 automated evidence 已完成但 manual gate 仍開放；`8.6.4` 已 rejected。`5.0.3.1` query-side semantic normalization、`5.0.3.3` unresolved actual-provider stability 與 `8.4.1` mixed readiness false negative 依 roadmap 維持 deferred。
+Deterministic evaluation、read-only demo preflight 與 core browser verification evidence 已具備，
+本文件提供可重複的 local demo path。Current limitations 包括 YouTube/chat-text generic
+Knowledge indexing、query-side semantic Memory normalization、部分 mixed Knowledge + Memory
+requests 的 Evidence Readiness false negative，以及不在 scope 內的 remote MCP、RBAC 與
+provider-native streaming。
 
 ## Browser acceptance checklist
 
