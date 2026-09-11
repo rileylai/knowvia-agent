@@ -1398,6 +1398,13 @@ def test_same_session_agent_directly_rephrases_previous_answer_without_knowledge
         ("用中文說你剛才的回答", "剛剛的回答"),
         ("In English", "In English"),
         ("簡單一點", "剛剛的回答"),
+        ("聽不懂", "剛剛的回答"),
+        ("詳細解釋剛剛第二點", "剛剛的回答"),
+        ("再白話一點", "剛剛的回答"),
+        ("剛剛講的再白話一點", "剛剛的回答"),
+        ("elaborate on the second point", "剛剛的回答"),
+        ("rephrase that", "剛剛的回答"),
+        ("explain more simply", "剛剛的回答"),
     ),
 )
 def test_same_session_agent_supports_implicit_conversational_transforms(
@@ -1483,6 +1490,115 @@ def test_new_session_implicit_transform_cannot_use_previous_session_answer() -> 
         assert "沒有更早的 assistant 回答" in payload["answer"]
         assert provider.requests == []
         assert first_session_id != second_session_id
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_new_session_comprehension_failure_cannot_fabricate_transform_target() -> None:
+    session_factory = _build_session_factory()
+    provider = TransformToolCallingProvider()
+    _override_database(session_factory)
+    _override_provider(provider)
+    app.dependency_overrides[get_current_owner_id] = lambda: "local"
+
+    try:
+        client = TestClient(app)
+        session_id = _create_conversation(client)
+        response = client.post(
+            f"/api/conversations/{session_id}/messages",
+            json={"query": "聽不懂"},
+        )
+
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["insufficient_info"] is False
+        assert "沒有更早的 assistant 回答" in payload["answer"]
+        assert provider.requests == []
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_new_session_rephrasing_cannot_fabricate_transform_target() -> None:
+    session_factory = _build_session_factory()
+    provider = TransformToolCallingProvider()
+    _override_database(session_factory)
+    _override_provider(provider)
+    app.dependency_overrides[get_current_owner_id] = lambda: "local"
+
+    try:
+        client = TestClient(app)
+        session_id = _create_conversation(client)
+        response = client.post(
+            f"/api/conversations/{session_id}/messages",
+            json={"query": "再白話一點"},
+        )
+
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["insufficient_info"] is False
+        assert "沒有更早的 assistant 回答" in payload["answer"]
+        assert payload["used_saved_memory"] is False
+        assert payload["citations"] == []
+        assert provider.requests == []
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.parametrize(
+    "transform_query",
+    ("再白話一點", "剛剛講的再白話一點"),
+)
+def test_same_session_exact_browser_rephrasing_uses_dedicated_transform(
+    transform_query: str,
+) -> None:
+    session_factory = _build_session_factory()
+    _seed_knowledge(session_factory)
+    provider = TransformToolCallingProvider()
+    _override_database(session_factory)
+    _override_provider(provider)
+    app.dependency_overrides[get_current_owner_id] = lambda: "local"
+
+    try:
+        client = TestClient(app)
+        session_id = _create_conversation(client)
+        first = client.post(
+            f"/api/conversations/{session_id}/messages",
+            json={"query": "What design patterns are described for agentic AI systems?"},
+        )
+        second = client.post(
+            f"/api/conversations/{session_id}/messages",
+            json={"query": transform_query},
+        )
+
+        assert first.status_code == 200, first.text
+        assert second.status_code == 200, second.text
+        payload = second.json()
+        workflow_run_id = payload["workflow_run_id"]
+        assert payload["answer"].startswith("剛剛的回答")
+        assert payload["insufficient_info"] is False
+        assert payload["used_saved_memory"] is False
+        assert payload["citations"] == []
+        assert provider.requests[2].tools == []
+        assert provider.requests[2].tool_choice is None
+
+        with session_factory() as db:
+            run = (
+                db.query(WorkflowRun)
+                .filter(WorkflowRun.id == workflow_run_id)
+                .first()
+            )
+            assert run is not None
+            metadata = json.loads(run.metadata_json)
+            assert metadata["conversation_transform"] is True
+            assert metadata["conversation_authority_available"] is True
+            assert metadata["available_tool_count"] == 0
+            assert metadata["available_tool_names"] == []
+            assert metadata["context_requirement"] is None
+            assert metadata["reference_binding_count"] == 0
+            assert metadata["tool_names_used"] == []
+            assert metadata["used_saved_memory"] is False
+            assert metadata["citation_count"] == 0
+            assert metadata["provider_termination_type"] == "final_text"
     finally:
         app.dependency_overrides.clear()
 

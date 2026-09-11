@@ -4096,3 +4096,37 @@ Case B、8.6.4、specialized second-hop 與 `5.0.3.1.1` 維持先前的 deferred
 - 本輪只更新 `dev_state/PROJECT_ROADMAP.md` 與 `dev_state/DAILY_LOG.md`。
 - `DECISIONS.md`、production files 與 test files 沒有變更。
 - Provider calls executed=`0`。No commit confirmation。
+# 2026-09-11
+
+## 5.0.4 Same-Session Conversational Transform Hardening
+
+### Done
+
+- 擴充 deterministic previous-assistant transform detector，涵蓋中英文理解澄清、
+  elaboration、simplification、rephrasing、summarization 與 numbered-item clarification。
+- 保留既有 dedicated transform routing、same-session boundary、no-tool/no-citation
+  contract 與 New Chat 無 target 時的 safe fallback。
+- 沒有修改 Reference Binding、Context Requirement Selector、Knowledge/Memory retrieval、
+  Evidence Readiness、Final synthesis、MCP、schema、embedding、chunking 或 parser。
+
+### Automated Evidence
+
+- TDD RED 先捕捉新增 transform 類別與 no-target routing 缺口；GREEN focused run 為
+  `54 passed`。
+- Conversation recall/API regression 為 `107 passed`。
+- Full backend command `.venv/bin/python -m pytest -q` exit 0；test collection 為
+  `1058 tests`。
+- Deterministic Agent Golden Set 為 `29/29`。
+- Frontend test suite 為 `62 passed`，production build 通過。
+- `compileall` 與 `git diff --check` 通過。
+- 本輪沒有 provider call，也沒有執行 browser。
+
+### Manual Verification
+
+Not yet manually verified. Browser acceptance remains pending for language switch,
+simplify, rephrase, summarize、numbered-item clarification 與 New Chat isolation。
+
+### Next
+
+- 依規格執行 T1 至 T4 browser acceptance；在人工驗證完成前維持 roadmap
+  `automated_verified`。
