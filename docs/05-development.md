@@ -1,5 +1,9 @@
 # Knowvia Agent 開發流程
 
+本文件是 repository development workflow、SDD/TDD、manual acceptance、verification
+expectations 與 safety rules 的 canonical source。產品 scope、架構與 guardrail details 應回到
+各自的 canonical docs；current priority 與 chronological evidence 分別看 roadmap 與 daily log。
+
 本 repository 採 Spec-Driven Development（SDD）與 Test-Driven Development
 （TDD）。目標是讓每個功能先有可觀察的行為，再進入實作。
 
@@ -119,4 +123,4 @@ uv run --no-env-file --frozen pytest -q
 4. 受影響的 source-of-truth 文件已更新。
 5. Frontend manual verification 已完成，或明確記錄尚未完成的原因。
 6. `dev_state/DAILY_LOG.md` 有簡短紀錄，包含實際人工驗證內容。
-7. 若有產品或架構決策，`dev_state/DECISIONS.md` 已更新。
+7. 若有產品或架構決策，`docs/decisions/DECISIONS.md` 已更新。

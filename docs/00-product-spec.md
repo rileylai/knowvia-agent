@@ -1,5 +1,10 @@
 # Knowvia Agent 產品規格
 
+本文件是 product scope、MVP boundary、user-facing behavior 與 non-goal 的 canonical source。
+Current implementation status 以 application code、tests、migrations、config 與 dependency
+lockfile 為準；priority 與 verification evidence 請看
+[`dev_state/PROJECT_ROADMAP.md`](../dev_state/PROJECT_ROADMAP.md)。
+
 ## 產品問題
 
 企業知識分散在文件、圖片、網站、影片與 workspace page 中。使用者通常
@@ -42,9 +47,12 @@ fragmented enterprise knowledge
 PDF
 Screenshot / Image
 Web URL
-YouTube
 Notion
 ```
+
+YouTube transcript 與 chat text 目前只完成 `SourceDocument` parse/normalize/persist，尚未
+進入 searchable Knowledge QA；其 generic Knowledge indexing、retrieval 與 citation flow
+不列為目前已完成的 MVP source path。
 
 ### Future
 
@@ -100,8 +108,10 @@ query
 - 現有 pgvector foundation
 - deterministic lexical fallback
 
-本週不新增 BM25、RRF、production hybrid retrieval rebuild、reranker、HyDE、
-multi-query retrieval 或 semantic chunking。
+目前 production retrieval freeze 為 existing pgvector cosine retrieval、relevance acceptance
+與 lexical fallback；BM25、RRF、production hybrid retrieval rebuild、reranker、HyDE、
+multi-query retrieval 與 semantic chunking 不屬於目前 MVP contract。Quality gate 與 evaluation
+規則由 [`docs/04-quality-and-guardrails.md`](04-quality-and-guardrails.md) 維護。
 
 ## Single Agent
 
@@ -128,12 +138,6 @@ MVP Agent tools：
 search_knowledge
 search_memory
 save_memory
-```
-
-Bonus tool：
-
-```text
-fetch_source
 ```
 
 MCP 是 standardized tool boundary / adapter，不擁有 business logic。例：
@@ -246,15 +250,18 @@ done
 
 | 能力 | 狀態 |
 | --- | --- |
-| Notion read、listing、page/full/incremental index | `EXISTING` |
-| PDF、Image/OCR、URL、YouTube、chat text parse/persist | `EXISTING` |
-| Notion-only pgvector QA 與 lexical fallback | `EXISTING` |
-| Generic multi-source chunk/index/retrieval | `IMPLEMENTED`（PDF、URL、Image 與既有 Notion path） |
+| Notion read、listing、page/full/incremental index | `IMPLEMENTED` |
+| PDF、Image/OCR、URL generic chunk/index/retrieval | `IMPLEMENTED` |
+| YouTube、chat text parse/normalize/persist | `PARTIAL`（只建立 `SourceDocument`） |
 | Conversation sessions 與 short-term memory | `IMPLEMENTED` |
 | LongTermMemory 與 explicit save | `IMPLEMENTED` |
 | Bounded Agent loop 與 MCP adapters | `IMPLEMENTED` |
 | SSE 與 Web UI | `IMPLEMENTED` |
 | Telegram、Supplement、Notion write-back、RQ | `LEGACY` |
+
+`done`、`automated_verified`、`manual_verification`、`deferred` 與 `rejected` 的 roadmap
+status 及其 evidence 不在本表重複；以 [`PROJECT_ROADMAP.md`](../dev_state/PROJECT_ROADMAP.md)
+為準。
 
 ## 明確非目標
 

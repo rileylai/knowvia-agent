@@ -26,6 +26,7 @@ data/
 local_storage/
 uploads/
 tmp/
+dev_state/
 
 # Deferred LearnLoop parser evaluation
 tests/evals/parser_note_completeness/

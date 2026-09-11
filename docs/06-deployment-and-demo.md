@@ -1,5 +1,7 @@
 # Knowvia Agent 部署與 Demo
 
+本文件只描述 local setup、依賴、migration、health/readiness、demo preflight 與 release checklist。產品 scope、runtime topology 與 guardrail 規則分別由 `docs/00-product-spec.md`、`docs/01-architecture.md` 與 `docs/04-quality-and-guardrails.md` 負責。
+
 ## MVP 部署目標
 
 Target MVP runtime：
@@ -68,21 +70,11 @@ disconnect 完成後，其結果只包含 Knowvia core dependency checks。
 
 ## Configuration 邊界
 
-Knowvia core 需要的設定包括：
+Local core path 的必要設定是 `DATABASE_URL` 與 `OPENAI_API_KEY`。`APP_ENV`、`LOG_LEVEL`、embedding batch/retry limits 與 workflow cost limits 有 application defaults；`API_BEARER_TOKEN` 是 optional。`.env.example` 只提供不含 secret 的 local baseline。
 
-```text
-APP_ENV
-LOG_LEVEL
-DATABASE_URL
-OPENAI_API_KEY
-API_BEARER_TOKEN
-NOTION_BACKEND
-NOTION_TOKEN（live Notion read 時）
-embedding batch / retry settings
-workflow cost limits
-```
+Notion 預設使用 `NOTION_BACKEND=mock` 與 `tests/fixtures/notion_pages`。需要 live Notion read 時，設定 `NOTION_BACKEND=live`、`NOTION_TOKEN`，並在 process environment 中提供相關 timeout/retry settings。
 
-以下設定屬於 legacy queue 或 Telegram：
+以下設定只供 legacy queue 或 Telegram path：
 
 ```text
 REDIS_URL
@@ -123,11 +115,7 @@ Preflight 會檢查 frontend `dist/` build artifact；如果 frontend 或 API �
 | 8 | Refresh browser，查看目前 session 與 Memory Inspector。 | conversation、citation disclosure 與 memory indicator 保留。 | Durable state。 | 重新開啟同一個 `session_id`。 |
 | 9 | （Technical appendix）執行 `initialize` 與 `tools/list`。 | 只列出三個 Agent tools。 | Native MCP boundary。 | 使用 deterministic eval report。 |
 
-正式 browser 驗證尚未完成；目前下一個唯一主線 priority 是 `8.5 User-Facing Answer Quality Diagnostic`，
-只做 user-facing failure diagnosis，後續 retrieval、readiness 與 synthesis work 依 evidence 再決定。
-`7.0` 維持 `manual_verification`，Formal Browser Demo Story 保留但暫排在 `8.5` diagnosis 後。
-5.0.3.1 未完成的 query-side semantic normalization，以及 5.0.3.3 unresolved actual-provider
-stability 已 deferred，不是本次 Demo Story 的前置 implementation。
+正式 browser acceptance 仍未完成，下一個 active mainline 是 `7.0 Evaluation and Demo Hardening`，目前為 `manual_verification`。`8.5`、`8.6` 與 `8.6.1` 已完成，`8.6.2` 與 `8.6.3` 的 automated evidence 已完成但 manual gate 仍開放；`8.6.4` 已 rejected。`5.0.3.1` query-side semantic normalization、`5.0.3.3` unresolved actual-provider stability 與 `8.4.1` mixed readiness false negative 依 roadmap 維持 deferred。
 
 ## Browser acceptance checklist
 
@@ -163,6 +151,8 @@ Completeness governance 暫時 deferred，不阻塞 Agent MVP。
 - evidence 不足會回傳 `insufficient_info`。
 - session isolation 通過測試。
 - memory 只在 explicit save 後保存。
-- tool allowlist、timeout、max tool calls 與 termination 有測試。
+- tool allowlist、timeout、max tool calls、termination、MCP boundary、SSE redaction 與 source ownership 有測試或明確 verification evidence。
 - SSE 不會輸出 chain-of-thought 或 secrets。
-- current code 與文件中的 `EXISTING`、`MODIFY`、`NEW`、`FUTURE` 標記一致。
+- `/health`、`/ready`、migration head、pgvector extension 與 provider configuration 通過檢查。
+- PDF、Image/OCR、URL、Notion read/sync 與 Knowledge citation path 使用 current backend contract。
+- explicit save、cross-session Memory recall、session isolation 與 `insufficient_info` negative path 通過 relevant tests 或已記錄未完成的 browser gate。

@@ -1,5 +1,11 @@
 # Knowvia Agent 工作流程
 
+本文件是 current end-to-end workflow、ingestion、conversation、Memory、SSE 與 legacy
+boundary 的 canonical source。Product scope 請看
+[`docs/00-product-spec.md`](00-product-spec.md)；entity contract 請看
+[`docs/02-data-and-contracts.md`](02-data-and-contracts.md)；roadmap status 與 evidence 請看
+[`dev_state/PROJECT_ROADMAP.md`](../dev_state/PROJECT_ROADMAP.md)。
+
 本文件區分 current implementation 與 target workflow。Current flow 以 code
 與 tests 為準；target flow 是後續 SDD/TDD 的行為依據。
 
@@ -102,8 +108,8 @@ acceptance deferred；`8.6.1 Context Requirement Provider Wire Contract` 的 aut
 與 bounded actual-provider verification 已完成。UQ-003、UQ-007、UQ-010 各一次均通過 OpenAI
 Structured Output schema acceptance、wire validation、deterministic mapping 與 domain validation。
 Readiness Usability Study 排在此 slice 後。
-`7.0 Evaluation and Demo Hardening` 維持 `manual_verification`，Formal Browser Demo Story 保留但暫排在
-`8.6.1` 後。Explicit save、conversation
+`7.0 Evaluation and Demo Hardening` 是目前下一個 active mainline，維持 `manual_verification`；
+Formal Browser Demo Story 的詳細 gate 以 roadmap 為準。Explicit save、conversation
 recall、conversation transform 與 direct Memory compatibility 先走既有 dedicated routes；其餘
 substantive request 走 structured path：
 

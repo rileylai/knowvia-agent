@@ -1,5 +1,11 @@
 # Knowvia Agent 資料與契約
 
+本文件是 entity authority、data ownership、API/tool conceptual contract 與 bounded payload
+vocabulary 的 canonical source。實際欄位、schema、migration 與 validation 以 current code、
+migrations 與 tests 為準；workflow sequencing 請看
+[`docs/03-workflows.md`](03-workflows.md)，quality/guardrail rules 請看
+[`docs/04-quality-and-guardrails.md`](04-quality-and-guardrails.md)。
+
 本文件定義 conceptual contract，不預先固定 ORM 實作。欄位名稱是對後續 API、
 Repository 與測試的共同語言；實作可在不改變語意的前提下調整資料型別。
 

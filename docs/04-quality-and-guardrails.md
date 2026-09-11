@@ -1,5 +1,11 @@
 # Knowvia Agent 品質與 Guardrails
 
+本文件是 grounding、citation、insufficient-info、tool safety、Memory authority、retrieval
+eligibility、prompt-injection boundary 與 evaluation contract 的 canonical source。Runtime
+topology 請看 [`docs/01-architecture.md`](01-architecture.md)，data contract 請看
+[`docs/02-data-and-contracts.md`](02-data-and-contracts.md)，current status/evidence 請看
+[`dev_state/PROJECT_ROADMAP.md`](../dev_state/PROJECT_ROADMAP.md)。
+
 ## Grounding
 
 企業問題必須先取得 Knowledge evidence。Agent 可以說明 evidence 不足，但不
@@ -44,8 +50,7 @@ search_memory
 save_memory
 ```
 
-`fetch_source` 是 bonus。Notion listing 與 sync 不由 Agent tool calling 執行，
-而是 deterministic backend operation。
+Notion listing 與 sync 不由 Agent tool calling 執行，而是 deterministic backend operation。
 
 每次 ToolCall 都必須經過：
 
@@ -390,7 +395,8 @@ surface：
 | Agent Contract Golden Set | `eval/golden_set.yaml` 的 deterministic fixtures，驗證 routing、authority、citation、safety、MCP 與 SSE contract。 | 不證明 real PDF parser/chunker/embedding/pgvector 的 ranking quality。 |
 | Retrieval Quality Benchmark | Frozen real PDFs，經 current parser、page-aware chunker、current embedding 與 isolated pgvector indexing；runner 只執行 retrieval，gold 使用 source/page/evidence anchors。 | 不代表 final LLM answer quality，也不授權在 baseline 前調整 retrieval behavior。 |
 
-8.1 pilot 固定三份 PDF 與 15 個 cases，明確報告 macro-by-case Recall@1/3/5、MRR、
+Current frozen 8.2 benchmark 使用 `eval/retrieval/benchmark.yaml` 的 30 個 cases，固定三份 PDF，
+明確報告 macro-by-case Recall@1/3/5、MRR、
 full-case success、source/page coverage 與 negative rejection。Per-case report 保留 evidence
 group hits，供 anchor review 使用；不另設與 Recall 重複的 anchor coverage primary metric。
 Diagnostics 只保留 bounded rank、locator、score、retrieval mode 與 failure label，不保存全文、

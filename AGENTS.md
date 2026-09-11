@@ -13,35 +13,35 @@
 - 撰寫或大幅修改 human-facing Markdown 前，先使用 `/avoid-ai-writing` skill。
 - Desired behavior 讀 `docs/`；development priority 與 current phase 讀
   `dev_state/PROJECT_ROADMAP.md`；已確認的 decisions 讀
-  `dev_state/DECISIONS.md`。
+  `docs/decisions/DECISIONS.md`。
 - Current implementation 以 application code、tests、migrations、config 與
   dependency lockfile 為準。
 - 不把 planned、future 或 legacy capability 寫成已完成；詳細產品與 guardrail 規則
   留在 relevant spec，不要複製到本文件。
-- Development state 只使用 tracked `dev_state/`，保留
-  `PROJECT_ROADMAP.md`、`DAILY_LOG.md` 與 `DECISIONS.md`。
+- Development state 使用 `dev_state/PROJECT_ROADMAP.md` 與
+  `dev_state/DAILY_LOG.md`；accepted decisions 使用
+  `docs/decisions/DECISIONS.md`。不要把 daily log 當成 current spec。
 
 ## Documentation Navigation
 
-不要預設讀取全部文件。依 task 只讀必要的 source of truth：
+不要 mechanical preload 全部文件。先判斷 task 類型，讀一份 primary source；只有跨越多個 concern 時才讀 secondary source。任何 current implementation claim 都要回查 application code、tests、migrations、config 與 lockfile，文件不是 runtime authority。
 
-| 要處理的問題 | 優先閱讀 |
-| --- | --- |
-| 產品 scope、MVP、非目標、使用者行為 | `docs/00-product-spec.md` |
-| 架構邊界、component responsibility、current/target architecture | `docs/01-architecture.md` |
-| Entity、schema、資料 authority、API/tool conceptual contract | `docs/02-data-and-contracts.md` |
-| End-to-end workflow、ingestion、chat、memory flow | `docs/03-workflows.md` |
-| Grounding、citation、tool safety、memory policy、evaluation | `docs/04-quality-and-guardrails.md` |
-| SDD、TDD、manual acceptance、repository workflow | `docs/05-development.md` |
-| Local deployment、Docker、demo flow | `docs/06-deployment-and-demo.md` |
-| 目前 development priority、status、下一個 slice | `dev_state/PROJECT_ROADMAP.md` |
-| 已確認、不能自行推翻的產品／架構 decision | `dev_state/DECISIONS.md` |
-| 最近工作、驗證結果、目前問題 | `dev_state/DAILY_LOG.md` |
+| Task | Primary source | Secondary source when needed |
+| --- | --- | --- |
+| Product scope、MVP、non-goal、user behavior | `docs/00-product-spec.md` | `docs/04-quality-and-guardrails.md` |
+| Architecture、component responsibility、authority boundary | `docs/01-architecture.md` | `docs/decisions/DECISIONS.md`、relevant code |
+| Entity、schema、data ownership、API/tool contract | `docs/02-data-and-contracts.md` | migrations、schemas、tests |
+| Knowledge ingestion / retrieval workflow | `docs/03-workflows.md` | `docs/04-quality-and-guardrails.md`、`src/orchestrators/`、`src/rag/` |
+| Conversation、Memory、Agent、tool calling、MCP workflow | `docs/03-workflows.md` | `docs/02-data-and-contracts.md`、`src/agent/`、`src/mcp/` |
+| Grounding、citation、`insufficient_info`、retrieval safety、evaluation | `docs/04-quality-and-guardrails.md` | `docs/02-data-and-contracts.md`、`eval/`、tests |
+| Frontend behavior、SSE、manual acceptance | `docs/03-workflows.md` | `frontend/src/`、`docs/05-development.md` |
+| SDD、TDD、tests、manual verification、repository workflow | `docs/05-development.md` | relevant tests and `dev_state/DAILY_LOG.md` |
+| Local setup、Docker、migration、health/readiness、demo | `docs/06-deployment-and-demo.md` | `README.md`、`docker-compose.yml`、`.env.example`、scripts |
+| Current priority、status、next slice | `dev_state/PROJECT_ROADMAP.md` | `dev_state/DAILY_LOG.md` |
+| Accepted product / architecture decision | `docs/decisions/DECISIONS.md` | current implementation and roadmap |
+| Recent investigation、verification result、known issue | `dev_state/DAILY_LOG.md` | roadmap and relevant code/tests |
 
-- 先判斷 task 類型，再讀最少必要文件。
-- 跨多個 concern 時，再讀對應文件；不要 mechanical preload 全部 docs。
-- Desired behavior 以相關 spec 與 decision 為準，current implementation 以 code
-  與 tests 為準。
+`README.md` 是 onboarding 與 navigation entry point，不是 detailed spec。`PROJECT_ROADMAP.md` 是 status source，不是 architecture source；`DAILY_LOG.md` 是 chronological evidence，不是 product spec。若 spec、decision 與 implementation 不一致，先確認 current code/tests/config，再只修正文件或在 report 列出 discrepancy。
 
 ## Development workflow
 

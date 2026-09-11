@@ -1,5 +1,11 @@
 # Knowvia Agent 架構
 
+本文件是 current runtime topology、component responsibility、authority boundary 與 external
+adapter ownership 的 canonical source。Entity 與 schema vocabulary 請看
+[`docs/02-data-and-contracts.md`](02-data-and-contracts.md)；end-to-end behavior 請看
+[`docs/03-workflows.md`](03-workflows.md)；quality gate 請看
+[`docs/04-quality-and-guardrails.md`](04-quality-and-guardrails.md)。
+
 ## 架構邊界
 
 ```text
@@ -42,19 +48,19 @@ flowchart LR
 | Component | 狀態 | 責任 |
 | --- | --- | --- |
 | Web App | `IMPLEMENTED` | Knowledge Tab、Chat、Memory Inspector、SSE client |
-| FastAPI backend | `EXISTING` | API boundary、auth、dependency wiring |
-| Knowledge APIs | `MODIFY` | 將 source ingestion 與 Notion sync 統一成 Knowledge flow |
-| Source ingestion | `EXISTING` / `MODIFY` | 現有 parser/persist；補 generic chunk/index |
-| Notion sync | `EXISTING` | deterministic page listing、sync、chunk、embed、index |
-| Knowledge Layer | `MODIFY` | 統一 `KnowledgeSource`、`SourceDocument`、`KnowledgeChunk` |
-| Retrieval Service | `EXISTING` / `MODIFY` | 共用 Notion、PDF、Image、URL 的 pgvector 與 lexical fallback；套用 source eligibility |
-| Conversation State | `EXISTING` | durable session、message、owner isolation 與 short-term context budget |
+| FastAPI backend | `IMPLEMENTED` | API boundary、auth hook、dependency wiring |
+| Knowledge APIs | `IMPLEMENTED` | source ingestion、Notion sync、inventory 與 QA boundary |
+| Source ingestion | `IMPLEMENTED` / `PARTIAL` | PDF、Image/OCR、URL 完整 generic flow；YouTube/chat text 停在 `SourceDocument` |
+| Notion sync | `IMPLEMENTED` | deterministic page listing、sync、chunk、embed、index |
+| Knowledge Layer | `IMPLEMENTED` | `KnowledgeSource`、`SourceDocument`、`KnowledgeChunk` boundary |
+| Retrieval Service | `IMPLEMENTED` | shared pgvector、relevance acceptance、lexical fallback 與 source eligibility |
+| Conversation State | `IMPLEMENTED` | durable session、message、owner isolation 與 short-term context budget |
 | Context Assembly | `IMPLEMENTED` | 組合 bounded conversation context、Knowledge evidence 與 saved memory |
 | Memory Service | `IMPLEMENTED` | explicit save、owner scope、semantic retrieval |
 | Bounded Knowledge Agent | `IMPLEMENTED` | 單一 Agent 的有限 tool loop 與 answer generation |
 | MCP Tool Layer | `IMPLEMENTED` | native stdio protocol adapter；重用 allowlisted tool registry，不擁有 business logic |
-| Provider Layer | `EXISTING` / `MODIFY` | Provider Router、LLM 與 embedding adapters |
-| PostgreSQL + pgvector | `EXISTING` / `MODIFY` | durable records、sessions、messages、chunks、vectors 與 memory |
+| Provider Layer | `IMPLEMENTED` | Provider Router、LLM 與 embedding adapters |
+| PostgreSQL + pgvector | `IMPLEMENTED` | durable records、sessions、messages、chunks、vectors 與 memory |
 | SSE | `IMPLEMENTED` | browser streaming transport |
 | Redis/RQ | `LEGACY` | Telegram worker；不列入 Knowvia MVP core |
 
@@ -203,8 +209,8 @@ actual-provider stability probe 與 browser acceptance deferred。`8.6.1 Context
 Wire Contract` 的 automated implementation 與 bounded actual-provider verification 已完成：UQ-003、
 UQ-007、UQ-010 各一次均通過 OpenAI Structured Output schema acceptance、wire validation、
 deterministic mapping 與 domain validation。Readiness Usability Study 排在此 slice 後。
-`7.0 Evaluation and Demo Hardening` 維持 `manual_verification`，Formal Browser Demo Story
-保留但暫排在 `8.6.1` 後。
+`7.0 Evaluation and Demo Hardening` 是目前下一個 active mainline，維持 `manual_verification`；
+Formal Browser Demo Story 的詳細 gate 以 roadmap 為準。
 
 ## Evidence Readiness（8.4 current implementation）
 
@@ -311,7 +317,7 @@ SSE 是 transport，不改變 Agent 的 permission、tool 或 persistence policy
 
 | 系統 | Active Knowvia 用途 | 備註 |
 | --- | --- | --- |
-| PostgreSQL | application state、sessions、messages、KnowledgeChunk、vectors、planned memory | 必要 |
+| PostgreSQL | application state、sessions、messages、KnowledgeChunk、vectors、LongTermMemory | 必要 |
 | pgvector | knowledge 與 memory semantic retrieval | 必要 |
 | Notion | knowledge source | read/sync only |
 | OpenAI 或其他 provider | LLM、embedding | 經 Provider Router |
